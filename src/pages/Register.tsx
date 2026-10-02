@@ -1,20 +1,192 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const USERNAME_PATTERN = /^[a-z0-9._]+$/
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/
+const PHONE_PATTERN = /^0\d{9}$/
+const SUPPORTED_PHONE_PREFIXES = new Set([
+  '032',
+  '033',
+  '034',
+  '035',
+  '036',
+  '037',
+  '038',
+  '039',
+  '086',
+  '096',
+  '097',
+  '098',
+  '070',
+  '076',
+  '077',
+  '078',
+  '079',
+  '089',
+  '090',
+  '093',
+  '081',
+  '082',
+  '083',
+  '084',
+  '085',
+  '088',
+  '091',
+  '094',
+])
+
+function normalizePhone(rawPhone) {
+  let phone = rawPhone
+    .trim()
+    .replaceAll(' ', '')
+    .replaceAll('.', '')
+    .replaceAll('-', '')
+    .replaceAll('(', '')
+    .replaceAll(')', '')
+
+  if (phone.startsWith('+84')) {
+    phone = `0${phone.slice(3)}`
+  } else if (phone.startsWith('84') && phone.length === 11) {
+    phone = `0${phone.slice(2)}`
+  }
+
+  return phone
+}
 
 export default function Register() {
+  const [formData, setFormData] = useState({
+    username: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
+  const [formError, setFormError] = useState('')
   const navigate = useNavigate()
 
-  const handleRegister = (event: React.FormEvent) => {
+  const updateField = (fieldName, value) => {
+    setFormData((current) => ({
+      ...current,
+      [fieldName]: value,
+    }))
+    setFieldErrors((current) => ({
+      ...current,
+      [fieldName]: '',
+    }))
+    setFormError('')
+  }
+
+  const validateForm = () => {
+    const errors = {}
+    const username = formData.username.trim().toLowerCase()
+    const fullName = formData.fullName.trim()
+    const email = formData.email.trim().toLowerCase()
+    const phone = normalizePhone(formData.phone)
+
+    if (!username) {
+      errors.username = 'Tai khoan la bat buoc.'
+    } else if (username.length > 50 || !USERNAME_PATTERN.test(username)) {
+      errors.username = 'Tai khoan chi gom chu thuong, so, dau cham hoac gach duoi.'
+    }
+
+    if (!fullName) {
+      errors.fullName = 'Ho va ten la bat buoc.'
+    } else if (fullName.length > 100) {
+      errors.fullName = 'Ho va ten khong duoc vuot qua 100 ky tu.'
+    }
+
+    if (!email) {
+      errors.email = 'Email la bat buoc.'
+    } else if (email.length > 100 || !EMAIL_PATTERN.test(email)) {
+      errors.email = 'Email khong hop le.'
+    }
+
+    if (!phone) {
+      errors.phone = 'So dien thoai la bat buoc.'
+    } else if (!PHONE_PATTERN.test(phone)) {
+      errors.phone = 'So dien thoai khong hop le.'
+    } else if (!SUPPORTED_PHONE_PREFIXES.has(phone.slice(0, 3))) {
+      errors.phone = 'So dien thoai khong thuoc nha mang duoc ho tro.'
+    }
+
+    if (!formData.password) {
+      errors.password = 'Mat khau la bat buoc.'
+    } else if (
+      formData.password.length < 8 ||
+      formData.password.length > 72 ||
+      !PASSWORD_PATTERN.test(formData.password)
+    ) {
+      errors.password = 'Mat khau can 8-72 ky tu, co chu hoa, chu thuong, so va ky tu dac biet.'
+    }
+
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = 'Xac nhan mat khau la bat buoc.'
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Mat khau xac nhan khong khop.'
+    }
+
+    return {
+      errors,
+      payload: {
+        username,
+        fullName,
+        email,
+        phone,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      },
+    }
+  }
+
+  const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault()
+    setFormError('')
+
+    const { errors, payload } = validateForm()
+    setFieldErrors(errors)
+
+    if (Object.keys(errors).length > 0) {
+      return
+    }
+
     setIsLoading(true)
 
-    setTimeout(() => {
+    try {
+      const response = await axiosClient.post('/api/auth/register', payload)
+      const message = response.data?.message || 'Dang ky tai khoan thanh cong.'
+
+      navigate('/login', {
+        replace: true,
+        state: {
+          registered: true,
+          message,
+        },
+      })
+    } catch (requestError) {
+      const status = requestError?.response?.status
+      const message = requestError?.response?.data?.message
+
+      if (message) {
+        setFormError(message)
+      } else if (status === 400) {
+        setFormError('Thong tin dang ky khong hop le.')
+      } else if (status === 409) {
+        setFormError('Tai khoan, email hoac so dien thoai da ton tai.')
+      } else if (requestError?.request) {
+        setFormError('Khong the ket noi Backend. Vui long kiem tra server hoac CORS.')
+      } else {
+        setFormError('Dang ky that bai. Vui long thu lai.')
+      }
+    } finally {
       setIsLoading(false)
-      navigate('/dashboard')
-    }, 900)
+    }
   }
 
   return (
@@ -38,32 +210,64 @@ export default function Register() {
               Tai khoan
               <span className="input-wrap">
                 <span className="material-symbols-outlined">person_outline</span>
-                <input placeholder="VD: minh_anh88" required type="text" />
+                <input
+                  name="username"
+                  onChange={(event) => updateField('username', event.target.value)}
+                  placeholder="VD: minh_anh88"
+                  required
+                  type="text"
+                  value={formData.username}
+                />
               </span>
+              {fieldErrors.username ? <span className="field-error">{fieldErrors.username}</span> : null}
             </label>
 
             <label>
               Ho va ten
               <span className="input-wrap">
                 <span className="material-symbols-outlined">badge</span>
-                <input placeholder="VD: Nguyen Minh Anh" required type="text" />
+                <input
+                  name="fullName"
+                  onChange={(event) => updateField('fullName', event.target.value)}
+                  placeholder="VD: Nguyen Minh Anh"
+                  required
+                  type="text"
+                  value={formData.fullName}
+                />
               </span>
+              {fieldErrors.fullName ? <span className="field-error">{fieldErrors.fullName}</span> : null}
             </label>
 
             <label>
               Email
               <span className="input-wrap">
                 <span className="material-symbols-outlined">mail</span>
-                <input placeholder="minhanh@example.com" required type="email" />
+                <input
+                  name="email"
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="minhanh@example.com"
+                  required
+                  type="email"
+                  value={formData.email}
+                />
               </span>
+              {fieldErrors.email ? <span className="field-error">{fieldErrors.email}</span> : null}
             </label>
 
             <label>
               So dien thoai
               <span className="input-wrap">
                 <span className="material-symbols-outlined">call</span>
-                <input placeholder="0912 345 678" required type="tel" />
+                <input
+                  name="phone"
+                  onChange={(event) => updateField('phone', event.target.value)}
+                  placeholder="0912 345 678"
+                  required
+                  type="tel"
+                  value={formData.phone}
+                />
               </span>
+              {fieldErrors.phone ? <span className="field-error">{fieldErrors.phone}</span> : null}
             </label>
 
             <label>
@@ -71,9 +275,12 @@ export default function Register() {
               <span className="input-wrap">
                 <span className="material-symbols-outlined">lock</span>
                 <input
+                  name="password"
+                  onChange={(event) => updateField('password', event.target.value)}
                   placeholder="Toi thieu 8 ky tu"
                   required
                   type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
                 />
                 <button
                   className="icon-button"
@@ -85,6 +292,7 @@ export default function Register() {
                   </span>
                 </button>
               </span>
+              {fieldErrors.password ? <span className="field-error">{fieldErrors.password}</span> : null}
             </label>
 
             <label>
@@ -92,9 +300,12 @@ export default function Register() {
               <span className="input-wrap">
                 <span className="material-symbols-outlined">lock_reset</span>
                 <input
+                  name="confirmPassword"
+                  onChange={(event) => updateField('confirmPassword', event.target.value)}
                   placeholder="Nhap lai mat khau"
                   required
                   type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
                 />
                 <button
                   className="icon-button"
@@ -106,6 +317,9 @@ export default function Register() {
                   </span>
                 </button>
               </span>
+              {fieldErrors.confirmPassword ? (
+                <span className="field-error">{fieldErrors.confirmPassword}</span>
+              ) : null}
             </label>
           </div>
 
@@ -114,8 +328,10 @@ export default function Register() {
             Toi dong y voi dieu khoan dich vu va chinh sach quyen rieng tu.
           </label>
 
+          {formError ? <div className="auth-error">{formError}</div> : null}
+
           <button className="submit-button" disabled={isLoading} type="submit">
-            {isLoading ? 'Dang tao tai khoan...' : 'Dang ky'}
+            {isLoading ? 'Dang dang ky...' : 'Dang ky'}
           </button>
         </form>
 

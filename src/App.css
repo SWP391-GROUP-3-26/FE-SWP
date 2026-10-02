@@ -412,6 +412,13 @@ input {
   font-weight: 800;
 }
 
+.field-error {
+  color: #9c2f1b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .input-wrap {
   display: flex;
   align-items: center;
@@ -491,6 +498,27 @@ input {
   font-weight: 800;
 }
 
+.auth-error,
+.auth-notice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.auth-error {
+  border: 1px solid #f1b9aa;
+  color: #9c2f1b;
+  background: #fff2ee;
+}
+
+.auth-notice {
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  background: var(--surface-muted);
+}
+
 .dashboard-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
@@ -562,9 +590,14 @@ input {
 }
 
 .dashboard-nav-item:hover,
-.logout-button:hover {
+.logout-button:hover,
+.dashboard-nav-item-active {
   background: rgba(47, 125, 89, 0.1);
   color: var(--primary-dark);
+}
+
+.dashboard-nav-item-active {
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 
 .logout-button {
@@ -579,8 +612,9 @@ input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 64px;
-  padding: 0 28px;
+  gap: 20px;
+  min-height: 86px;
+  padding: 16px 28px;
   border-bottom: 1px solid #e4eee6;
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(16px);
@@ -590,6 +624,13 @@ input {
   color: #7b8d83;
   font-size: 13px;
   font-weight: 800;
+}
+
+.dashboard-page-title {
+  margin: 6px 0 0;
+  color: #17251e;
+  font-size: 22px;
+  line-height: 1.2;
 }
 
 .topbar-user {
@@ -640,7 +681,151 @@ input {
 }
 
 .dashboard-content {
-  padding: 42px 28px;
+  display: grid;
+  gap: 22px;
+  padding: 30px 28px 42px;
+}
+
+.dashboard-intro,
+.dashboard-panel,
+.dashboard-card {
+  border: 1px solid #e4eee6;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(22, 41, 31, 0.06);
+}
+
+.dashboard-intro {
+  padding: 26px;
+  background:
+    linear-gradient(135deg, rgba(47, 125, 89, 0.1), transparent 46%),
+    #fff;
+}
+
+.section-heading-kicker {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-intro h2 {
+  margin: 8px 0 10px;
+  color: #17251e;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.05;
+}
+
+.dashboard-intro p {
+  max-width: 760px;
+  margin: 0;
+  color: #65776d;
+  line-height: 1.6;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-card {
+  display: grid;
+  gap: 10px;
+  min-height: 168px;
+  padding: 22px;
+}
+
+.dashboard-card > .material-symbols-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: var(--primary);
+  background: #edf6ef;
+  font-size: 24px;
+}
+
+.dashboard-card h3,
+.dashboard-panel h3 {
+  margin: 0;
+  color: #17251e;
+  font-size: 20px;
+}
+
+.dashboard-card p {
+  margin: 0;
+  color: #65776d;
+  line-height: 1.6;
+}
+
+.dashboard-card-accent {
+  border-color: rgba(47, 125, 89, 0.28);
+  background:
+    linear-gradient(145deg, rgba(47, 125, 89, 0.12), transparent 52%),
+    #fff;
+}
+
+.dashboard-panel {
+  padding: 22px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.panel-heading span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.placeholder-box {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  border: 1px dashed #c9d8cd;
+  border-radius: 12px;
+  color: #65776d;
+  background: #f8fbf8;
+  text-align: center;
+}
+
+.coach-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 18px;
+}
+
+.schedule-placeholder {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) 90px;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e4eee6;
+  border-radius: 12px;
+  color: #24312b;
+  font-weight: 800;
+  background: #f8fbf8;
+}
+
+.schedule-placeholder + .schedule-placeholder {
+  margin-top: 10px;
+}
+
+.schedule-placeholder.muted {
+  color: #65776d;
+  background: #fff;
 }
 
 .welcome-panel {
@@ -692,7 +877,9 @@ input {
 
 @media (max-width: 860px) {
   .hero-section,
-  .program-grid {
+  .program-grid,
+  .dashboard-grid,
+  .coach-board {
     grid-template-columns: 1fr;
   }
 

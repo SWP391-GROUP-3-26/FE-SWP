@@ -1,19 +1,64 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
+import { saveAuth } from '../auth/authStorage'
+import { getRoleIdForRoleName, getRouteForRoleId } from '../auth/roleConfig'
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false)
+  const [identifier, setIdentifier] = useState('')
+  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const location = useLocation()
   const navigate = useNavigate()
+  const registerMessage = location.state?.registered
+    ? location.state?.message || 'Dang ky tai khoan thanh cong.'
+    : ''
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault()
     setIsLoading(true)
+    setError('')
 
-    setTimeout(() => {
+    try {
+      const response = await axiosClient.post('/api/auth/login', {
+        identifier,
+        password,
+      })
+      const payload = response.data || {}
+      const responseData = payload.data || payload
+      const responseUser = responseData.user || payload.user || {}
+      const accessToken = responseData.accessToken || payload.accessToken
+      const userId = responseData.userId ?? payload.userId ?? responseUser.userId
+      const roleId =
+        responseData.roleId ??
+        payload.roleId ??
+        responseUser.roleId ??
+        getRoleIdForRoleName(responseUser.role)
+
+      if (!accessToken || userId === undefined || roleId === undefined) {
+        setError('Phan hoi dang nhap chua co du thong tin accessToken, userId hoac role.')
+        return
+      }
+
+      saveAuth({ accessToken, userId, roleId })
+      navigate(getRouteForRoleId(roleId), { replace: true })
+    } catch (requestError) {
+      const status = requestError?.response?.status
+      const message = requestError?.response?.data?.message
+
+      if (message) {
+        setError(message)
+      } else if (status === 401 || status === 403) {
+        setError('Email, ten tai khoan hoac mat khau khong chinh xac.')
+      } else if (requestError?.request) {
+        setError('Khong the ket noi Backend. Vui long kiem tra server hoac CORS.')
+      } else {
+        setError('Dang nhap that bai. Vui long thu lai.')
+      }
+    } finally {
       setIsLoading(false)
-      navigate('/dashboard')
-    }, 900)
+    }
   }
 
   return (
@@ -32,11 +77,20 @@ export default function Login() {
         </div>
 
         <form className="auth-form" onSubmit={handleLogin}>
+          {registerMessage ? <div className="auth-notice">{registerMessage}</div> : null}
+
           <label>
-            Tai khoan
+            Email hoac ten tai khoan
             <span className="input-wrap">
               <span className="material-symbols-outlined">badge</span>
-              <input placeholder="Nhap ten tai khoan" required type="text" />
+              <input
+                name="identifier"
+                onChange={(event) => setIdentifier(event.target.value)}
+                placeholder="email@example.com hoac username"
+                required
+                type="text"
+                value={identifier}
+              />
             </span>
           </label>
 
@@ -45,21 +99,17 @@ export default function Login() {
             <span className="input-wrap">
               <span className="material-symbols-outlined">lock</span>
               <input
+                name="password"
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="Nhap mat khau"
                 required
-                type={showPassword ? 'text' : 'password'}
+                type="password"
+                value={password}
               />
             </span>
           </label>
 
-          <label className="check-row">
-            <input
-              checked={showPassword}
-              onChange={(event) => setShowPassword(event.target.checked)}
-              type="checkbox"
-            />
-            Hien mat khau
-          </label>
+          {error ? <div className="auth-error">{error}</div> : null}
 
           <button className="submit-button" disabled={isLoading} type="submit">
             {isLoading ? 'Dang xac thuc...' : 'Dang nhap'}
