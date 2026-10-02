@@ -1,17 +1,17 @@
 import { Navigate } from 'react-router-dom'
-import { getAccessToken, getRoleId } from '../auth/authStorage'
-import { getRouteForRoleId, isAllowedRole } from '../auth/roleConfig'
+import { getAccessToken, getRole } from '../auth/authStorage'
+import { getRouteForRole, isAllowedRole } from '../auth/roleConfig'
 
-export default function ProtectedRoute({ allowedRoleIds, children }) {
+export default function ProtectedRoute({ allowedRoles, children }) {
   const accessToken = getAccessToken()
-  const roleId = getRoleId()
+  const role = getRole()
 
   if (!accessToken) {
     return <Navigate to="/" replace />
   }
 
-  if (!isAllowedRole(roleId, allowedRoleIds)) {
-    return <Navigate to={getRouteForRoleId(roleId)} replace />
+  if (!isAllowedRole(role, allowedRoles)) {
+    return <Navigate to={getRouteForRole(role)} replace />
   }
 
   return children

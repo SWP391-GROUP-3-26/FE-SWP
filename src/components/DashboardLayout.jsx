@@ -9,7 +9,7 @@ export default function DashboardLayout({
   menuItems,
   children,
 }) {
-  const { userId } = getAuth()
+  const { fullName, username } = getAuth()
 
   return (
     <div className="dashboard-shell">
@@ -26,7 +26,7 @@ export default function DashboardLayout({
               <span className="material-symbols-outlined">notifications</span>
             </button>
             <div className="user-copy">
-              <strong>User ID {userId || '-'}</strong>
+              <strong>{fullName || username || role}</strong>
               <small>{role}</small>
             </div>
             <span className="user-avatar material-symbols-outlined">person</span>

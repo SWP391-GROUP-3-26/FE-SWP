@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import axiosClient from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
-import { getRoleIdForRoleName, getRouteForRoleId } from '../auth/roleConfig'
+import { getRouteForRole } from '../auth/roleConfig'
 
 export default function Login() {
   const [identifier, setIdentifier] = useState('')
@@ -25,24 +25,19 @@ export default function Login() {
         identifier,
         password,
       })
-      const payload = response.data || {}
-      const responseData = payload.data || payload
-      const responseUser = responseData.user || payload.user || {}
-      const accessToken = responseData.accessToken || payload.accessToken
-      const userId = responseData.userId ?? payload.userId ?? responseUser.userId
-      const roleId =
-        responseData.roleId ??
-        payload.roleId ??
-        responseUser.roleId ??
-        getRoleIdForRoleName(responseUser.role)
+      const authData = response.data.data
+      const accessToken = authData.accessToken
+      const userId = authData.user.userId
+      const role = authData.user.role
+      const { fullName, email, username, status } = authData.user
 
-      if (!accessToken || userId === undefined || roleId === undefined) {
-        setError('Phan hoi dang nhap chua co du thong tin accessToken, userId hoac role.')
+      if (!accessToken || userId === undefined || !role) {
+        setError('Phan hoi dang nhap khong dung cau truc Backend hien tai.')
         return
       }
 
-      saveAuth({ accessToken, userId, roleId })
-      navigate(getRouteForRoleId(roleId), { replace: true })
+      saveAuth({ accessToken, userId, role, fullName, email, username, status })
+      navigate(getRouteForRole(role), { replace: true })
     } catch (requestError) {
       const status = requestError?.response?.status
       const message = requestError?.response?.data?.message

@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom'
-import { getRoleId } from '../auth/authStorage'
-import { getRouteForRoleId } from '../auth/roleConfig'
+import { getRole } from '../auth/authStorage'
+import { getRouteForRole } from '../auth/roleConfig'
 
 export default function Dashboard() {
-  return <Navigate to={getRouteForRoleId(getRoleId())} replace />
+  return <Navigate to={getRouteForRole(getRole())} replace />
 }
