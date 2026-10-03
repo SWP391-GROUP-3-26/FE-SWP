@@ -4,54 +4,51 @@ import axiosClient from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
 
+function resolveErrorParam(errorParam) {
+  if (!errorParam) return ''
+  if (errorParam === 'google_email_not_verified') {
+    return 'Tài khoản Google của bạn chưa được xác thực email.'
+  }
+  if (errorParam === 'google_authentication_failed') {
+    return 'Đăng nhập Google thất bại hoặc bạn đã hủy ủy quyền.'
+  }
+  if (errorParam === 'google_login_failed') {
+    return 'Không thể đăng nhập bằng Google. Vui lòng thử lại.'
+  }
+  return 'Đã xảy ra lỗi trong quá trình xác thực Google.'
+}
+
 export default function GoogleCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [asyncError, setAsyncError] = useState('')
-  const [isDoneProcessing, setIsDoneProcessing] = useState(false)
-  const hasRequestedRef = useRef(false)
+  const [status, setStatus] = useState({ done: false, error: '' })
+  
+  // Dùng ref để chống React StrictMode gọi 2 lần trong development
+  const exchangedRef = useRef(false)
 
   const code = searchParams.get('code')
   const errorParam = searchParams.get('error')
 
-  const initialError = (() => {
-    if (errorParam) {
-      if (errorParam === 'google_email_not_verified') {
-        return 'Tài khoản Google của bạn chưa được xác thực email.'
-      }
-      if (errorParam === 'google_authentication_failed') {
-        return 'Đăng nhập Google thất bại hoặc bạn đã hủy ủy quyền.'
-      }
-      if (errorParam === 'google_login_failed') {
-        return 'Không thể đăng nhập bằng Google. Vui lòng thử lại.'
-      }
-      return 'Đã xảy ra lỗi trong quá trình xác thực Google.'
-    }
-    if (!code) {
-      return 'Không tìm thấy mã xác thực Google hợp lệ.'
-    }
-    return ''
-  })()
+  // Lỗi từ query param (nếu BE redirect về ?error=...)
+  const paramError = resolveErrorParam(errorParam) || (!code ? 'Không tìm thấy mã xác thực Google hợp lệ.' : '')
 
-  const errorMessage = initialError || asyncError
-  const isProcessing = !errorMessage && !isDoneProcessing
+  const errorMessage = paramError || status.error
+  const isProcessing = !paramError && !status.done
 
   useEffect(() => {
-    if (initialError || !code) {
-      return
-    }
+    // Có lỗi tĩnh hoặc không có code → dừng ngay, không gọi API
+    if (paramError || !code) return
 
-    if (hasRequestedRef.current) {
-      return
-    }
-    hasRequestedRef.current = true
+    // Chống StrictMode double-mount gọi duplicate (vì code chỉ dùng được 1 lần)
+    if (exchangedRef.current) return
+    exchangedRef.current = true
 
-    let isMounted = true
-
-    const exchangeCodeForToken = async () => {
+    const exchangeCode = async () => {
       try {
+        console.log('[GoogleCallback] Bắt đầu trao đổi mã xác thực với Backend...')
         const response = await axiosClient.get('/api/auth/google/exchange', {
           params: { code },
+          timeout: 15000, // Timeout 15s tránh treo vô hạn nếu mạng chậm
         })
 
         const authData = response.data?.data
@@ -60,40 +57,37 @@ export default function GoogleCallback() {
         }
 
         const { accessToken, user } = authData
-        const { userId, fullName, username, email, role, status } = user
+        const { userId, fullName, username, email, role, status: userStatus } = user
 
         if (!role) {
           throw new Error('Không xác định được vai trò người dùng.')
         }
 
-        saveAuth({ accessToken, userId, role, fullName, email, username, status })
-
-        if (isMounted) {
-          setIsDoneProcessing(true)
-          navigate(getRouteForRole(role), { replace: true })
-        }
+        saveAuth({ accessToken, userId, role, fullName, email, username, status: userStatus })
+        setStatus({ done: true, error: '' })
+        console.log('[GoogleCallback] Đăng nhập Google thành công, chuyển hướng theo role:', role)
+        navigate(getRouteForRole(role), { replace: true })
       } catch (err) {
-        if (!isMounted) return
-        setIsDoneProcessing(true)
+        console.error('[GoogleCallback] Lỗi trao đổi Google code:', err)
         const serverMessage = err?.response?.data?.message
+        let msg
         if (serverMessage) {
-          setAsyncError(serverMessage)
+          msg = serverMessage
         } else if (err?.response?.status === 401) {
-          setAsyncError('Mã đăng nhập Google không hợp lệ hoặc đã hết hạn.')
+          msg = 'Mã đăng nhập Google không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.'
+        } else if (err?.code === 'ECONNABORTED') {
+          msg = 'Quá thời gian kết nối tới máy chủ. Vui lòng thử lại.'
         } else if (err?.request) {
-          setAsyncError('Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra kết nối mạng.')
+          msg = 'Không thể kết nối đến máy chủ Backend (localhost:8080). Vui lòng kiểm tra server Backend.'
         } else {
-          setAsyncError(err.message || 'Xác thực tài khoản Google thất bại.')
+          msg = err.message || 'Xác thực tài khoản Google thất bại.'
         }
+        setStatus({ done: true, error: msg })
       }
     }
 
-    exchangeCodeForToken()
-
-    return () => {
-      isMounted = false
-    }
-  }, [code, initialError, navigate])
+    exchangeCode()
+  }, [code, paramError, navigate])
 
   return (
     <main className="auth-page">
@@ -105,7 +99,7 @@ export default function GoogleCallback() {
 
         <div className="auth-heading">
           <span className="auth-logo material-symbols-outlined">spa</span>
-          <small>SereneDesk Fitness & Sports</small>
+          <small>SereneDesk Fitness &amp; Sports</small>
           <h1>Xác thực Google</h1>
           <p>
             {isProcessing
@@ -116,7 +110,11 @@ export default function GoogleCallback() {
 
         {isProcessing && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <div className="spinner-border text-success" role="status" style={{ width: '3rem', height: '3rem' }}>
+            <div
+              className="spinner-border text-success"
+              role="status"
+              style={{ width: '3rem', height: '3rem' }}
+            >
               <span className="visually-hidden">Đang xử lý...</span>
             </div>
             <p style={{ marginTop: '16px', color: 'var(--muted)', fontWeight: 600 }}>
@@ -130,7 +128,11 @@ export default function GoogleCallback() {
             <div className="auth-error" style={{ marginBottom: '20px' }}>
               {errorMessage}
             </div>
-            <Link to="/login" className="submit-button" style={{ display: 'flex', textDecoration: 'none', justifyContent: 'center' }}>
+            <Link
+              to="/login"
+              className="submit-button"
+              style={{ display: 'flex', textDecoration: 'none', justifyContent: 'center' }}
+            >
               Thử lại tại trang đăng nhập
             </Link>
           </div>
