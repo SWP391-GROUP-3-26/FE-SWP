@@ -6,6 +6,7 @@ import { ROLES } from './auth/roleConfig'
 import CenterManagerDashboard from './pages/CenterManagerDashboard'
 import CoachDashboard from './pages/CoachDashboard'
 import Landing from './pages/Landing'
+import GoogleVerify from './pages/GoogleVerify'
 import Login from './pages/Login'
 import MemberDashboard from './pages/MemberDashboard'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/google-verify" element={<GoogleVerify />} />
         <Route path="/register" element={<Register />} />
         <Route
           path="/member"

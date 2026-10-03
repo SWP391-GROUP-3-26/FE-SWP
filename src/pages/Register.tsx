@@ -91,45 +91,45 @@ export default function Register() {
     const phone = normalizePhone(formData.phone)
 
     if (!username) {
-      errors.username = 'Tai khoan la bat buoc.'
+      errors.username = 'Tài khoản là bắt buộc.'
     } else if (username.length > 50 || !USERNAME_PATTERN.test(username)) {
-      errors.username = 'Tai khoan chi gom chu thuong, so, dau cham hoac gach duoi.'
+      errors.username = 'Tài khoản chỉ gồm chữ thường, số, dấu chấm hoặc gạch dưới.'
     }
 
     if (!fullName) {
-      errors.fullName = 'Ho va ten la bat buoc.'
+      errors.fullName = 'Họ và tên là bắt buộc.'
     } else if (fullName.length > 100) {
-      errors.fullName = 'Ho va ten khong duoc vuot qua 100 ky tu.'
+      errors.fullName = 'Họ và tên không được vượt quá 100 ký tự.'
     }
 
     if (!email) {
-      errors.email = 'Email la bat buoc.'
+      errors.email = 'Email là bắt buộc.'
     } else if (email.length > 100 || !EMAIL_PATTERN.test(email)) {
-      errors.email = 'Email khong hop le.'
+      errors.email = 'Email không hợp lệ.'
     }
 
     if (!phone) {
-      errors.phone = 'So dien thoai la bat buoc.'
+      errors.phone = 'Số điện thoại là bắt buộc.'
     } else if (!PHONE_PATTERN.test(phone)) {
-      errors.phone = 'So dien thoai khong hop le.'
+      errors.phone = 'Số điện thoại không hợp lệ.'
     } else if (!SUPPORTED_PHONE_PREFIXES.has(phone.slice(0, 3))) {
-      errors.phone = 'So dien thoai khong thuoc nha mang duoc ho tro.'
+      errors.phone = 'Số điện thoại không thuộc nhà mạng được hỗ trợ.'
     }
 
     if (!formData.password) {
-      errors.password = 'Mat khau la bat buoc.'
+      errors.password = 'Mật khẩu là bắt buộc.'
     } else if (
       formData.password.length < 8 ||
       formData.password.length > 72 ||
       !PASSWORD_PATTERN.test(formData.password)
     ) {
-      errors.password = 'Mat khau can 8-72 ky tu, co chu hoa, chu thuong, so va ky tu dac biet.'
+      errors.password = 'Mật khẩu cần 8-72 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.'
     }
 
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Xac nhan mat khau la bat buoc.'
+      errors.confirmPassword = 'Xác nhận mật khẩu là bắt buộc.'
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Mat khau xac nhan khong khop.'
+      errors.confirmPassword = 'Mật khẩu xác nhận không khớp.'
     }
 
     return {
@@ -159,8 +159,8 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      const response = await axiosClient.post('/api/auth/register', payload)
-      const message = response.data?.message || 'Dang ky tai khoan thanh cong.'
+      await axiosClient.post('/api/auth/register', payload)
+      const message = 'Đăng ký tài khoản thành công.'
 
       navigate('/login', {
         replace: true,
@@ -176,13 +176,13 @@ export default function Register() {
       if (message) {
         setFormError(message)
       } else if (status === 400) {
-        setFormError('Thong tin dang ky khong hop le.')
+        setFormError('Thông tin đăng ký không hợp lệ.')
       } else if (status === 409) {
-        setFormError('Tai khoan, email hoac so dien thoai da ton tai.')
+        setFormError('Tài khoản, email hoặc số điện thoại đã tồn tại.')
       } else if (requestError?.request) {
-        setFormError('Khong the ket noi Backend. Vui long kiem tra server hoac CORS.')
+        setFormError('Không thể kết nối Backend. Vui lòng kiểm tra server hoặc CORS.')
       } else {
-        setFormError('Dang ky that bai. Vui long thu lai.')
+        setFormError('Đăng ký thất bại. Vui lòng thử lại.')
       }
     } finally {
       setIsLoading(false)
@@ -194,20 +194,20 @@ export default function Register() {
       <section className="auth-card auth-card-wide">
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>
-          Quay lai trang chu
+          Quay lại trang chủ
         </Link>
 
         <div className="auth-heading">
           <span className="auth-logo material-symbols-outlined">spa</span>
           <small>SereneDesk Fitness & Sports</small>
-          <h1>Dang ky tai khoan</h1>
-          <p>Khoi dau trai nghiem tap luyen tai SereneDesk.</p>
+          <h1>Đăng ký tài khoản</h1>
+          <p>Khởi đầu trải nghiệm tập luyện tại SereneDesk.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleRegister}>
           <div className="form-grid">
             <label>
-              Tai khoan
+              Tài khoản
               <span className="input-wrap">
                 <span className="material-symbols-outlined">person_outline</span>
                 <input
@@ -223,13 +223,13 @@ export default function Register() {
             </label>
 
             <label>
-              Ho va ten
+              Họ và tên
               <span className="input-wrap">
                 <span className="material-symbols-outlined">badge</span>
                 <input
                   name="fullName"
                   onChange={(event) => updateField('fullName', event.target.value)}
-                  placeholder="VD: Nguyen Minh Anh"
+                  placeholder="VD: Nguyễn Minh Anh"
                   required
                   type="text"
                   value={formData.fullName}
@@ -255,7 +255,7 @@ export default function Register() {
             </label>
 
             <label>
-              So dien thoai
+              Số điện thoại
               <span className="input-wrap">
                 <span className="material-symbols-outlined">call</span>
                 <input
@@ -271,13 +271,13 @@ export default function Register() {
             </label>
 
             <label>
-              Mat khau
+              Mật khẩu
               <span className="input-wrap">
                 <span className="material-symbols-outlined">lock</span>
                 <input
                   name="password"
                   onChange={(event) => updateField('password', event.target.value)}
-                  placeholder="Toi thieu 8 ky tu"
+                  placeholder="Tối thiểu 8 ký tự"
                   required
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
@@ -296,13 +296,13 @@ export default function Register() {
             </label>
 
             <label>
-              Xac nhan mat khau
+              Xác nhận mật khẩu
               <span className="input-wrap">
                 <span className="material-symbols-outlined">lock_reset</span>
                 <input
                   name="confirmPassword"
                   onChange={(event) => updateField('confirmPassword', event.target.value)}
-                  placeholder="Nhap lai mat khau"
+                  placeholder="Nhập lại mật khẩu"
                   required
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
@@ -325,18 +325,18 @@ export default function Register() {
 
           <label className="check-row">
             <input required type="checkbox" />
-            Toi dong y voi dieu khoan dich vu va chinh sach quyen rieng tu.
+            Tôi đồng ý với điều khoản dịch vụ và chính sách quyền riêng tư.
           </label>
 
           {formError ? <div className="auth-error">{formError}</div> : null}
 
           <button className="submit-button" disabled={isLoading} type="submit">
-            {isLoading ? 'Dang dang ky...' : 'Dang ky'}
+            {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
           </button>
         </form>
 
         <p className="auth-switch">
-          Da co tai khoan? <Link to="/login">Dang nhap ngay</Link>
+          Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
         </p>
       </section>
     </main>

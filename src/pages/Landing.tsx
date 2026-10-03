@@ -2,31 +2,31 @@ import { Link } from 'react-router-dom'
 
 const programs = [
   {
-    title: 'Yoga & Thien tinh',
-    tag: 'Tam tri & thu gian',
+    title: 'Yoga & Thiền tĩnh',
+    tag: 'Tâm trí & thư giãn',
     image:
       'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=900&q=80',
-    meta: '60 phut / ca',
+    meta: '60 phút / ca',
     description:
-      'Khong gian tap luyen yen tinh voi cac lop yoga, thien va hoi phuc co the sau gio lam viec.',
+      'Không gian tập luyện yên tĩnh với các lớp yoga, thiền và hồi phục cơ thể sau giờ làm việc.',
   },
   {
     title: 'Pilates Reformer',
-    tag: 'Tao dang & cot song',
+    tag: 'Tạo dáng & cột sống',
     image:
       'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80',
-    meta: '1:1 hoac nhom nho',
+    meta: '1:1 hoặc nhóm nhỏ',
     description:
-      'Bai tap giup can chinh tu the, tang do deo dai va cai thien suc manh vung co loi.',
+      'Bài tập giúp cân chỉnh tư thế, tăng độ dẻo dai và cải thiện sức mạnh vùng cơ lõi.',
   },
   {
     title: 'Functional & Boxing',
-    tag: 'Suc ben & but pha',
+    tag: 'Sức bền & bứt phá',
     image:
       'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=900&q=80',
-    meta: 'Dot 700+ calo',
+    meta: 'Đốt 700+ calo',
     description:
-      'Khu tap luyen cuong do cao voi bai tap chuc nang, boxing va cac thiet bi hien dai.',
+      'Khu tập luyện cường độ cao với bài tập chức năng, boxing và các thiết bị hiện đại.',
   },
 ]
 
@@ -44,10 +44,10 @@ export default function Landing() {
 
         <nav className="header-actions" aria-label="Main navigation">
           <Link to="/login" className="ghost-link">
-            Member Login
+            Đăng nhập
           </Link>
           <Link to="/register" className="primary-link">
-            Dang ky
+            Đăng ký
           </Link>
         </nav>
       </header>
@@ -57,17 +57,17 @@ export default function Landing() {
           <div className="hero-copy">
             <span className="eyebrow">
               <span className="material-symbols-outlined">eco</span>
-              Tai tao nang luong chuan sinh thai
+              Tái tạo năng lượng chuẩn sinh thái
             </span>
-            <h1>Bat dau hanh trinh song khoe cung SereneDesk Sports</h1>
+            <h1>Bắt đầu hành trình sống khỏe cùng SereneDesk Sports</h1>
             <p>
-              Khong gian tap luyen hien dai, ket hop nang luong thien nhien va
-              doi ngu huan luyen vien chuyen nghiep de giup ban can bang the
-              luc moi ngay.
+              Không gian tập luyện hiện đại, kết hợp năng lượng thiên nhiên và
+              đội ngũ huấn luyện viên chuyên nghiệp để giúp bạn cân bằng thể
+              lực mỗi ngày.
             </p>
             <div className="hero-actions">
               <Link to="/register" className="cta-button">
-                Dang ky ngay
+                Đăng ký ngay
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
             </div>
@@ -76,23 +76,23 @@ export default function Landing() {
           <div className="hero-panel" aria-label="SereneDesk highlights">
             <div>
               <strong>100%</strong>
-              <span>HLV co chung chi quoc te</span>
+              <span>HLV có chứng chỉ quốc tế</span>
             </div>
             <div>
-              <strong>7 ngay</strong>
-              <span>Lich tap linh hoat trong tuan</span>
+              <strong>7 ngày</strong>
+              <span>Lịch tập linh hoạt trong tuần</span>
             </div>
             <div>
               <strong>05:30</strong>
-              <span>Mo cua tu sang som den toi</span>
+              <span>Mở cửa từ sáng sớm đến tối</span>
             </div>
           </div>
         </section>
 
         <section className="program-section">
           <div className="section-heading">
-            <span>Chuong trinh tieu bieu</span>
-            <h2>Khong gian bo mon chuyen sau</h2>
+            <span>Chương trình tiêu biểu</span>
+            <h2>Không gian bộ môn chuyên sâu</h2>
           </div>
 
           <div className="program-grid">
@@ -105,7 +105,7 @@ export default function Landing() {
                   <p>{program.description}</p>
                   <div className="program-footer">
                     <span>{program.meta}</span>
-                    <button type="button">Xem lich tap</button>
+                    <button type="button">Xem lịch tập</button>
                   </div>
                 </div>
               </article>

@@ -12,8 +12,12 @@ export default function Login() {
   const location = useLocation()
   const navigate = useNavigate()
   const registerMessage = location.state?.registered
-    ? location.state?.message || 'Dang ky tai khoan thanh cong.'
+    ? location.state?.message || 'Đăng ký tài khoản thành công.'
     : ''
+
+  const handleGoogleLogin = () => {
+    setError('Backend chưa có Google OAuth endpoint để tích hợp đăng nhập bằng Google.')
+  }
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -32,7 +36,7 @@ export default function Login() {
       const { fullName, email, username, status } = authData.user
 
       if (!accessToken || userId === undefined || !role) {
-        setError('Phan hoi dang nhap khong dung cau truc Backend hien tai.')
+        setError('Phản hồi đăng nhập không đúng cấu trúc Backend hiện tại.')
         return
       }
 
@@ -45,11 +49,11 @@ export default function Login() {
       if (message) {
         setError(message)
       } else if (status === 401 || status === 403) {
-        setError('Email, ten tai khoan hoac mat khau khong chinh xac.')
+        setError('Email, tên tài khoản hoặc mật khẩu không chính xác.')
       } else if (requestError?.request) {
-        setError('Khong the ket noi Backend. Vui long kiem tra server hoac CORS.')
+        setError('Không thể kết nối Backend. Vui lòng kiểm tra server hoặc CORS.')
       } else {
-        setError('Dang nhap that bai. Vui long thu lai.')
+        setError('Đăng nhập thất bại. Vui lòng thử lại.')
       }
     } finally {
       setIsLoading(false)
@@ -61,27 +65,27 @@ export default function Login() {
       <section className="auth-card">
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>
-          Quay lai trang chu
+          Quay lại trang chủ
         </Link>
 
         <div className="auth-heading">
           <span className="auth-logo material-symbols-outlined">spa</span>
           <small>SereneDesk Fitness & Sports</small>
-          <h1>Dang nhap</h1>
-          <p>Chao mung ban quay tro lai voi SereneDesk.</p>
+          <h1>Đăng nhập</h1>
+          <p>Chào mừng bạn quay trở lại với SereneDesk.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleLogin}>
           {registerMessage ? <div className="auth-notice">{registerMessage}</div> : null}
 
           <label>
-            Email hoac ten tai khoan
+            Email hoặc tên tài khoản
             <span className="input-wrap">
               <span className="material-symbols-outlined">badge</span>
               <input
                 name="identifier"
                 onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="email@example.com hoac username"
+                placeholder="email@example.com hoặc username"
                 required
                 type="text"
                 value={identifier}
@@ -90,13 +94,13 @@ export default function Login() {
           </label>
 
           <label>
-            Mat khau
+            Mật khẩu
             <span className="input-wrap">
               <span className="material-symbols-outlined">lock</span>
               <input
                 name="password"
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Nhap mat khau"
+                placeholder="Nhập mật khẩu"
                 required
                 type="password"
                 value={password}
@@ -107,12 +111,21 @@ export default function Login() {
           {error ? <div className="auth-error">{error}</div> : null}
 
           <button className="submit-button" disabled={isLoading} type="submit">
-            {isLoading ? 'Dang xac thuc...' : 'Dang nhap'}
+            {isLoading ? 'Đang xác thực...' : 'Đăng nhập'}
+          </button>
+
+          <div className="auth-divider">
+            <span>Hoặc</span>
+          </div>
+
+          <button className="google-login-button" onClick={handleGoogleLogin} type="button">
+            <span className="google-mark">G</span>
+            Đăng nhập bằng Google
           </button>
         </form>
 
         <p className="auth-switch">
-          Chua co tai khoan? <Link to="/register">Dang ky</Link>
+          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
       </section>
     </main>
