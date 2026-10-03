@@ -1,14 +1,31 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import axiosClient from '../api/axiosClient'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
 
 export default function Login() {
+  const [searchParams] = useSearchParams()
+  const errorParam = searchParams.get('error')
+
+  const getInitialGoogleError = () => {
+    if (!errorParam) return ''
+    if (errorParam === 'google_email_not_verified') {
+      return 'Tài khoản Google của bạn chưa được xác thực email.'
+    }
+    if (errorParam === 'google_authentication_failed') {
+      return 'Đăng nhập Google thất bại hoặc bạn đã hủy ủy quyền.'
+    }
+    if (errorParam === 'google_login_failed') {
+      return 'Đăng nhập bằng tài khoản Google không thành công. Vui lòng thử lại.'
+    }
+    return 'Đã xảy ra lỗi khi đăng nhập bằng Google. Vui lòng thử lại.'
+  }
+
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(getInitialGoogleError)
   const location = useLocation()
   const navigate = useNavigate()
   const registerMessage = location.state?.registered
@@ -16,8 +33,10 @@ export default function Login() {
     : ''
 
   const handleGoogleLogin = () => {
-    setError('Backend chưa có Google OAuth endpoint để tích hợp đăng nhập bằng Google.')
+    setIsLoading(true)
+    window.location.href = GOOGLE_AUTH_URL
   }
+
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault()

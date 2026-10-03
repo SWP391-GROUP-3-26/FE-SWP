@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axiosClient from '../api/axiosClient'
+import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const USERNAME_PATTERN = /^[a-z0-9._]+$/
@@ -332,6 +332,21 @@ export default function Register() {
 
           <button className="submit-button" disabled={isLoading} type="submit">
             {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
+          </button>
+
+          <div className="auth-divider">
+            <span>Hoặc</span>
+          </div>
+
+          <button
+            className="google-login-button"
+            onClick={() => {
+              window.location.href = GOOGLE_AUTH_URL
+            }}
+            type="button"
+          >
+            <span className="google-mark">G</span>
+            Đăng ký nhanh bằng Google
           </button>
         </form>
 
