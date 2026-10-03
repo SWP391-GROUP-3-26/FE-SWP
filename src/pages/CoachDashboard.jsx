@@ -10,7 +10,7 @@ const menuItems = [
 export default function CoachDashboard() {
   return (
     <DashboardLayout
-      eyebrow="HLV SereneDesk / Lich day"
+      eyebrow="UniSports / Lịch dạy"
       menuItems={menuItems}
       role="Coach"
       subtitle="Shell cho huan luyen vien theo doi lich day, lop phu trach va ghi chu tap luyen."

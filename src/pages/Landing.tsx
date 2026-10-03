@@ -17,7 +17,7 @@ const programs = [
       'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80',
     meta: '1:1 hoặc nhóm nhỏ',
     description:
-      'Bài tập giúp cân chỉnh tư thế, tăng độ dẻo dai và cải thiện sức mạnh vùng cơ lõi.',
+      'Bài tập giúp căn chỉnh tư thế, tăng độ dẻo dai và cải thiện sức mạnh vùng cơ lõi.',
   },
   {
     title: 'Functional & Boxing',
@@ -37,14 +37,14 @@ export default function Landing() {
         <Link to="/" className="brand">
           <span className="brand-mark material-symbols-outlined">spa</span>
           <span>
-            <strong>SereneDesk</strong>
+            <strong>UniSports</strong>
             <small>Fitness & Sports</small>
           </span>
         </Link>
 
         <nav className="header-actions" aria-label="Main navigation">
           <Link to="/login" className="ghost-link">
-            Đăng nhập
+            Member Login
           </Link>
           <Link to="/register" className="primary-link">
             Đăng ký
@@ -59,7 +59,7 @@ export default function Landing() {
               <span className="material-symbols-outlined">eco</span>
               Tái tạo năng lượng chuẩn sinh thái
             </span>
-            <h1>Bắt đầu hành trình sống khỏe cùng SereneDesk Sports</h1>
+            <h1>Bắt đầu hành trình sống khỏe cùng UniSports</h1>
             <p>
               Không gian tập luyện hiện đại, kết hợp năng lượng thiên nhiên và
               đội ngũ huấn luyện viên chuyên nghiệp để giúp bạn cân bằng thể
@@ -73,7 +73,7 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="hero-panel" aria-label="SereneDesk highlights">
+          <div className="hero-panel" aria-label="UniSports highlights">
             <div>
               <strong>100%</strong>
               <span>HLV có chứng chỉ quốc tế</span>
@@ -115,7 +115,7 @@ export default function Landing() {
       </main>
 
       <footer className="site-footer">
-        <span>SereneDesk Sports Center</span>
+        <span>UniSports Center</span>
         <span>2026</span>
       </footer>
     </div>

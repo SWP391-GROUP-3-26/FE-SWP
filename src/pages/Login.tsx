@@ -1,42 +1,19 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import axiosClient from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
 
 export default function Login() {
-  const [searchParams] = useSearchParams()
-  const errorParam = searchParams.get('error')
-
-  const getInitialGoogleError = () => {
-    if (!errorParam) return ''
-    if (errorParam === 'google_email_not_verified') {
-      return 'Tài khoản Google của bạn chưa được xác thực email.'
-    }
-    if (errorParam === 'google_authentication_failed') {
-      return 'Đăng nhập Google thất bại hoặc bạn đã hủy ủy quyền.'
-    }
-    if (errorParam === 'google_login_failed') {
-      return 'Đăng nhập bằng tài khoản Google không thành công. Vui lòng thử lại.'
-    }
-    return 'Đã xảy ra lỗi khi đăng nhập bằng Google. Vui lòng thử lại.'
-  }
-
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(getInitialGoogleError)
+  const [error, setError] = useState('')
   const location = useLocation()
   const navigate = useNavigate()
   const registerMessage = location.state?.registered
     ? location.state?.message || 'Đăng ký tài khoản thành công.'
     : ''
-
-  const handleGoogleLogin = () => {
-    setIsLoading(true)
-    window.location.href = GOOGLE_AUTH_URL
-  }
-
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -55,7 +32,7 @@ export default function Login() {
       const { fullName, email, username, status } = authData.user
 
       if (!accessToken || userId === undefined || !role) {
-        setError('Phản hồi đăng nhập không đúng cấu trúc Backend hiện tại.')
+        setError('Phản hồi đăng nhập không đúng cấu trúc backend hiện tại.')
         return
       }
 
@@ -70,7 +47,7 @@ export default function Login() {
       } else if (status === 401 || status === 403) {
         setError('Email, tên tài khoản hoặc mật khẩu không chính xác.')
       } else if (requestError?.request) {
-        setError('Không thể kết nối Backend. Vui lòng kiểm tra server hoặc CORS.')
+        setError('Không thể kết nối đến backend. Vui lòng kiểm tra máy chủ hoặc cấu hình CORS.')
       } else {
         setError('Đăng nhập thất bại. Vui lòng thử lại.')
       }
@@ -89,9 +66,9 @@ export default function Login() {
 
         <div className="auth-heading">
           <span className="auth-logo material-symbols-outlined">spa</span>
-          <small>SereneDesk Fitness & Sports</small>
+          <small>UniSports FITNESS &amp; SPORTS</small>
           <h1>Đăng nhập</h1>
-          <p>Chào mừng bạn quay trở lại với SereneDesk.</p>
+          <p>Chào mừng bạn quay trở lại với UniSports.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleLogin}>
@@ -104,7 +81,7 @@ export default function Login() {
               <input
                 name="identifier"
                 onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="email@example.com hoặc username"
+                placeholder="email@example.com hoặc tên tài khoản"
                 required
                 type="text"
                 value={identifier}
@@ -131,15 +108,6 @@ export default function Login() {
 
           <button className="submit-button" disabled={isLoading} type="submit">
             {isLoading ? 'Đang xác thực...' : 'Đăng nhập'}
-          </button>
-
-          <div className="auth-divider">
-            <span>Hoặc</span>
-          </div>
-
-          <button className="google-login-button" onClick={handleGoogleLogin} type="button">
-            <span className="google-mark">G</span>
-            Đăng nhập bằng Google
           </button>
         </form>
 

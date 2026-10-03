@@ -1,41 +1,41 @@
 import DashboardLayout from '../components/DashboardLayout'
 
 const menuItems = [
-  { icon: 'home', label: 'Trang chu hoi vien', route: '/member' },
-  { icon: 'calendar_month', label: 'Lich tap', route: '/member' },
-  { icon: 'card_membership', label: 'Goi tap', route: '/member' },
-  { icon: 'person', label: 'Ho so', route: '/member' },
+  { icon: 'home', label: 'Tổng quan', route: '/member' },
+  { icon: 'calendar_month', label: 'Lịch tập', route: '/member' },
+  { icon: 'card_membership', label: 'Gói tập', route: '/member' },
+  { icon: 'person', label: 'Hồ sơ', route: '/member' },
 ]
 
 export default function MemberDashboard() {
   return (
     <DashboardLayout
-      eyebrow="Cong hoi vien / Trang chu"
+      eyebrow="Hội viên / Tổng quan"
       menuItems={menuItems}
-      role="Member"
-      subtitle="Khung tong quan cho hoi vien sau khi dang nhap thanh cong."
-      title="Trang chu hoi vien"
+      role="Hội viên"
+      subtitle="Tổng quan hoạt động dành cho hội viên." 
+      title="Tổng quan hội viên"
     >
       <div className="dashboard-grid">
         <article className="dashboard-card dashboard-card-accent">
           <span className="material-symbols-outlined">calendar_month</span>
-          <h3>Lich tap</h3>
-          <p>Placeholder cho lich tap va lop da dang ky.</p>
+          <h3>Lịch tập</h3>
+          <p>Lịch tập và các lớp đã đăng ký sẽ hiển thị tại đây.</p>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">card_membership</span>
-          <h3>Goi dich vu</h3>
-          <p>Khung hien thi thong tin goi tap khi co API nghiep vu.</p>
+          <h3>Gói tập</h3>
+          <p>Thông tin gói tập sẽ hiển thị tại đây.</p>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">person</span>
-          <h3>Ho so</h3>
-          <p>Khu vuc thong tin ca nhan cua hoi vien.</p>
+          <h3>Hồ sơ</h3>
+          <p>Thông tin cá nhân của hội viên sẽ hiển thị tại đây.</p>
         </article>
       </div>
       <section className="dashboard-panel">
-        <h3>Noi dung hoi vien</h3>
-        <div className="placeholder-box">Chua implement nghiep vu hoi vien.</div>
+        <h3>Hoạt động hội viên</h3>
+        <div className="placeholder-box">Các tính năng dành cho hội viên đang được phát triển.</div>
       </section>
     </DashboardLayout>
   )
