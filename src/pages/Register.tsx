@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
+import axiosClient from '../api/axiosClient'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const USERNAME_PATTERN = /^[a-z0-9._]+$/
@@ -93,7 +93,7 @@ export default function Register() {
     if (!username) {
       errors.username = 'Tài khoản là bắt buộc.'
     } else if (username.length > 50 || !USERNAME_PATTERN.test(username)) {
-      errors.username = 'Tài khoản chỉ gồm chữ thường, số, dấu chấm hoặc gạch dưới.'
+      errors.username = 'Tài khoản chỉ gồm chữ thường, số, dấu chấm hoặc dấu gạch dưới.'
     }
 
     if (!fullName) {
@@ -123,7 +123,7 @@ export default function Register() {
       formData.password.length > 72 ||
       !PASSWORD_PATTERN.test(formData.password)
     ) {
-      errors.password = 'Mật khẩu cần 8-72 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt.'
+      errors.password = 'Mật khẩu cần có 8-72 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.'
     }
 
     if (!formData.confirmPassword) {
@@ -159,8 +159,8 @@ export default function Register() {
     setIsLoading(true)
 
     try {
-      await axiosClient.post('/api/auth/register', payload)
-      const message = 'Đăng ký tài khoản thành công.'
+      const response = await axiosClient.post('/api/auth/register', payload)
+      const message = response.data?.message || 'Đăng ký tài khoản thành công.'
 
       navigate('/login', {
         replace: true,
@@ -180,7 +180,7 @@ export default function Register() {
       } else if (status === 409) {
         setFormError('Tài khoản, email hoặc số điện thoại đã tồn tại.')
       } else if (requestError?.request) {
-        setFormError('Không thể kết nối Backend. Vui lòng kiểm tra server hoặc CORS.')
+        setFormError('Không thể kết nối Backend. Vui lòng kiểm tra máy chủ hoặc CORS.')
       } else {
         setFormError('Đăng ký thất bại. Vui lòng thử lại.')
       }
@@ -199,9 +199,9 @@ export default function Register() {
 
         <div className="auth-heading">
           <span className="auth-logo material-symbols-outlined">spa</span>
-          <small>SereneDesk Fitness & Sports</small>
+          <small>UniSports Fitness & Sports</small>
           <h1>Đăng ký tài khoản</h1>
-          <p>Khởi đầu trải nghiệm tập luyện tại SereneDesk.</p>
+          <p>Khởi đầu trải nghiệm tập luyện tại UniSports.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleRegister}>
@@ -332,21 +332,6 @@ export default function Register() {
 
           <button className="submit-button" disabled={isLoading} type="submit">
             {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
-          </button>
-
-          <div className="auth-divider">
-            <span>Hoặc</span>
-          </div>
-
-          <button
-            className="google-login-button"
-            onClick={() => {
-              window.location.href = GOOGLE_AUTH_URL
-            }}
-            type="button"
-          >
-            <span className="google-mark">G</span>
-            Đăng ký nhanh bằng Google
           </button>
         </form>
 
