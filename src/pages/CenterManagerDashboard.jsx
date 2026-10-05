@@ -1,17 +1,12 @@
 import DashboardLayout from '../components/DashboardLayout'
-
-const menuItems = [
-  { icon: 'dashboard', label: 'Tong quan trung tam', route: '/center-manager' },
-  { icon: 'analytics', label: 'Bao cao', route: '/center-manager' },
-  { icon: 'groups', label: 'Nhan su', route: '/center-manager' },
-  { icon: 'settings', label: 'Cau hinh', route: '/center-manager' },
-]
+import { staffMenuItems } from '../components/staffMenuItems'
+import { ROLES } from '../auth/roleConfig'
 
 export default function CenterManagerDashboard() {
   return (
     <DashboardLayout
       eyebrow="Quan tri trung tam / Dashboard"
-      menuItems={menuItems}
+      menuItems={staffMenuItems[ROLES.CENTER_MANAGER]}
       role="Center Manager"
       subtitle="Khung tong quan danh cho quan ly trung tam, chua gan API nghiep vu."
       title="Dashboard - Quan tri trung tam"

@@ -1,8 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
 
 export default function Sidebar({ role, menuItems }) {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const activeIndex = menuItems.findIndex((item) => item.route === pathname)
 
   const handleLogout = () => {
     clearAuth()
@@ -22,7 +24,8 @@ export default function Sidebar({ role, menuItems }) {
       <nav className="dashboard-nav" aria-label={`${role} navigation`}>
         {menuItems.map((item, index) => (
           <Link
-            className={`dashboard-nav-item${index === 0 ? ' dashboard-nav-item-active' : ''}`}
+            className={`dashboard-nav-item${index === activeIndex ? ' dashboard-nav-item-active' : ''}`}
+            aria-current={index === activeIndex ? 'page' : undefined}
             key={item.label}
             to={item.route}
           >
