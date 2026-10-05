@@ -1,17 +1,12 @@
 import DashboardLayout from '../components/DashboardLayout'
-
-const menuItems = [
-  { icon: 'home', label: 'Tong quan tiep tan', route: '/receptionist' },
-  { icon: 'event_available', label: 'Lich hen', route: '/receptionist' },
-  { icon: 'person_add', label: 'Hoi vien', route: '/receptionist' },
-  { icon: 'payments', label: 'Thanh toan', route: '/receptionist' },
-]
+import { staffMenuItems } from '../components/staffMenuItems'
+import { ROLES } from '../auth/roleConfig'
 
 export default function ReceptionistDashboard() {
   return (
     <DashboardLayout
       eyebrow="Cong tiep tan / Trang chu"
-      menuItems={menuItems}
+      menuItems={staffMenuItems[ROLES.RECEPTIONIST]}
       role="Receptionist"
       subtitle="Khung lam viec cho le tan theo doi lich hen, hoi vien va thanh toan."
       title="Trang chu - Cong tiep tan"

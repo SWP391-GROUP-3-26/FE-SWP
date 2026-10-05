@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import MemberDashboard from './pages/MemberDashboard'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import Register from './pages/Register'
+import SubjectManagement from './pages/SubjectManagement'
 
 function App() {
   return (
@@ -53,6 +54,11 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/subjects" element={
+          <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.RECEPTIONIST]}>
+            <SubjectManagement />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
