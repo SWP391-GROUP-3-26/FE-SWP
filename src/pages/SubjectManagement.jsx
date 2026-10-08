@@ -48,7 +48,7 @@ export default function SubjectManagement() {
 
   useEffect(() => {
     const previousTitle = document.title
-    document.title = 'Quản lý Môn học - SereneDesk'
+    document.title = 'Quản lý môn học - UniSports'
     // Start loading asynchronously; abort requests on navigation and StrictMode cleanup.
     const timer = setTimeout(() => { void loadSubjects() }, 0)
     return () => {
@@ -138,7 +138,7 @@ export default function SubjectManagement() {
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
-      eyebrow="SereneDesk / Môn học" title="Quản lý Môn học"
+      eyebrow="UniSports / Môn học" title="Quản lý môn học"
       subtitle="Quản lý danh mục môn học, thông tin và nội dung các bộ môn tại trung tâm.">
       {notice && <div className="auth-notice subject-notice" role="status">
         <span>{notice}</span>

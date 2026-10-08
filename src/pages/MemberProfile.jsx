@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import { updateAuthProfile } from '../auth/authStorage'
-import { getMyProfile, updateMyProfile } from '../services/memberProfileService'
+import memberMenuItems from '../components/memberMenuItems'
+import {
+  getMyProfile,
+  profileErrorMessage,
+  resolveAvatarUrl,
+  updateMyProfile,
+  uploadAvatar,
+} from '../services/memberProfileService'
 import './MemberProfile.css'
-
-const menuItems = [
-  { icon: 'home', label: 'Tổng quan', route: '/member' },
-  { icon: 'calendar_month', label: 'Lịch tập', route: '/member' },
-  { icon: 'card_membership', label: 'Gói tập', route: '/member' },
-  { icon: 'person', label: 'Hồ sơ', route: '/member/profile' },
-]
 
 function emptyProfile() {
   return {
@@ -33,14 +33,6 @@ function toEditableProfile(profile) {
   }
 }
 
-function errorMessage(error) {
-  if (error.response?.status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-  if (error.response?.status === 403) return 'Bạn không có quyền xem hồ sơ này.'
-  return error.response?.data?.message || (error.request
-    ? 'Không thể kết nối máy chủ. Vui lòng thử lại.'
-    : error.message) || 'Không thể tải hồ sơ hội viên.'
-}
-
 function statusLabel(status) {
   if (status === 'Active') return 'Đang hoạt động'
   if (status === 'Inactive') return 'Ngừng hoạt động'
@@ -56,8 +48,9 @@ export default function MemberProfile() {
   const [saveError, setSaveError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
-  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false)
+  const [failedAvatarSrc, setFailedAvatarSrc] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -65,11 +58,17 @@ export default function MemberProfile() {
     getMyProfile(controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return
+        updateAuthProfile({
+          fullName: data.fullName,
+          email: data.email,
+          status: data.status,
+          avatarUrl: data.avatarUrl,
+        })
         setProfile(data)
         setForm(toEditableProfile(data))
       })
       .catch((error) => {
-        if (!controller.signal.aborted) setLoadError(errorMessage(error))
+        if (!controller.signal.aborted) setLoadError(profileErrorMessage(error))
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -87,7 +86,6 @@ export default function MemberProfile() {
   function updateField(event) {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
-    if (name === 'avatarUrl') setAvatarLoadFailed(false)
     setSaveError('')
     setNotice('')
   }
@@ -117,14 +115,50 @@ export default function MemberProfile() {
         fullName: updated.fullName,
         email: updated.email,
         status: updated.status,
+        avatarUrl: updated.avatarUrl,
       })
       setProfile(updated)
       setForm(toEditableProfile(updated))
       setNotice('Hồ sơ của bạn đã được cập nhật.')
     } catch (error) {
-      setSaveError(errorMessage(error))
+      setSaveError(profileErrorMessage(error))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleAvatarUpload(event) {
+    const file = event.currentTarget.files?.[0]
+    event.currentTarget.value = ''
+    if (!file || avatarUploading) return
+
+    setAvatarUploading(true)
+    setSaveError('')
+    setNotice('')
+    try {
+      const uploadedAvatarUrl = await uploadAvatar(file)
+      updateAuthProfile({ avatarUrl: uploadedAvatarUrl })
+      setProfile((current) => current ? { ...current, avatarUrl: uploadedAvatarUrl } : current)
+      setForm((current) => ({ ...current, avatarUrl: uploadedAvatarUrl }))
+
+      try {
+        const updated = await getMyProfile()
+        updateAuthProfile({
+          fullName: updated.fullName,
+          email: updated.email,
+          status: updated.status,
+          avatarUrl: updated.avatarUrl,
+        })
+        setProfile(updated)
+        setForm(toEditableProfile(updated))
+        setNotice('Ảnh đại diện đã được cập nhật.')
+      } catch (refreshError) {
+        setSaveError(`Ảnh đã tải lên nhưng không thể làm mới hồ sơ: ${profileErrorMessage(refreshError)}`)
+      }
+    } catch (error) {
+      setSaveError(profileErrorMessage(error))
+    } finally {
+      setAvatarUploading(false)
     }
   }
 
@@ -135,12 +169,15 @@ export default function MemberProfile() {
   }
 
   const displayName = profile?.fullName || profile?.username || 'Hội viên'
+  const avatarSrc = resolveAvatarUrl(form.avatarUrl)
+  const showAvatar = avatarSrc && avatarSrc !== failedAvatarSrc
 
   return (
     <DashboardLayout
       eyebrow="Hội viên / Tài khoản"
-      menuItems={menuItems}
+      menuItems={memberMenuItems}
       role="Hội viên"
+      profile={profile}
       showIntro={false}
       title="Hồ sơ cá nhân"
     >
@@ -163,16 +200,33 @@ export default function MemberProfile() {
           <section className="member-profile-card" aria-label="Thông tin hồ sơ hội viên">
             <div className="member-profile-cover" />
             <div className="member-profile-identity">
-              <div className="member-profile-avatar">
-                {form.avatarUrl && !avatarLoadFailed ? (
-                  <img
-                    src={form.avatarUrl}
-                    alt={`Ảnh đại diện của ${displayName}`}
-                    onError={() => setAvatarLoadFailed(true)}
+              <div className="member-profile-avatar-wrap">
+                <div className="member-profile-avatar">
+                  {showAvatar ? (
+                    <img
+                      key={avatarSrc}
+                      src={avatarSrc}
+                      alt={`Ảnh đại diện của ${displayName}`}
+                      referrerPolicy="no-referrer"
+                      onError={() => setFailedAvatarSrc(avatarSrc)}
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined" aria-hidden="true">person</span>
+                  )}
+                </div>
+                <label className={`member-avatar-upload${avatarUploading ? ' member-avatar-uploading' : ''}`}>
+                  <input
+                    accept="image/png,image/jpeg,image/gif"
+                    aria-label="Tải ảnh đại diện lên"
+                    disabled={avatarUploading}
+                    onChange={handleAvatarUpload}
+                    type="file"
                   />
-                ) : (
-                  <span className="material-symbols-outlined" aria-hidden="true">person</span>
-                )}
+                  <span className="material-symbols-outlined" aria-hidden="true">
+                    {avatarUploading ? 'progress_activity' : 'photo_camera'}
+                  </span>
+                  <span>{avatarUploading ? 'Đang tải ảnh...' : 'Đổi ảnh'}</span>
+                </label>
               </div>
               <div className="member-profile-name">
                 <h2>{displayName}</h2>
@@ -285,7 +339,7 @@ export default function MemberProfile() {
                       name="avatarUrl"
                       onChange={updateField}
                       placeholder="https://..."
-                      type="url"
+                      type="text"
                       value={form.avatarUrl}
                     />
                   </div>

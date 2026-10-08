@@ -8,8 +8,11 @@ import CoachDashboard from './pages/CoachDashboard'
 import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
 import Login from './pages/Login'
+import MemberClasses from './pages/MemberClasses'
 import MemberDashboard from './pages/MemberDashboard'
+import MemberPackages from './pages/MemberPackages'
 import MemberProfile from './pages/MemberProfile'
+import MemberSchedule from './pages/MemberSchedule'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import Register from './pages/Register'
 import SubjectManagement from './pages/SubjectManagement'
@@ -36,6 +39,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
               <MemberProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/schedule"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberSchedule />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/packages"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberPackages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/classes"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberClasses />
             </ProtectedRoute>
           }
         />

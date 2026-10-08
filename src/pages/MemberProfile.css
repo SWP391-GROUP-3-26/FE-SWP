@@ -66,6 +66,12 @@
   position: relative;
 }
 
+.member-profile-avatar-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
 .member-profile-avatar {
   display: grid;
   flex: 0 0 92px;
@@ -88,6 +94,49 @@
 
 .member-profile-avatar > .material-symbols-outlined {
   font-size: 42px;
+}
+
+.member-avatar-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 7px;
+  color: #286b4d;
+  background: #eaf5ed;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.member-avatar-upload:hover {
+  background: #dceee2;
+}
+
+.member-avatar-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.member-avatar-upload:focus-within {
+  outline: 3px solid rgba(47, 125, 89, 0.25);
+  outline-offset: 2px;
+}
+
+.member-avatar-upload > .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.member-avatar-uploading {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 .member-profile-name {
@@ -220,6 +269,24 @@
   background: transparent;
   font: inherit;
   font-size: 14px;
+}
+
+.member-profile-input input:-webkit-autofill,
+.member-profile-input input:-webkit-autofill:hover,
+.member-profile-input input:-webkit-autofill:focus,
+.member-profile-input input:autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: #24312b;
+  caret-color: #24312b;
+}
+
+.member-profile-readonly input:-webkit-autofill,
+.member-profile-readonly input:-webkit-autofill:hover,
+.member-profile-readonly input:-webkit-autofill:focus,
+.member-profile-readonly input:autofill {
+  -webkit-box-shadow: 0 0 0 1000px #eaf0eb inset;
+  box-shadow: 0 0 0 1000px #eaf0eb inset;
 }
 
 .member-profile-input select {

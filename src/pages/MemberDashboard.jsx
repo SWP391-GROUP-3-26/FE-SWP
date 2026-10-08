@@ -1,14 +1,8 @@
 import DashboardLayout from '../components/DashboardLayout'
 import { Link } from 'react-router-dom'
 import { getAuth } from '../auth/authStorage'
+import memberMenuItems from '../components/memberMenuItems'
 import './MemberDashboard.css'
-
-const menuItems = [
-  { icon: 'home', label: 'Tổng quan', route: '/member' },
-  { icon: 'calendar_month', label: 'Lịch tập', route: '/member' },
-  { icon: 'card_membership', label: 'Gói tập', route: '/member' },
-  { icon: 'person', label: 'Hồ sơ', route: '/member/profile' },
-]
 
 export default function MemberDashboard() {
   const { fullName, username } = getAuth()
@@ -17,7 +11,7 @@ export default function MemberDashboard() {
   return (
     <DashboardLayout
       eyebrow="Hội viên / Tổng quan"
-      menuItems={menuItems}
+      menuItems={memberMenuItems}
       role="Hội viên"
       showIntro={false}
       title="Tổng quan hội viên"
@@ -36,11 +30,19 @@ export default function MemberDashboard() {
           <span className="material-symbols-outlined">calendar_month</span>
           <h3>Lịch tập</h3>
           <p>Lịch tập và các lớp đã đăng ký sẽ hiển thị tại đây.</p>
+          <Link className="member-profile-link" to="/member/schedule">Xem lịch tập</Link>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">card_membership</span>
           <h3>Gói tập</h3>
           <p>Thông tin gói tập sẽ hiển thị tại đây.</p>
+          <Link className="member-profile-link" to="/member/packages">Xem gói tập</Link>
+        </article>
+        <article className="dashboard-card">
+          <span className="material-symbols-outlined">sports_gymnastics</span>
+          <h3>Lớp học</h3>
+          <p>Khám phá các lớp tập và lịch học dành cho hội viên.</p>
+          <Link className="member-profile-link" to="/member/classes">Xem lớp học</Link>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">person</span>

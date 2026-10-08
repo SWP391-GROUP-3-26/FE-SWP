@@ -838,6 +838,7 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   width: 34px;
   height: 34px;
   border-radius: 999px;
@@ -868,11 +869,19 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   width: 34px;
   height: 34px;
   border-radius: 999px;
   color: #fff;
   background: var(--primary);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
 }
 
 .dashboard-content {

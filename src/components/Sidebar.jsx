@@ -6,6 +6,7 @@ export default function Sidebar({ role, menuItems }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeIndex = menuItems.findIndex((item) => item.route === pathname)
+  const roleLabel = role === 'Center Manager' ? 'Quản lý trung tâm' : role
 
   const handleLogout = () => {
     clearAuth()
@@ -17,12 +18,12 @@ export default function Sidebar({ role, menuItems }) {
       <Link to="/" className="dashboard-brand">
         <span className="brand-mark material-symbols-outlined">spa</span>
         <span>
-          <strong>{role === 'Hội viên' ? 'UniSports' : 'SereneDesk'}</strong>
-          <small>{role}</small>
+          <strong>UniSports</strong>
+          <small>{roleLabel}</small>
         </span>
       </Link>
 
-      <nav className="dashboard-nav" aria-label={`${role} navigation`}>
+      <nav className="dashboard-nav" aria-label={`Điều hướng ${roleLabel}`}>
         {menuItems.map((item, index) => (
           <Link
             className={`dashboard-nav-item${index === activeIndex ? ' dashboard-nav-item-active' : ''}`}
@@ -36,7 +37,7 @@ export default function Sidebar({ role, menuItems }) {
         ))}
       </nav>
 
-      {role === 'Hội viên' && (
+      {(role === 'Hội viên' || role === 'Center Manager') && (
         <img className="sidebar-plant-art" src={memberPlant} alt="" aria-hidden="true" />
       )}
 
