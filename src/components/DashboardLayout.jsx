@@ -7,6 +7,7 @@ export default function DashboardLayout({
   title,
   subtitle,
   menuItems,
+  showIntro = true,
   children,
 }) {
   const { fullName, username } = getAuth()
@@ -34,13 +35,15 @@ export default function DashboardLayout({
         </header>
 
         <main className="dashboard-content">
-          <section className="dashboard-intro">
-            <div>
-              <span className="section-heading-kicker">{role}</span>
-              <h2>{title}</h2>
-              <p>{subtitle}</p>
-            </div>
-          </section>
+          {showIntro && (
+            <section className="dashboard-intro">
+              <div>
+                <span className="section-heading-kicker">{role}</span>
+                <h2>{title}</h2>
+                <p>{subtitle}</p>
+              </div>
+            </section>
+          )}
           {children}
         </main>
       </div>

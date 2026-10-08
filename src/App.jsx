@@ -9,6 +9,7 @@ import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
 import Login from './pages/Login'
 import MemberDashboard from './pages/MemberDashboard'
+import MemberProfile from './pages/MemberProfile'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import Register from './pages/Register'
 import SubjectManagement from './pages/SubjectManagement'
@@ -27,6 +28,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
               <MemberDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/profile"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberProfile />
             </ProtectedRoute>
           }
         />

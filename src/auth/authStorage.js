@@ -30,6 +30,12 @@ export function getAuth() {
   }
 }
 
+export function updateAuthProfile({ fullName, email, status }) {
+  if (fullName !== undefined) localStorage.setItem(AUTH_KEYS.fullName, fullName || '')
+  if (email !== undefined) localStorage.setItem(AUTH_KEYS.email, email || '')
+  if (status !== undefined) localStorage.setItem(AUTH_KEYS.status, status || '')
+}
+
 export function getAccessToken() {
   return localStorage.getItem(AUTH_KEYS.accessToken)
 }

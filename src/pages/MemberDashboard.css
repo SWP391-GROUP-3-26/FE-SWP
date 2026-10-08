@@ -1,0 +1,139 @@
+.member-welcome-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 220px;
+  padding: clamp(24px, 4vw, 42px);
+  overflow: hidden;
+  border: 1px solid #d8e9dd;
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(239, 249, 242, 0.97) 0%, rgba(239, 249, 242, 0.92) 48%, rgba(239, 249, 242, 0.22) 100%),
+    url('../assets/login-running.jpg') center 42% / cover no-repeat;
+  box-shadow: 0 12px 36px rgba(22, 41, 31, 0.07);
+}
+
+.member-welcome-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 650px;
+}
+
+.member-welcome-copy h2 {
+  margin: 10px 0;
+  color: #17251e;
+  font-size: clamp(26px, 3.4vw, 40px);
+  line-height: 1.12;
+}
+
+.member-welcome-copy p {
+  max-width: 560px;
+  margin: 0;
+  color: #536b5e;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.member-welcome-icon {
+  position: absolute;
+  right: 34px;
+  bottom: 25px;
+  color: rgba(47, 125, 89, 0.6);
+  font-size: clamp(68px, 10vw, 120px);
+}
+
+.member-journey-panel {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 92% 10%, rgba(47, 125, 89, 0.08), transparent 34%),
+    #fff;
+}
+
+.member-journey-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.member-journey-icon {
+  display: grid;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 15px;
+  color: var(--primary);
+  background: #edf6ef;
+  font-size: 28px;
+}
+
+.member-journey-heading h3 {
+  margin: 5px 0;
+}
+
+.member-journey-heading p {
+  margin: 0;
+  color: #65776d;
+  line-height: 1.55;
+}
+
+.member-journey-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9f0eb;
+}
+
+.member-journey-footer > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #65776d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.member-journey-footer > span .material-symbols-outlined {
+  flex: 0 0 auto;
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.member-journey-footer > a {
+  flex: 0 0 auto;
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.member-journey-footer > a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .member-welcome-banner {
+    min-height: 240px;
+    background-position: 62% center;
+  }
+
+  .member-welcome-icon {
+    right: 16px;
+    bottom: 12px;
+    opacity: 0.55;
+  }
+
+  .member-journey-panel {
+    padding: 18px;
+  }
+
+  .member-journey-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

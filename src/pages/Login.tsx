@@ -79,7 +79,7 @@ export default function Login() {
   }
 
   return (
-    <main className="auth-page">
+    <main className="auth-page auth-page--login">
       <section className="auth-card">
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>

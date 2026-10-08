@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
+import memberPlant from '../assets/member-plant.svg'
 
 export default function Sidebar({ role, menuItems }) {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ export default function Sidebar({ role, menuItems }) {
       <Link to="/" className="dashboard-brand">
         <span className="brand-mark material-symbols-outlined">spa</span>
         <span>
-          <strong>SereneDesk</strong>
+          <strong>{role === 'Hội viên' ? 'UniSports' : 'SereneDesk'}</strong>
           <small>{role}</small>
         </span>
       </Link>
@@ -35,9 +36,13 @@ export default function Sidebar({ role, menuItems }) {
         ))}
       </nav>
 
+      {role === 'Hội viên' && (
+        <img className="sidebar-plant-art" src={memberPlant} alt="" aria-hidden="true" />
+      )}
+
       <button className="logout-button" onClick={handleLogout} type="button">
         <span className="material-symbols-outlined">logout</span>
-        Dang xuat
+        Đăng xuất
       </button>
     </aside>
   )
