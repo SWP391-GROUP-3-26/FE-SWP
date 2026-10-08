@@ -25,9 +25,10 @@ export const ROLE_CONFIG = {
 }
 
 export function getRouteForRole(role) {
-  return ROLE_CONFIG[role]?.route || '/'
+  return ROLE_CONFIG[String(role || '').trim()]?.route || '/'
 }
 
 export function isAllowedRole(role, allowedRoles) {
-  return allowedRoles.includes(role)
+  const normalizedRole = String(role || '').trim()
+  return allowedRoles.some((allowedRole) => allowedRole === normalizedRole)
 }

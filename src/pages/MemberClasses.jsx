@@ -90,7 +90,7 @@ export default function MemberClasses() {
           Tìm kiếm
         </button>
         <span className="member-class-count">
-          {loading ? 'Đang tải lớp...' : `${classes.length} lớp đang hoạt động`}
+          {loading ? 'Đang tải lớp...' : `${classes.length} lớp đang mở`}
         </span>
       </form>
 
@@ -127,7 +127,9 @@ export default function MemberClasses() {
             <article className="member-class-card" key={classItem.id}>
               <div className="member-class-card-heading">
                 <span className="member-class-code">{classItem.code || `Lớp #${classItem.id}`}</span>
-                <span className="member-class-active">Đang hoạt động</span>
+                <span className="member-class-active">
+                  {String(classItem.status).toLocaleLowerCase('vi') === 'open' ? 'Đang mở' : 'Đang hoạt động'}
+                </span>
               </div>
               <h3>{classItem.name}</h3>
               <p className="member-class-subject">

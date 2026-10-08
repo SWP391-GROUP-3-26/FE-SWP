@@ -14,7 +14,6 @@ export async function getAvailableClasses({ search = '', signal } = {}) {
   const token = getAccessToken()
   const response = await axiosClient.get('/api/classes', {
     params: {
-      status: 'Active',
       ...(search.trim() ? { search: search.trim() } : {}),
     },
     signal,
@@ -26,5 +25,8 @@ export async function getAvailableClasses({ search = '', signal } = {}) {
     throw new Error(response.data?.message || 'Dữ liệu danh sách lớp từ backend không hợp lệ.')
   }
 
-  return response.data.data
+  return response.data.data.filter((classItem) => {
+    const status = String(classItem.status || '').trim().toLocaleLowerCase('vi')
+    return status === 'open' || status === 'active'
+  })
 }

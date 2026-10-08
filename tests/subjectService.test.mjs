@@ -8,7 +8,7 @@ globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null }
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
   const service = await server.ssrLoadModule('/src/services/subjectService.js')
-  const { ROLES, isAllowedRole } = await server.ssrLoadModule('/src/auth/roleConfig.js')
+  const { ROLES, getRouteForRole, isAllowedRole } = await server.ssrLoadModule('/src/auth/roleConfig.js')
   let payload = { success: true, total: 1, data: [{ id: 7, code: 'S7', name: 'Yoga', category: 'Fitness', description: '' }] }
   let lastRequest
   client.defaults.adapter = async (config) => {
@@ -37,6 +37,8 @@ try {
   assert.equal(isAllowedRole(ROLES.RECEPTIONIST, allowed), true)
   assert.equal(isAllowedRole(ROLES.MEMBER, allowed), false)
   assert.equal(isAllowedRole(ROLES.COACH, allowed), false)
+  assert.equal(isAllowedRole('Center Manager ', allowed), true)
+  assert.equal(getRouteForRole('Center Manager '), '/center-manager')
   console.log('PASS: Subject API methods, payload, bearer token, error handling and role allowlist')
 } finally {
   delete globalThis.localStorage

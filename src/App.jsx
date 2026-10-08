@@ -4,6 +4,7 @@ import './App.css'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ROLES } from './auth/roleConfig'
 import CenterManagerDashboard from './pages/CenterManagerDashboard'
+import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
 import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
@@ -13,9 +14,11 @@ import MemberDashboard from './pages/MemberDashboard'
 import MemberPackages from './pages/MemberPackages'
 import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
+import PackageManagement from './pages/PackageManagement'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import Register from './pages/Register'
 import SubjectManagement from './pages/SubjectManagement'
+import UserManagement from './pages/UserManagement'
 
 function App() {
   return (
@@ -87,6 +90,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <CenterManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/center-manager/users"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+              <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/center-manager/classes"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+              <ClassManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/center-manager/packages"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+              <PackageManagement />
             </ProtectedRoute>
           }
         />
