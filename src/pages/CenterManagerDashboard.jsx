@@ -11,6 +11,7 @@ export default function CenterManagerDashboard() {
       roleLabel="Quản lý trung tâm"
       subtitle="Tổng quan hoạt động trung tâm. Dữ liệu nghiệp vụ sẽ được hiển thị khi các API tương ứng sẵn sàng."
       title="Tổng quan quản trị trung tâm"
+      className="center-manager-dashboard"
     >
       <div className="dashboard-grid manager-summary">
         <article className="dashboard-card dashboard-card-accent">
