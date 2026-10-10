@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export default function Modal({ title, busy = false, onClose, children }) {
+export default function Modal({ title, busy = false, onClose, className = '', children }) {
   const dialogRef = useRef(null)
   useEffect(() => {
     const dialog = dialogRef.current
@@ -13,7 +13,7 @@ export default function Modal({ title, busy = false, onClose, children }) {
   }, [])
 
   return (
-    <dialog className="serene-modal" ref={dialogRef} aria-labelledby="modal-title"
+    <dialog className={`serene-modal ${className}`.trim()} ref={dialogRef} aria-labelledby="modal-title"
       onCancel={(event) => { event.preventDefault(); if (!busy) onClose() }}>
       <div className="panel-heading">
         <h3 id="modal-title">{title}</h3>

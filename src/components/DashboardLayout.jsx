@@ -16,6 +16,7 @@ export default function DashboardLayout({
   menuItems,
   profile,
   showIntro = true,
+  className = '',
   children,
 }) {
   const [auth, setAuth] = useState(getAuth)
@@ -53,7 +54,7 @@ export default function DashboardLayout({
   const showAvatar = avatarSrc && avatarSrc !== failedAvatarSrc
 
   return (
-    <div className="dashboard-shell">
+    <div className={`dashboard-shell ${className}`.trim()}>
       <Sidebar role={role} menuItems={menuItems} />
 
       <div className="dashboard-main">
