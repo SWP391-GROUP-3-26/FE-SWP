@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
+import Modal from '../components/Modal'
 import memberMenuItems from '../components/memberMenuItems'
-import { classApiErrorMessage, getAvailableClasses } from '../services/memberClassService'
+import {
+  classApiErrorMessage,
+  getAvailableClasses,
+  getClassConfirmation,
+  registerForClass,
+} from '../services/memberClassService'
 import './MemberActivities.css'
 
 const priceFormatter = new Intl.NumberFormat('vi-VN', {
@@ -12,10 +18,13 @@ const priceFormatter = new Intl.NumberFormat('vi-VN', {
 })
 
 function classSchedule(classItem) {
-  const days = Array.isArray(classItem.daysOfWeek) && classItem.daysOfWeek.length
-    ? classItem.daysOfWeek.join(', ')
+  const days = classItem.daysOfWeek
+    ? String(classItem.daysOfWeek).split(',').map((day) => day.trim()).filter(Boolean).join(', ')
     : 'Chưa cập nhật ngày học'
-  const times = [classItem.startTime, classItem.endTime].filter(Boolean).join(' - ')
+  const times = [classItem.startTime, classItem.endTime]
+    .filter(Boolean)
+    .map((time) => String(time).slice(0, 5))
+    .join(' - ')
   return times ? `${days} · ${times}` : days
 }
 
@@ -26,6 +35,14 @@ export default function MemberClasses() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [selectedClass, setSelectedClass] = useState(null)
+  const [confirmation, setConfirmation] = useState(null)
+  const [confirmationLoading, setConfirmationLoading] = useState(false)
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const [modalError, setModalError] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('DIRECT')
+  const [paymentChannel, setPaymentChannel] = useState('Bank_Transfer')
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -46,6 +63,7 @@ export default function MemberClasses() {
     event.preventDefault()
     setLoading(true)
     setLoadError('')
+    setSuccessMessage('')
     if (search === submittedSearch) {
       setReloadKey((key) => key + 1)
     } else {
@@ -57,6 +75,52 @@ export default function MemberClasses() {
     setLoading(true)
     setLoadError('')
     setReloadKey((key) => key + 1)
+  }
+
+  async function openRegistration(classItem) {
+    setSelectedClass(classItem)
+    setConfirmation(null)
+    setConfirmationLoading(true)
+    setModalError('')
+    setPaymentChannel('Bank_Transfer')
+    try {
+      const details = await getClassConfirmation(classItem.classId)
+      setConfirmation(details)
+      setPaymentMethod(details.packageOption?.eligible ? 'PACKAGE' : 'DIRECT')
+    } catch (error) {
+      setModalError(classApiErrorMessage(error))
+    } finally {
+      setConfirmationLoading(false)
+    }
+  }
+
+  function closeRegistration() {
+    if (bookingLoading) return
+    setSelectedClass(null)
+    setConfirmation(null)
+    setModalError('')
+  }
+
+  async function submitRegistration(event) {
+    event.preventDefault()
+    if (!selectedClass || !confirmation) return
+
+    setBookingLoading(true)
+    setModalError('')
+    try {
+      const result = await registerForClass(selectedClass.classId, {
+        paymentMethod,
+        ...(paymentMethod === 'DIRECT' ? { paymentChannel } : {}),
+      })
+      setSuccessMessage(result.message || `Đăng ký lớp ${result.className || selectedClass.name} thành công.`)
+      setSelectedClass(null)
+      setConfirmation(null)
+      setReloadKey((key) => key + 1)
+    } catch (error) {
+      setModalError(classApiErrorMessage(error))
+    } finally {
+      setBookingLoading(false)
+    }
   }
 
   return (
@@ -71,7 +135,7 @@ export default function MemberClasses() {
         <div>
           <span className="section-heading-kicker">KHÁM PHÁ BỘ MÔN</span>
           <h2>Đăng ký lớp học</h2>
-          <p>Tìm lớp phù hợp và xem lịch, huấn luyện viên cùng thông tin đăng ký.</p>
+          <p>Tìm lớp phù hợp, chọn hình thức thanh toán và thêm lớp đã đăng ký vào thời khóa biểu.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">sports_gymnastics</span>
       </section>
@@ -93,6 +157,14 @@ export default function MemberClasses() {
           {loading ? 'Đang tải lớp...' : `${classes.length} lớp đang mở`}
         </span>
       </form>
+
+      {successMessage && (
+        <section className="member-registration-success" role="status">
+          <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
+          <span>{successMessage} Lớp đã được ghi nhận, xem tại <Link to="/member/schedule">Thời khóa biểu</Link>.</span>
+          <button type="button" aria-label="Đóng thông báo" onClick={() => setSuccessMessage('')}>×</button>
+        </section>
+      )}
 
       {loadError && (
         <section className="member-class-state member-class-error" role="alert">
@@ -124,17 +196,17 @@ export default function MemberClasses() {
       {!loadError && !loading && classes.length > 0 && (
         <section className="member-class-grid" aria-label="Danh sách lớp đang hoạt động">
           {classes.map((classItem) => (
-            <article className="member-class-card" key={classItem.id}>
+            <article className="member-class-card" key={classItem.classId}>
               <div className="member-class-card-heading">
-                <span className="member-class-code">{classItem.code || `Lớp #${classItem.id}`}</span>
+                <span className="member-class-code">{classItem.classCode || `Lớp #${classItem.classId}`}</span>
                 <span className="member-class-active">
-                  {String(classItem.status).toLocaleLowerCase('vi') === 'open' ? 'Đang mở' : 'Đang hoạt động'}
+                  {classItem.enrolled ? 'Đã đăng ký' : classItem.remainingSlotsText || 'Đang mở'}
                 </span>
               </div>
               <h3>{classItem.name}</h3>
               <p className="member-class-subject">
-                {classItem.subject?.name || 'Chưa phân môn'}
-                {classItem.subject?.category ? ` · ${classItem.subject.category}` : ''}
+                {classItem.subjectName || 'Chưa phân môn'}
+                {classItem.category ? ` · ${classItem.category}` : ''}
               </p>
               <dl className="member-class-details">
                 <div>
@@ -143,44 +215,125 @@ export default function MemberClasses() {
                 </div>
                 <div>
                   <dt><span className="material-symbols-outlined" aria-hidden="true">person</span>Huấn luyện viên</dt>
-                  <dd>{classItem.coach?.fullName || classItem.coach?.username || 'Chưa phân công'}</dd>
+                  <dd>{classItem.coachName || 'Chưa phân công'}</dd>
                 </div>
                 <div>
                   <dt><span className="material-symbols-outlined" aria-hidden="true">location_on</span>Phòng</dt>
-                  <dd>{classItem.room?.name || 'Chưa xếp phòng'}</dd>
+                  <dd>{classItem.roomName || 'Chưa xếp phòng'}</dd>
                 </div>
                 <div>
-                  <dt><span className="material-symbols-outlined" aria-hidden="true">groups</span>Sức chứa</dt>
-                  <dd>{classItem.maxCapacity ?? 'Chưa cập nhật'} học viên</dd>
+                  <dt><span className="material-symbols-outlined" aria-hidden="true">groups</span>Chỗ còn lại</dt>
+                  <dd>{classItem.remainingSlots ?? classItem.maxCapacity ?? 'Chưa cập nhật'} chỗ còn lại</dd>
                 </div>
               </dl>
               <div className="member-class-card-footer">
                 <strong>
-                  {classItem.price == null ? 'Liên hệ trung tâm' : priceFormatter.format(classItem.price)}
+                  {classItem.priceFormatted || (classItem.price == null ? 'Liên hệ trung tâm' : priceFormatter.format(classItem.price))}
                 </strong>
-                <span>API đăng ký lớp chưa khả dụng</span>
+                <button
+                  className="member-register-button"
+                  disabled={!classItem.canRegister || classItem.enrolled || Boolean(selectedClass)}
+                  type="button"
+                  onClick={() => openRegistration(classItem)}
+                >
+                  {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? 'Đăng ký lớp' : 'Hết chỗ'}
+                </button>
               </div>
             </article>
           ))}
         </section>
       )}
 
-      <section className="member-class-empty member-class-enrollment-note">
-        <span className="member-class-empty-icon material-symbols-outlined" aria-hidden="true">info</span>
-        <h3>Đăng ký lớp chưa được kết nối</h3>
-        <p>
-          Backend hiện chỉ hỗ trợ xem danh sách và thông tin lớp. Chưa có API đăng ký hoặc thanh toán,
-          nên lớp trong danh sách này chưa được xem là lớp hội viên đã đăng ký.
-        </p>
-      </section>
-
       <aside className="member-policy-note">
         <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
         <div>
-          <strong>Thời khóa biểu chỉ dành cho lớp đủ điều kiện</strong>
-          <p>Chỉ lớp đã đăng ký thành công và thanh toán hợp lệ mới xuất hiện trong <Link to="/member/schedule">Lịch tập</Link>.</p>
+          <strong>Lớp đã đăng ký sẽ có trong thời khóa biểu</strong>
+          <p>Sau khi đăng ký thành công, lớp sẽ hiển thị trong <Link to="/member/schedule">Lịch tập</Link>.</p>
         </div>
       </aside>
+
+      {selectedClass && (
+        <Modal
+          busy={bookingLoading}
+          className="member-booking-modal"
+          onClose={closeRegistration}
+          title="Xác nhận đăng ký lớp"
+        >
+          {confirmationLoading ? (
+            <div className="member-class-state" role="status">Đang tải thông tin đăng ký...</div>
+          ) : confirmation ? (
+            <form onSubmit={submitRegistration}>
+              <h4>{confirmation.className}</h4>
+              <p>{confirmation.schedule}</p>
+              <p><strong>Huấn luyện viên:</strong> {confirmation.coachName || 'Chưa cập nhật'}</p>
+              <p><strong>Phòng:</strong> {confirmation.roomName || 'Chưa xác định'}</p>
+              <fieldset className="member-payment-options">
+                <legend>Hình thức thanh toán</legend>
+                {confirmation.packageOption?.eligible && (
+                  <label>
+                    <input
+                      checked={paymentMethod === 'PACKAGE'}
+                      name="paymentMethod"
+                      onChange={() => setPaymentMethod('PACKAGE')}
+                      type="radio"
+                      value="PACKAGE"
+                    />
+                    {confirmation.packageOption.title || 'Trừ gói hội viên'}
+                    {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
+                  </label>
+                )}
+                {confirmation.directPaymentOption?.available && (
+                  <label>
+                    <input
+                      checked={paymentMethod === 'DIRECT'}
+                      name="paymentMethod"
+                      onChange={() => setPaymentMethod('DIRECT')}
+                      type="radio"
+                      value="DIRECT"
+                    />
+                    {confirmation.directPaymentOption.title || 'Thanh toán trực tiếp'}
+                    {confirmation.directPaymentOption.amountFormatted && ` · ${confirmation.directPaymentOption.amountFormatted}`}
+                  </label>
+                )}
+              </fieldset>
+              {paymentMethod === 'DIRECT' && confirmation.directPaymentOption?.available && (
+                <label className="member-payment-channel">
+                  Kênh thanh toán
+                  <select value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>
+                    <option value="Bank_Transfer">Chuyển khoản</option>
+                    <option value="Cash">Tiền mặt</option>
+                    <option value="Card">Thẻ</option>
+                    <option value="E_Wallet">Ví điện tử</option>
+                  </select>
+                </label>
+              )}
+              {!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available && (
+                <div className="member-class-state member-class-error" role="alert">
+                  Hiện không có hình thức thanh toán khả dụng cho lớp này.
+                </div>
+              )}
+              {modalError && <div className="member-class-state member-class-error" role="alert">{modalError}</div>}
+              <div className="member-booking-actions">
+                <button className="member-cancel-button" disabled={bookingLoading} onClick={closeRegistration} type="button">Hủy</button>
+                <button
+                  className="member-register-button"
+                  disabled={bookingLoading || (!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available)}
+                  type="submit"
+                >
+                  {bookingLoading ? 'Đang đăng ký...' : 'Xác nhận đăng ký'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              {modalError && <div className="member-class-state member-class-error" role="alert">{modalError}</div>}
+              <div className="member-booking-actions">
+                <button className="member-cancel-button" type="button" onClick={closeRegistration}>Đóng</button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
     </DashboardLayout>
   )
 }

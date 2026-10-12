@@ -621,3 +621,250 @@
     gap: 4px;
   }
 }
+
+.member-calendar-class-cell {
+  vertical-align: top;
+  min-width: 0;
+  padding: 6px;
+  background: #fff;
+}
+
+.member-calendar-empty-label {
+  display: block;
+  padding-top: 12px;
+  color: #c3d0c7;
+  font-size: 12px;
+  text-align: center;
+}
+
+.member-calendar {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: collapse;
+  border: 1px solid #e7efe9;
+  table-layout: fixed;
+}
+
+.member-calendar th,
+.member-calendar td {
+  border: 1px solid #e7efe9;
+}
+
+.member-calendar th:first-child {
+  width: 108px;
+}
+
+.member-calendar thead {
+  height: 66px;
+  background: #f1f7f2;
+}
+
+.member-calendar .member-time-heading,
+.member-calendar .member-day-heading-cell,
+.member-calendar .member-time-cell {
+  padding: 8px;
+  text-align: center;
+}
+
+.member-calendar .member-time-heading,
+.member-calendar .member-time-cell {
+  color: #52665a;
+  background: #f6f9f6;
+}
+
+.member-calendar .member-time-heading {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.member-calendar .member-day-heading-cell {
+  font-weight: 400;
+}
+
+.member-calendar tbody tr {
+  height: 90px;
+}
+
+.member-calendar .member-time-cell strong {
+  color: #34473d;
+  font-size: 12px;
+}
+
+.member-calendar .member-time-cell span {
+  color: #718077;
+  font-size: 10px;
+}
+
+.member-schedule-class {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  border-left: 3px solid var(--primary);
+  border-radius: 7px;
+  color: #34473d;
+  background: #eaf5ed;
+  overflow-wrap: anywhere;
+}
+
+.member-schedule-class strong {
+  font-size: 11px;
+}
+
+.member-schedule-class span {
+  color: #65776d;
+  font-size: 10px;
+}
+
+.member-schedule-loading {
+  padding: 28px;
+  color: #65776d;
+  text-align: center;
+}
+
+.member-sync-status.member-sync-error > span {
+  background: #c44d3d;
+}
+
+.member-schedule-error {
+  justify-content: space-between;
+  color: #8d392f;
+  border-color: #f0c8c2;
+  background: #fff5f3;
+}
+
+.member-schedule-error button {
+  flex: 0 0 auto;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.member-register-button,
+.member-cancel-button {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.member-register-button {
+  color: #fff;
+  background: var(--primary);
+}
+
+.member-register-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.member-register-button:disabled {
+  color: #78877d;
+  background: #e8eee9;
+  cursor: not-allowed;
+}
+
+.member-cancel-button {
+  color: #34473d;
+  background: #edf2ee;
+}
+
+.member-registration-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #cce6d2;
+  border-radius: 10px;
+  color: #236b4d;
+  background: #f0faf2;
+  font-size: 13px;
+}
+
+.member-registration-success > span:first-child {
+  flex: 0 0 auto;
+}
+
+.member-registration-success > span:nth-child(2) {
+  flex: 1;
+}
+
+.member-registration-success a {
+  color: inherit;
+  font-weight: 800;
+}
+
+.member-registration-success button {
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.member-booking-modal {
+  width: min(520px, calc(100% - 32px));
+}
+
+.member-booking-modal h4 {
+  margin: 20px 0 6px;
+  color: #24312b;
+}
+
+.member-booking-modal p {
+  margin: 8px 0;
+  color: #52665a;
+  font-size: 13px;
+}
+
+.member-payment-options {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 12px;
+  border: 1px solid #e1eae3;
+  border-radius: 9px;
+}
+
+.member-payment-options legend {
+  padding: 0 5px;
+  color: #34473d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.member-payment-options label,
+.member-payment-channel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #34473d;
+  font-size: 13px;
+}
+
+.member-payment-channel {
+  align-items: flex-start;
+  flex-direction: column;
+  font-weight: 700;
+}
+
+.member-payment-channel select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #dce7de;
+  border-radius: 7px;
+  color: #34473d;
+  background: #fff;
+}
+
+.member-booking-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
