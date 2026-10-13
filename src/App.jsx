@@ -16,6 +16,8 @@ import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
+import ReceptionistMemberRegister from './pages/ReceptionistMemberRegister'
+import ReceptionistMemberSearch from './pages/ReceptionistMemberSearch'
 import Register from './pages/Register'
 import SubjectManagement from './pages/SubjectManagement'
 import UserManagement from './pages/UserManagement'
@@ -74,6 +76,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
               <ReceptionistDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/receptionist/members"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
+              <ReceptionistMemberSearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/receptionist/members/new"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
+              <ReceptionistMemberRegister />
             </ProtectedRoute>
           }
         />

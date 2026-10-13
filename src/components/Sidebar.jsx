@@ -10,7 +10,7 @@ export default function Sidebar({ role, menuItems }) {
   const initialOpenGroup = menuItems.findIndex((item) =>
     item.children?.some((child) => child.route === pathname))
   const [openGroup, setOpenGroup] = useState(initialOpenGroup)
-  const roleLabel = role === 'Center Manager' ? 'Quản lý trung tâm' : role
+  const roleLabel = role === 'Center Manager' ? 'Quản lý trung tâm' : role === 'Receptionist' ? 'Tiếp tân' : role
 
   const handleLogout = () => {
     clearAuth()

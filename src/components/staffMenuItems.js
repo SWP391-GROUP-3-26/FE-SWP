@@ -16,10 +16,11 @@ export const staffMenuItems = {
     { icon: 'history', label: 'Audit log', disabled: true },
   ],
   [ROLES.RECEPTIONIST]: [
-    { icon: 'home', label: 'Tong quan tiep tan', route: '/receptionist' },
+    { icon: 'home', label: 'Tổng quan tiếp tân', route: '/receptionist' },
+    { icon: 'person_add', label: 'Đăng ký thành viên', route: '/receptionist/members/new' },
     { icon: 'menu_book', label: 'Môn học', route: '/subjects' },
-    { icon: 'event_available', label: 'Lich hen', route: '/receptionist' },
-    { icon: 'person_add', label: 'Hoi vien', route: '/receptionist' },
-    { icon: 'payments', label: 'Thanh toan', route: '/receptionist' },
+    { icon: 'event_available', label: 'Lịch hẹn', route: '/receptionist' },
+    { icon: 'groups', label: 'Hội viên', route: '/receptionist/members' },
+    { icon: 'payments', label: 'Thanh toán', route: '/receptionist' },
   ],
 }
