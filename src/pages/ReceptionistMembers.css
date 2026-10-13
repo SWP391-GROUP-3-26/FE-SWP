@@ -1,0 +1,22 @@
+.member-panel { display: grid; gap: 16px; min-width: 0; }
+.member-panel p, .member-panel .back-link { margin: 0; }
+.member-panel label { font-weight: 700; }
+.member-muted { color: var(--muted); font-size: 14px; }
+.member-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; margin: 0; list-style: none; }
+.member-result { display: grid; gap: 8px; height: 100%; padding: 18px; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface); overflow-wrap: anywhere; text-decoration: none; }
+.member-result:hover { border-color: var(--primary); background: var(--surface-muted); text-decoration: none; }
+.member-result-heading, .member-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.member-result-heading strong { font-size: 18px; }
+.member-open { color: var(--primary); font-weight: 700; }
+.member-button { padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--primary-dark); background: var(--surface-muted); cursor: pointer; }
+.member-button:disabled { opacity: 0.5; cursor: default; }
+.member-panel :is(a, button, input):focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.member-panel .auth-error { display: grid; gap: 12px; justify-items: start; overflow-wrap: anywhere; }
+.member-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 0; }
+.member-details div { min-width: 0; padding-bottom: 12px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.member-details dt { color: var(--muted); font-size: 14px; }
+.member-details dd { margin: 6px 0 0; }
+@media (max-width: 640px) {
+  .member-results, .member-details { grid-template-columns: 1fr; }
+  .member-panel { padding: 16px; }
+}

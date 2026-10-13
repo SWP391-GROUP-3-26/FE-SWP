@@ -16,7 +16,9 @@ import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
+import ReceptionistMemberDetail from './pages/ReceptionistMemberDetail'
 import Register from './pages/Register'
+import ReceptionistRegisterMember from './pages/ReceptionistRegisterMember'
 import SubjectManagement from './pages/SubjectManagement'
 import UserManagement from './pages/UserManagement'
 
@@ -29,6 +31,11 @@ function App() {
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="/google-verify" element={<GoogleCallback />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/receptionist/register-member" element={
+          <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
+            <ReceptionistRegisterMember />
+          </ProtectedRoute>
+        } />
         <Route
           path="/member"
           element={
@@ -74,6 +81,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
               <ReceptionistDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/receptionist/members/:id"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
+              <ReceptionistMemberDetail />
             </ProtectedRoute>
           }
         />
