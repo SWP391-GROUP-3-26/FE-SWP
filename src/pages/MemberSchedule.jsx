@@ -1,68 +1,15 @@
 import { useEffect, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
+import MemberSessionCard from '../components/MemberSessionCard'
 import { classApiErrorMessage, getMyClasses } from '../services/memberClassService'
+import { addCalendarDays, getMonday, isConfirmedBooking, MEMBER_TIME_SLOTS, memberWeekSchedule } from '../utils/classSchedule'
 import './MemberActivities.css'
 
 const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật']
-const DEFAULT_TIME_SLOTS = [
-  '07:00 - 08:30',
-  '09:30 - 11:00',
-  '15:30 - 17:00',
-  '18:00 - 19:30',
-]
-
-function getMonday(date) {
-  const monday = new Date(date)
-  const day = monday.getDay()
-  monday.setDate(monday.getDate() - (day === 0 ? 6 : day - 1))
-  monday.setHours(0, 0, 0, 0)
-  return monday
-}
 
 function formatDate(date) {
-  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date)
-}
-
-function addDays(date, amount) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + amount)
-  return result
-}
-
-function normalizeDay(day) {
-  const value = String(day || '')
-    .toLocaleLowerCase('vi')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[\s._-]/g, '')
-
-  if (['thu2', 'thuhai', 't2', 'monday', 'mon'].includes(value)) return 0
-  if (['thu3', 'thuba', 't3', 'tuesday', 'tue'].includes(value)) return 1
-  if (['thu4', 'thutu', 't4', 'wednesday', 'wed'].includes(value)) return 2
-  if (['thu5', 'thunam', 't5', 'thursday', 'thu'].includes(value)) return 3
-  if (['thu6', 'thusau', 't6', 'friday', 'fri'].includes(value)) return 4
-  if (['thu7', 'thubay', 't7', 'saturday', 'sat'].includes(value)) return 5
-  if (['chunhat', 'cn', 'sunday', 'sun'].includes(value)) return 6
-  return -1
-}
-
-function daysForClass(classItem) {
-  return String(classItem.schedule || '')
-    .split(/[(),;]/)
-    .flatMap((part) => part.split(','))
-    .map(normalizeDay)
-    .filter((day, index, days) => day >= 0 && days.indexOf(day) === index)
-}
-
-function timeKey(classItem) {
-  const time = String(classItem.timeSlot || '').trim()
-  return time || 'Giờ chưa cập nhật'
-}
-
-function timeSortValue(value) {
-  const match = value.match(/^(\d{1,2}):(\d{2})/)
-  return match ? Number(match[1]) * 60 + Number(match[2]) : Number.MAX_SAFE_INTEGER
+  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
 export default function MemberSchedule() {
@@ -72,15 +19,16 @@ export default function MemberSchedule() {
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
   const today = new Date()
-  const weekEnd = addDays(weekStart, 6)
+  const weekEnd = addCalendarDays(weekStart, 6)
   const weekLabel = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
-  const timeSlots = [...new Set([...DEFAULT_TIME_SLOTS, ...classes.map(timeKey)])]
-    .sort((left, right) => timeSortValue(left) - timeSortValue(right))
+  const { sessions, otherSessions } = memberWeekSchedule(classes, weekStart)
+  const weekSessionCount = sessions.length + otherSessions.filter((entry) => entry.date).length
+  const hasBookings = classes.some((item) => isConfirmedBooking(item) || item.sessions?.some(isConfirmedBooking))
 
   useEffect(() => {
     const controller = new AbortController()
-    getMyClasses({ status: 'ongoing', signal: controller.signal })
-      .then(setClasses)
+    getMyClasses({ status: 'all', signal: controller.signal })
+      .then((items) => { if (!controller.signal.aborted) setClasses(items) })
       .catch((error) => {
         if (!controller.signal.aborted) setLoadError(classApiErrorMessage(error))
       })
@@ -91,7 +39,7 @@ export default function MemberSchedule() {
   }, [reloadKey])
 
   function shiftWeek(amount) {
-    setWeekStart((current) => addDays(current, amount * 7))
+    setWeekStart((current) => addCalendarDays(current, amount * 7))
   }
 
   return (
@@ -117,7 +65,7 @@ export default function MemberSchedule() {
             <button type="button" aria-label="Tuần trước" onClick={() => shiftWeek(-1)}>
               <span className="material-symbols-outlined" aria-hidden="true">chevron_left</span>
             </button>
-            <strong>Tuần này: {weekLabel}</strong>
+            <strong>Tuần đang xem: {weekLabel}</strong>
             <button type="button" aria-label="Tuần sau" onClick={() => shiftWeek(1)}>
               <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
             </button>
@@ -127,7 +75,7 @@ export default function MemberSchedule() {
           </button>
           <span className={`member-sync-status${loadError ? ' member-sync-error' : ''}`}>
             <span aria-hidden="true" />
-            {loading ? 'Đang đồng bộ' : loadError ? 'Chưa đồng bộ' : `${classes.length} lớp đang đăng ký`}
+            {loading ? 'Đang đồng bộ' : loadError ? 'Chưa đồng bộ' : `${weekSessionCount} buổi trong tuần`}
           </span>
         </div>
 
@@ -141,14 +89,17 @@ export default function MemberSchedule() {
             }}>Thử lại</button>
           </div>
         )}
-        {!loading && !loadError && classes.length === 0 && (
+        {!loading && !loadError && !hasBookings && (
           <div className="member-schedule-notice" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">event_busy</span>
-            <span>Bạn chưa có lớp đang đăng ký. Lớp đăng ký thành công sẽ tự động xuất hiện tại đây.</span>
+            <span>Bạn chưa có lớp đã đăng ký. Buổi học được xác nhận sẽ hiển thị tại đây.</span>
           </div>
         )}
+        {!loading && !loadError && hasBookings && weekSessionCount === 0 && (
+          <div className="member-schedule-notice" role="status">Không có buổi học nào đã xác định ngày trong tuần đang xem.</div>
+        )}
 
-        <div className="member-calendar-scroll" aria-label={`Thời khóa biểu tuần ${weekLabel}`}>
+        <div className="member-calendar-scroll" tabIndex={0} role="region" aria-label={`Thời khóa biểu tuần ${weekLabel}`}>
             {loading && (
               <div className="member-schedule-loading" role="status">Đang tải thời khóa biểu...</div>
             )}
@@ -158,7 +109,7 @@ export default function MemberSchedule() {
                   <tr>
                     <th className="member-time-heading" scope="col">Khung giờ</th>
                     {WEEKDAYS.map((weekday, index) => {
-                      const date = addDays(weekStart, index)
+                      const date = addCalendarDays(weekStart, index)
                       const isToday = date.toDateString() === today.toDateString()
                       return (
                         <th className="member-day-heading-cell" key={weekday} scope="col">
@@ -173,26 +124,19 @@ export default function MemberSchedule() {
                   </tr>
                 </thead>
                 <tbody>
-                  {timeSlots.map((slot) => (
-                    <tr key={slot}>
+                  {MEMBER_TIME_SLOTS.map((slot) => (
+                    <tr key={slot.id}>
                       <th className="member-time-cell" scope="row">
-                        <strong>{slot === 'Giờ chưa cập nhật' ? slot : 'Lịch học'}</strong>
-                        <span>{slot}</span>
+                        <strong>Slot {slot.id}</strong>
+                        <span>{slot.startTime}–{slot.endTime}</span>
                       </th>
                       {WEEKDAYS.map((weekday, dayIndex) => {
-                        const dayClasses = classes.filter((classItem) => (
-                          timeKey(classItem) === slot && daysForClass(classItem).includes(dayIndex)
+                        const dayClasses = sessions.filter((entry) => (
+                          entry.slotId === slot.id && entry.dayIndex === dayIndex
                         ))
                         return (
-                          <td className="member-calendar-class-cell" key={`${slot}-${weekday}`}>
-                            {dayClasses.map((classItem) => (
-                              <article className="member-schedule-class" key={classItem.bookingId}>
-                                <strong>{classItem.className}</strong>
-                                <span>{classItem.classCode}</span>
-                                {classItem.roomName && <span>{classItem.roomName}</span>}
-                                {classItem.coachName && <span>{classItem.coachName}</span>}
-                              </article>
-                            ))}
+                          <td className="member-calendar-class-cell" key={`${slot.id}-${weekday}`}>
+                            {dayClasses.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
                             {dayClasses.length === 0 && (
                               <span className="member-calendar-empty-label" aria-hidden="true">—</span>
                             )}
@@ -206,6 +150,15 @@ export default function MemberSchedule() {
             )}
         </div>
       </section>
+      {!loading && !loadError && otherSessions.length > 0 && (
+        <section className="member-data-section member-schedule-other" aria-labelledby="member-other-sessions-title">
+          <h3 id="member-other-sessions-title">Buổi học cần kiểm tra lịch</h3>
+          <p>Buổi có ngày dưới đây thuộc tuần đang xem. Buổi chưa có ngày được giữ lại để bạn kiểm tra với trung tâm; hệ thống chưa thể xếp vào lịch.</p>
+          <div className="member-class-grid">
+            {otherSessions.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
+          </div>
+        </section>
+      )}
     </DashboardLayout>
   )
 }

@@ -74,8 +74,8 @@ try {
   storage.delete('accessToken')
   assert.equal(render(createElement(ProtectedRoute, { allowedRoles: [ROLES.RECEPTIONIST] }, 'protected-content')).includes('protected-content'), false)
   assert.equal(getRouteForRole(ROLES.RECEPTIONIST), '/receptionist')
-  assert.deepEqual(staffMenuItems[ROLES.RECEPTIONIST].map((item) => item.label), ['Đăng ký người dùng', 'Tong quan tiep tan', 'Hoi vien', 'Thanh toan'])
-  assert.ok(staffMenuItems[ROLES.CENTER_MANAGER].some((item) => item.route === '/subjects'))
+  assert.deepEqual(staffMenuItems[ROLES.RECEPTIONIST].map((item) => item.label), ['Đăng ký người dùng', 'Tong quan tiep tan', 'Thanh toan'])
+  assert.ok(staffMenuItems[ROLES.CENTER_MANAGER].some((item) => item.children?.some((child) => child.route === '/subjects')))
   assert.ok(render(createElement(Home)).includes('Nhập từ khóa để tìm học viên.'))
   console.log('PASS: member search/detail contract, blank keywords, trim, pagination, cancellation, errors, initial render, role guard and sidebar')
 } finally {

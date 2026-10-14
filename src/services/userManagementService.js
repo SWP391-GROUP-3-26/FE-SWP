@@ -13,12 +13,12 @@ export async function getUserManagementOptions(signal) {
     headers: getAuthHeaders(),
   })
 
-  if (response.data?.success === false) {
-    throw new Error(response.data.message || 'Không thể tải danh mục người dùng.')
+  if (response.data?.success !== true || !Array.isArray(response.data.roles) || !Array.isArray(response.data.statuses)) {
+    throw new Error(response.data?.message || 'Không thể tải danh mục người dùng.')
   }
 
-  const roles = Array.isArray(response.data?.data?.roles) ? response.data.data.roles : []
-  const statuses = Array.isArray(response.data?.data?.statuses) ? response.data.data.statuses : []
+  const roles = response.data.roles
+  const statuses = response.data.statuses
   return { roles, statuses }
 }
 
@@ -91,6 +91,29 @@ export async function updateManagedUserStatus(userId, status) {
 
   const user = response.data?.data
   if (!user || typeof user !== 'object' || Array.isArray(user)) {
+    throw new Error('Thông tin người dùng sau khi cập nhật không hợp lệ.')
+  }
+
+  return user
+}
+
+export async function updateManagedUserRole(userId, role) {
+  const response = await axiosClient.patch(
+    `/api/center-manager/users/${encodeURIComponent(userId)}/role`,
+    { role },
+    {
+      timeout: 20000,
+      headers: getAuthHeaders(),
+    }
+  )
+
+  if (response.data?.success !== true) {
+    throw new Error(response.data?.message || 'Không thể cập nhật vai trò người dùng.')
+  }
+
+  const user = response.data.data
+  if (!user || typeof user !== 'object' || Array.isArray(user) ||
+    user.userId !== Number(userId) || typeof user.role !== 'string') {
     throw new Error('Thông tin người dùng sau khi cập nhật không hợp lệ.')
   }
 

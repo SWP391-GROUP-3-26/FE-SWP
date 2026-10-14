@@ -30,6 +30,12 @@ try {
       subjects: [{ id: 1, name: 'Yoga' }],
       coaches: [{ id: 2, fullName: 'Coach' }],
       rooms: [{ id: 4, name: 'Studio' }],
+      timeSlots: [
+        { id: 1, startTime: '07:00', endTime: '09:15' },
+        { id: 2, startTime: '09:30', endTime: '11:45' },
+        { id: 3, startTime: '12:30', endTime: '14:45' },
+        { id: 4, startTime: '15:00', endTime: '17:15' },
+      ],
     },
   }
   assert.equal((await service.getClassFormOptions()).rooms[0].id, 4)
@@ -44,14 +50,17 @@ try {
     subjectId: 1,
     coachId: 2,
     roomId: 4,
-    daysOfWeek: ['Thứ 2'],
-    startTime: '09:00',
-    endTime: '10:00',
+    daysOfWeek: ['Thứ 3'],
+    slotId: 1,
+    startTime: '07:30',
+    endTime: '08:45',
     maxCapacity: 12,
     price: 200000,
-    status: 'Active',
+    startDate: '2026-10-13',
+    durationWeeks: 1,
   }
-  await service.createClass(classData)
+  payload = { success: true, data: { id: 3, startDate: '2026-10-13', durationWeeks: 1, endDate: '2026-10-18', status: 'Active' } }
+  assert.equal((await service.createClass(classData)).data.endDate, '2026-10-18')
   assert.equal(lastRequest.method, 'post')
   assert.deepEqual(JSON.parse(lastRequest.data), classData)
 

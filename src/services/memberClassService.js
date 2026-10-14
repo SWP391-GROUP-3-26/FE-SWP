@@ -28,10 +28,10 @@ export async function getAvailableClasses({ search = '', signal } = {}) {
   return response.data.classes
 }
 
-export async function getMyClasses({ status = 'ongoing', signal } = {}) {
+export async function getMyClassList({ status = 'ongoing', search = '', signal } = {}) {
   const token = getAccessToken()
   const response = await axiosClient.get('/api/member/classes/my-classes', {
-    params: { status },
+    params: { status, ...(search.trim() ? { search: search.trim() } : {}) },
     signal,
     timeout: 15000,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -41,7 +41,20 @@ export async function getMyClasses({ status = 'ongoing', signal } = {}) {
     throw new Error(response.data?.message || 'Dữ liệu lớp đã đăng ký từ backend không hợp lệ.')
   }
 
-  return response.data.classes
+  return { classes: response.data.classes, counts: response.data.counts || {} }
+}
+
+export async function getMyClasses(options) {
+  return (await getMyClassList(options)).classes
+}
+
+export async function cancelClassRegistration(bookingId) {
+  const token = getAccessToken()
+  const response = await axiosClient.post(`/api/member/classes/bookings/${encodeURIComponent(bookingId)}/cancel`, {}, {
+    timeout: 15000, headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (response.data?.success !== true) throw new Error(response.data?.message || 'Không thể hủy đăng ký lớp.')
+  return response.data
 }
 
 export async function getClassConfirmation(classId) {

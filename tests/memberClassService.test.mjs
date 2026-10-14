@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'vite'
+import { fileURLToPath } from 'node:url'
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ server: { middlewareMode: true, hmr: false },
+  resolve: { alias: { axios: fileURLToPath(new URL('../node_modules/axios/dist/esm/axios.js', import.meta.url)) } }, appType: 'custom' })
 const storage = new Map([['accessToken', 'member-class-test-token']])
 globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null }
 try {
@@ -26,6 +28,14 @@ try {
   assert.equal(lastRequest.url, '/api/member/classes/available')
   assert.deepEqual(lastRequest.params, { search: 'CLS-004' })
   assert.equal(lastRequest.headers.Authorization, 'Bearer member-class-test-token')
+
+  payload = { success: true, classes: [{ bookingId: 10, classId: 4, sessions: [{ sessionId: 1 }, { sessionId: 2 }] }], counts: { all: 1 } }
+  assert.deepEqual(await service.getMyClassList({ status: 'all', search: 'Yoga' }), { classes: payload.classes, counts: payload.counts })
+  assert.deepEqual(lastRequest.params, { status: 'all', search: 'Yoga' })
+  payload = { success: true, message: 'Đã hủy' }
+  assert.deepEqual(await service.cancelClassRegistration(10), payload)
+  assert.equal(lastRequest.url, '/api/member/classes/bookings/10/cancel')
+  assert.equal(lastRequest.method, 'post')
   const booking = {
     bookingId: 10,
     classId: 4,
@@ -37,6 +47,12 @@ try {
   assert.deepEqual(await service.getMyClasses(), [booking])
   assert.equal(lastRequest.url, '/api/member/classes/my-classes')
   assert.deepEqual(lastRequest.params, { status: 'ongoing' })
+  payload = { success: true, classes: [{ ...booking, startDate: '2026-10-13', durationWeeks: 1,
+    endDate: '2026-10-18', sessionId: 100, sessionDate: '2026-10-13',
+    sessionStartTime: '07:30', sessionEndTime: '08:45', rawStatus: 'Completed', sessionStatus: 'Completed' }] }
+  assert.deepEqual(await service.getMyClasses({ status: 'all' }), payload.classes)
+  assert.deepEqual(lastRequest.params, { status: 'all' })
+  assert.equal(lastRequest.headers.Authorization, 'Bearer member-class-test-token')
 
   payload = { success: true, classId: 4, packageOption: { eligible: true } }
   assert.deepEqual(await service.getClassConfirmation(4), payload)
