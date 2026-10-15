@@ -20,11 +20,29 @@ const EMPTY_FORM = {
   daysOfWeek: [],
   startTime: '',
   endTime: '',
+  durationWeeks: '',
   maxCapacity: '',
   price: '',
   startDate: '',
 }
 const WEEKDAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật']
+
+function timeToMinutes(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value || '')
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null
+}
+
+function findSelectedTimeSlot(timeSlots, startTime, endTime) {
+  const start = timeToMinutes(startTime)
+  const end = timeToMinutes(endTime)
+  if (start === null || end === null) return null
+
+  return timeSlots.find((slot) => {
+    const slotStart = timeToMinutes(slot.startTime)
+    const slotEnd = timeToMinutes(slot.endTime)
+    return slotStart !== null && slotEnd !== null && start >= slotStart && end <= slotEnd
+  }) || null
+}
 
 function errorMessage(error) {
   if (error.response?.status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
@@ -43,7 +61,7 @@ function statusLabel(status) {
 export default function ClassManagement() {
   const role = getRole()
   const [classes, setClasses] = useState([])
-  const [options, setOptions] = useState({ subjects: [], coaches: [], rooms: [] })
+  const [options, setOptions] = useState({ subjects: [], coaches: [], rooms: [], timeSlots: [] })
   const [loading, setLoading] = useState(true)
   const [optionsLoading, setOptionsLoading] = useState(false)
   const [listError, setListError] = useState('')
@@ -131,14 +149,27 @@ export default function ClassManagement() {
       setModalError('Vui lòng chọn ít nhất một ngày học.')
       return
     }
+    if (!selectedTimeSlot) {
+      setModalError('Giờ học phải nằm trong một slot học hợp lệ. Chọn giờ bắt đầu và kết thúc trong cùng một khung giờ.')
+      return
+    }
+    if (!form.startDate) {
+      setModalError('Vui lòng chọn ngày học đầu tiên.')
+      return
+    }
+    if (!Number.isInteger(Number(form.durationWeeks)) || Number(form.durationWeeks) < 1) {
+      setModalError('Vui lòng nhập số tuần học hợp lệ (ít nhất 1 tuần).')
+      return
+    }
     const payload = {
       ...form,
       subjectId: Number(form.subjectId),
       coachId: Number(form.coachId),
       roomId: Number(form.roomId),
+      slotId: selectedTimeSlot.id,
+      durationWeeks: Number(form.durationWeeks),
       maxCapacity: Number(form.maxCapacity),
       price: Number(form.price),
-      startDate: form.startDate || null,
       status: 'Active',
     }
     setBusy(true)
@@ -174,6 +205,7 @@ export default function ClassManagement() {
   const totalPages = Math.max(1, Math.ceil(classes.length / 5))
   const visibleClasses = useMemo(() => classes.slice((page - 1) * 5, page * 5), [classes, page])
   const dayOptions = optionsLoading ? [] : options
+  const selectedTimeSlot = findSelectedTimeSlot(options.timeSlots, form.startTime, form.endTime)
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
@@ -268,10 +300,16 @@ export default function ClassManagement() {
               <div className="service-form-grid">
                 <label>Giờ bắt đầu <span className="input-wrap"><input required type="time" value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></span></label>
                 <label>Giờ kết thúc <span className="input-wrap"><input required type="time" value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></span></label>
+                <label>Số tuần học <span className="input-wrap"><input required type="number" min="1" step="1" value={form.durationWeeks} onChange={(event) => setForm({ ...form, durationWeeks: event.target.value })} /></span></label>
                 <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value })} /></span></label>
                 <label>Học phí (VND) <span className="input-wrap"><input required type="number" min="0" step="1000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /></span></label>
-                <label>Ngày bắt đầu <span className="input-wrap"><input type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} /></span></label>
+                <label>Ngày bắt đầu <span className="input-wrap"><input required type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} /></span></label>
               </div>
+              {selectedTimeSlot && (
+                <p className="class-time-slot-hint" role="status">
+                  Slot học #{selectedTimeSlot.id}: {selectedTimeSlot.startTime} – {selectedTimeSlot.endTime}
+                </p>
+              )}
             </fieldset>
             <div className="subject-modal-actions"><button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Hủy</button>
               <button className="subject-button subject-primary" disabled={busy || optionsLoading} type="submit">{busy ? 'Đang tạo...' : 'Tạo lớp học'}</button></div>

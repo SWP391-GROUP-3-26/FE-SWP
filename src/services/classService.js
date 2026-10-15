@@ -32,7 +32,8 @@ export async function getClasses({ search = '', status = '', signal } = {}) {
 export async function getClassFormOptions(signal) {
   const result = await request('get', '/options', undefined, { signal })
   const options = result?.data
-  if (!Array.isArray(options?.subjects) || !Array.isArray(options?.coaches) || !Array.isArray(options?.rooms)) {
+  if (!Array.isArray(options?.subjects) || !Array.isArray(options?.coaches)
+    || !Array.isArray(options?.rooms) || !Array.isArray(options?.timeSlots)) {
     throw new Error('Danh mục tạo lớp học từ máy chủ không hợp lệ.')
   }
   return options

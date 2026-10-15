@@ -1,3 +1,68 @@
+:root {
+  /* Shared application palette */
+  --bg: #f5f7f2;
+  --surface: #ffffff;
+  --surface-muted: #eef3ea;
+  --text: #24312b;
+  --muted: #67746c;
+  --primary: #2f7d59;
+  --primary-dark: #246045;
+  --accent: #c76d3a;
+  --border: #d7e2d9;
+  --shadow: 0 20px 60px rgba(22, 41, 31, 0.12);
+  --page-gutter: clamp(16px, 5vw, 80px);
+
+  --color-heading: #17251e;
+  --color-secondary-text-strong: #536b5e;
+  --color-secondary-text: #65776d;
+  --color-secondary-text-soft: #66776d;
+  --color-subtle-text: #718077;
+  --color-ink-secondary: #34473d;
+  --color-surface-soft: #f9fbf9;
+  --color-surface-tint: #edf6ef;
+  --color-border-soft: #e3ece5;
+  --color-border-muted: #e4eee6;
+  --color-success: #236b4d;
+  --color-success-surface: #e5f5eb;
+  --color-danger: #9c2f1b;
+  --color-danger-surface: #fff2ee;
+  --color-warning: #735619;
+  --color-warning-surface: #fffaf0;
+  --color-focus-ring: rgba(47, 125, 89, 0.25);
+
+  --radius-control: 8px;
+  --radius-field: 10px;
+  --radius-card: 14px;
+  --shadow-card: 0 12px 36px rgba(22, 41, 31, 0.06);
+  --shadow-card-soft: 0 10px 30px rgba(22, 41, 31, 0.045);
+  --motion-fast: 180ms ease;
+
+  /* Package-card accents and supporting surfaces */
+  --member-package-ink: var(--text);
+  --member-package-muted: var(--color-secondary-text);
+  --member-package-soft: #819087;
+  --member-package-green: #276344;
+  --member-package-green-strong: var(--color-success);
+  --member-package-green-pale: #eaf5ed;
+  --member-package-green-wash: #f3f8f4;
+  --member-package-border: var(--color-border-soft);
+  --member-package-border-soft: #edf2ee;
+  --member-package-surface: var(--surface);
+  --member-package-warning-ink: #684509;
+  --member-package-warning-border: #e8a82f;
+  --member-package-warning-surface: #fff4d9;
+  --member-package-danger: var(--color-danger);
+  --member-package-radius: 12px;
+  --member-package-radius-small: var(--radius-control);
+  --member-package-shadow: 0 5px 16px rgba(22, 41, 31, 0.06);
+  --member-package-shadow-raised: 0 14px 28px rgba(22, 75, 46, 0.15);
+  --member-package-motion: var(--motion-fast);
+
+  --color-surface-hover: #f8fbf8;
+  --color-danger-hover: #7d2516;
+  --color-readonly-surface: #eaf0eb;
+}
+
 #root {
   min-height: 100vh;
 }

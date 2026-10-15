@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import { classApiErrorMessage, getMyClasses } from '../services/memberClassService'
+import { calendarDateKey, getCalendarSessions } from '../utils/memberSchedule'
 import './MemberActivities.css'
 
 const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật']
@@ -30,36 +31,6 @@ function addDays(date, amount) {
   return result
 }
 
-function normalizeDay(day) {
-  const value = String(day || '')
-    .toLocaleLowerCase('vi')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[\s._-]/g, '')
-
-  if (['thu2', 'thuhai', 't2', 'monday', 'mon'].includes(value)) return 0
-  if (['thu3', 'thuba', 't3', 'tuesday', 'tue'].includes(value)) return 1
-  if (['thu4', 'thutu', 't4', 'wednesday', 'wed'].includes(value)) return 2
-  if (['thu5', 'thunam', 't5', 'thursday', 'thu'].includes(value)) return 3
-  if (['thu6', 'thusau', 't6', 'friday', 'fri'].includes(value)) return 4
-  if (['thu7', 'thubay', 't7', 'saturday', 'sat'].includes(value)) return 5
-  if (['chunhat', 'cn', 'sunday', 'sun'].includes(value)) return 6
-  return -1
-}
-
-function daysForClass(classItem) {
-  return String(classItem.schedule || '')
-    .split(/[(),;]/)
-    .flatMap((part) => part.split(','))
-    .map(normalizeDay)
-    .filter((day, index, days) => day >= 0 && days.indexOf(day) === index)
-}
-
-function timeKey(classItem) {
-  const time = String(classItem.timeSlot || '').trim()
-  return time || 'Giờ chưa cập nhật'
-}
-
 function timeSortValue(value) {
   const match = value.match(/^(\d{1,2}):(\d{2})/)
   return match ? Number(match[1]) * 60 + Number(match[2]) : Number.MAX_SAFE_INTEGER
@@ -74,7 +45,8 @@ export default function MemberSchedule() {
   const today = new Date()
   const weekEnd = addDays(weekStart, 6)
   const weekLabel = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
-  const timeSlots = [...new Set([...DEFAULT_TIME_SLOTS, ...classes.map(timeKey)])]
+  const calendarSessions = getCalendarSessions(classes)
+  const timeSlots = [...new Set([...DEFAULT_TIME_SLOTS, ...calendarSessions.map((entry) => entry.timeSlot)])]
     .sort((left, right) => timeSortValue(left) - timeSortValue(right))
 
   useEffect(() => {
@@ -180,17 +152,32 @@ export default function MemberSchedule() {
                         <span>{slot}</span>
                       </th>
                       {WEEKDAYS.map((weekday, dayIndex) => {
-                        const dayClasses = classes.filter((classItem) => (
-                          timeKey(classItem) === slot && daysForClass(classItem).includes(dayIndex)
+                        const dateKey = calendarDateKey(addDays(weekStart, dayIndex))
+                        const dayClasses = calendarSessions.filter((entry) => (
+                          entry.timeSlot === slot && entry.date === dateKey
                         ))
                         return (
                           <td className="member-calendar-class-cell" key={`${slot}-${weekday}`}>
-                            {dayClasses.map((classItem) => (
-                              <article className="member-schedule-class" key={classItem.bookingId}>
+                            {dayClasses.map(({ classItem, session }) => (
+                              <article className="member-schedule-class" key={session.sessionId ?? `${classItem.bookingId}-${dateKey}`}>
+                                <div className="member-schedule-class-heading">
+                                  <span className="member-schedule-class-icon material-symbols-outlined" aria-hidden="true">fitness_center</span>
+                                  <span className="member-schedule-status">Đã đăng ký</span>
+                                </div>
                                 <strong>{classItem.className}</strong>
-                                <span>{classItem.classCode}</span>
-                                {classItem.roomName && <span>{classItem.roomName}</span>}
-                                {classItem.coachName && <span>{classItem.coachName}</span>}
+                                <span className="member-schedule-class-code">{classItem.classCode || `Lớp #${classItem.classId}`}</span>
+                                {classItem.roomName && (
+                                  <span className="member-schedule-meta">
+                                    <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
+                                    {classItem.roomName}
+                                  </span>
+                                )}
+                                {classItem.coachName && (
+                                  <span className="member-schedule-meta">
+                                    <span className="material-symbols-outlined" aria-hidden="true">person</span>
+                                    {classItem.coachName}
+                                  </span>
+                                )}
                               </article>
                             ))}
                             {dayClasses.length === 0 && (

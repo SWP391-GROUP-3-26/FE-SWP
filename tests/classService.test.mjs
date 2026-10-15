@@ -30,6 +30,7 @@ try {
       subjects: [{ id: 1, name: 'Yoga' }],
       coaches: [{ id: 2, fullName: 'Coach' }],
       rooms: [{ id: 4, name: 'Studio' }],
+      timeSlots: [{ id: 1, startTime: '07:00', endTime: '09:15' }],
     },
   }
   assert.equal((await service.getClassFormOptions()).rooms[0].id, 4)
@@ -45,8 +46,11 @@ try {
     coachId: 2,
     roomId: 4,
     daysOfWeek: ['Thứ 2'],
-    startTime: '09:00',
-    endTime: '10:00',
+    slotId: 1,
+    startTime: '07:30',
+    endTime: '08:30',
+    startDate: '2026-10-15',
+    durationWeeks: 4,
     maxCapacity: 12,
     price: 200000,
     status: 'Active',
