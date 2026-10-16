@@ -199,7 +199,8 @@ try {
   find((node) => node.props['aria-label'] === 'Tuần sau').props.onClick()
   render(Member)
   assert.doesNotMatch(html(), /Buổi vượt thời hạn|Yoga tuần sau/)
-  assert.match(html(), /Không có buổi học/)
+  assert.match(html(), /Hiện tại bạn không có buổi học nào trong tuần này!/)
+  assert.match(html(), /member-schedule-empty-week/)
   cleanup()
   console.log('PASS: real form handlers block invalid terms/days; four-slot controls and payload; backend end date/status; Member SSR four-row calendar, week changes and visible legacy exceptions (fixtures, not a live browser)')
 } finally {

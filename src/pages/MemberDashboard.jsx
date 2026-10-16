@@ -25,50 +25,32 @@ export default function MemberDashboard() {
         <span className="member-welcome-icon material-symbols-outlined" aria-hidden="true">spa</span>
       </section>
 
-      <div className="dashboard-grid">
+      <div className="dashboard-grid member-overview-grid">
         <article className="dashboard-card dashboard-card-accent">
           <span className="material-symbols-outlined">calendar_month</span>
           <h3>Lịch tập</h3>
-          <p>Lịch tập và các lớp đã đăng ký sẽ hiển thị tại đây.</p>
+          <p>Xem các buổi học đã xác nhận theo từng tuần.</p>
           <Link className="member-profile-link" to="/member/schedule">Xem lịch tập</Link>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">card_membership</span>
           <h3>Gói tập</h3>
-          <p>Thông tin gói tập sẽ hiển thị tại đây.</p>
+          <p>Theo dõi gói đang dùng, thời hạn và các gói đang mở bán.</p>
           <Link className="member-profile-link" to="/member/packages">Xem gói tập</Link>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">sports_gymnastics</span>
           <h3>Lớp học</h3>
-          <p>Khám phá các lớp tập và lịch học dành cho hội viên.</p>
+          <p>Tìm lớp phù hợp hoặc xem lại các lớp đã đăng ký.</p>
           <Link className="member-profile-link" to="/member/classes">Xem lớp học</Link>
         </article>
         <article className="dashboard-card">
           <span className="material-symbols-outlined">person</span>
           <h3>Hồ sơ</h3>
-          <p>Thông tin cá nhân của hội viên sẽ hiển thị tại đây.</p>
+          <p>Cập nhật thông tin liên hệ và ảnh đại diện của bạn.</p>
           <Link className="member-profile-link" to="/member/profile">Xem hồ sơ</Link>
         </article>
       </div>
-      <section className="dashboard-panel member-journey-panel">
-        <h3 className="member-activity-title">Hoạt động hội viên</h3>
-        <div className="member-journey-heading">
-          <span className="member-journey-icon material-symbols-outlined" aria-hidden="true">emoji_events</span>
-          <div>
-            <span className="section-heading-kicker">HÀNH TRÌNH SỨC KHỎE</span>
-            <h3>Bắt đầu hành trình của bạn</h3>
-            <p>Giữ thông tin cá nhân luôn mới để UniSports hỗ trợ bạn tốt hơn.</p>
-          </div>
-        </div>
-        <div className="member-journey-footer">
-          <span>
-            <span className="material-symbols-outlined" aria-hidden="true">info</span>
-            Lịch tập và thông tin gói sẽ hiển thị khi được kết nối với hệ thống.
-          </span>
-          <Link to="/member/profile">Cập nhật thông tin <span aria-hidden="true">→</span></Link>
-        </div>
-      </section>
     </DashboardLayout>
   )
 }

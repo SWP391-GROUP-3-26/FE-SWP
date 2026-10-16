@@ -3,9 +3,9 @@
 .subject-button:hover { background: var(--surface-muted); }
 .subject-primary { background: var(--primary); border-color: var(--primary); color: white; }
 .subject-primary:hover { background: var(--primary-dark); }
-.subject-delete { color: #9c2f1b; }
+.subject-delete { color: var(--color-danger); }
 .subject-danger { background: #9c2f1b; border-color: #9c2f1b; color: white; }
-.subject-danger:hover { background: #7d2516; }
+.subject-danger:hover { background: var(--color-danger-hover); }
 .subject-button:disabled { opacity: .65; cursor: wait; }
 .subject-toolbar { display: flex; gap: 14px; margin: 22px 0; flex-wrap: wrap; }
 .subject-search { flex: 1; min-width: 200px; }
@@ -18,7 +18,7 @@
 .subject-table th, .subject-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; overflow-wrap: anywhere; }
 .subject-table thead { background: var(--surface-muted); color: var(--muted); }
 .subject-table tbody tr:last-child > * { border-bottom: 0; }
-.subject-table tbody tr:hover { background: #f8fbf8; }
+.subject-table tbody tr:hover { background: var(--color-surface-hover); }
 .subject-table code { color: var(--primary-dark); }
 .subject-description { max-width: 340px; min-width: 180px; white-space: pre-wrap; color: var(--muted); }
 .subject-category { display: inline-block; padding: 5px 10px; border-radius: 8px; background: var(--surface-muted); color: var(--primary-dark); }

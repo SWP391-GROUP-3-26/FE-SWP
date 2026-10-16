@@ -96,7 +96,10 @@ export default function MemberSchedule() {
           </div>
         )}
         {!loading && !loadError && hasBookings && weekSessionCount === 0 && (
-          <div className="member-schedule-notice" role="status">Không có buổi học nào đã xác định ngày trong tuần đang xem.</div>
+          <div className="member-schedule-notice member-schedule-empty-week" role="status">
+            <span className="material-symbols-outlined" aria-hidden="true">event_busy</span>
+            <strong>Hiện tại bạn không có buổi học nào trong tuần này!</strong>
+          </div>
         )}
 
         <div className="member-calendar-scroll" tabIndex={0} role="region" aria-label={`Thời khóa biểu tuần ${weekLabel}`}>
@@ -137,6 +140,7 @@ export default function MemberSchedule() {
                         return (
                           <td className="member-calendar-class-cell" key={`${slot.id}-${weekday}`}>
                             {dayClasses.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
+
                             {dayClasses.length === 0 && (
                               <span className="member-calendar-empty-label" aria-hidden="true">—</span>
                             )}

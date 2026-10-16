@@ -306,6 +306,7 @@ export default function ClassManagement() {
                 ? `Chọn giờ học trong khoảng ${selectedSlot.startTime} – ${selectedSlot.endTime}. Giờ kết thúc phải sau giờ bắt đầu.`
                 : 'Chọn slot trước khi chọn giờ bắt đầu và kết thúc.'}</p>
               <div className="service-form-grid">
+
                 <label>Giờ bắt đầu <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.startTime} onChange={(event) => handleTimeChange('startTime', event.target.value)} /></span></label>
                 <label>Giờ kết thúc <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={form.startTime || selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.endTime} onChange={(event) => handleTimeChange('endTime', event.target.value)} /></span></label>
                 <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value })} /></span></label>

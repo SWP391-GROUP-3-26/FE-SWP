@@ -64,9 +64,11 @@ export default function DashboardLayout({
             <h1 className="dashboard-page-title">{title}</h1>
           </div>
           <div className="topbar-user">
-            <button className="notification-button" type="button">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
+            {role !== 'Hội viên' && (
+              <button className="notification-button" type="button">
+                <span className="material-symbols-outlined">notifications</span>
+              </button>
+            )}
             <div className="user-copy">
               <strong>{profile?.fullName || auth.fullName || auth.username || role}</strong>
               <small>{roleLabel}</small>

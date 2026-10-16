@@ -330,20 +330,6 @@ export default function MemberProfile() {
                   </div>
                 </label>
 
-                <label className="member-profile-field member-profile-field-wide">
-                  <span>Đường dẫn ảnh đại diện</span>
-                  <div className="member-profile-input">
-                    <span className="material-symbols-outlined" aria-hidden="true">image</span>
-                    <input
-                      maxLength={255}
-                      name="avatarUrl"
-                      onChange={updateField}
-                      placeholder="https://..."
-                      type="text"
-                      value={form.avatarUrl}
-                    />
-                  </div>
-                </label>
               </div>
 
               <div className="member-profile-actions">
