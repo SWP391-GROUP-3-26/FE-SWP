@@ -12,6 +12,7 @@ import Login from './pages/Login'
 import MemberClasses from './pages/MemberClasses'
 import MemberDashboard from './pages/MemberDashboard'
 import MemberPackages from './pages/MemberPackages'
+import MemberPaymentResult from './pages/MemberPaymentResult'
 import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
@@ -65,6 +66,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
               <MemberPackages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/payment-result"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberPaymentResult />
             </ProtectedRoute>
           }
         />

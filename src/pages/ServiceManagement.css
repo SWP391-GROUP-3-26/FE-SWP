@@ -62,7 +62,6 @@
 .user-management-theme .dashboard-intro {
   background: linear-gradient(135deg, rgba(22, 122, 89, 0.08), transparent 46%), #fff;
 }
-.user-management-actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .user-management-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 18px 0; padding: 14px; border: 1px solid var(--border); border-radius: 11px; background: #f8fbf8; }
 .user-management-search-filter { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; }
 .user-management-search-filter .service-search { min-width: 180px; }
@@ -117,7 +116,6 @@
 }
 @media (max-width: 560px) {
   .service-heading { align-items: stretch; flex-direction: column; }
-  .user-management-actions { flex-direction: column; }
   .user-management-search-filter { align-items: stretch; flex-wrap: wrap; }
   .user-management-search-filter .service-search { flex-basis: 100%; }
   .user-role-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }

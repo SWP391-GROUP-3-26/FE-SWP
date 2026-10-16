@@ -2,10 +2,15 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import RegisteredClassCard from '../components/RegisteredClassCard'
+import { formatClassDate } from '../utils/classSchedule'
 import memberMenuItems from '../components/memberMenuItems'
+import { getVnpayPaymentUrl, paymentApiErrorMessage } from '../services/memberPaymentService'
 import {
   classApiErrorMessage,
   getAvailableClasses,
+  getMyClassList,
+  cancelClassRegistration,
   getClassConfirmation,
   registerForClass,
 } from '../services/memberClassService'
@@ -30,6 +35,12 @@ function classSchedule(classItem) {
 
 export default function MemberClasses() {
   const [classes, setClasses] = useState([])
+  const [activeTab, setActiveTab] = useState('registered')
+  const [registeredClasses, setRegisteredClasses] = useState([])
+  const [counts, setCounts] = useState({})
+  const [registrationStatus, setRegistrationStatus] = useState('all')
+  const [detailRegistration, setDetailRegistration] = useState(null)
+  const [cancellingId, setCancellingId] = useState(null)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -47,8 +58,14 @@ export default function MemberClasses() {
   useEffect(() => {
     const controller = new AbortController()
 
-    getAvailableClasses({ search: submittedSearch, signal: controller.signal })
-      .then(setClasses)
+    const request = activeTab === 'registered'
+      ? getMyClassList({ search: submittedSearch, status: registrationStatus, signal: controller.signal })
+      : getAvailableClasses({ search: submittedSearch, signal: controller.signal })
+    request.then((result) => {
+      if (controller.signal.aborted) return
+      if (activeTab === 'registered') { setRegisteredClasses(result.classes); setCounts(result.counts) }
+      else setClasses(result)
+    })
       .catch((error) => {
         if (!controller.signal.aborted) setLoadError(classApiErrorMessage(error))
       })
@@ -57,7 +74,29 @@ export default function MemberClasses() {
       })
 
     return () => controller.abort()
-  }, [reloadKey, submittedSearch])
+  }, [reloadKey, submittedSearch, activeTab, registrationStatus])
+
+  function changeTab(tab) {
+    if (tab === activeTab) return
+    setActiveTab(tab)
+    setLoading(true)
+    setLoadError('')
+    setSearch('')
+    setSubmittedSearch('')
+  }
+
+  async function cancelRegistration(item) {
+    if (cancellingId != null || !window.confirm(`Hủy các buổi còn lại của lớp “${item.className}”? Các buổi đã học vẫn được giữ trong lịch sử. Hoàn tiền cần trung tâm kiểm tra.`)) return
+    setCancellingId(item.bookingId)
+    setLoadError('')
+    try {
+      const result = await cancelClassRegistration(item.bookingId)
+      setSuccessMessage(result.message || 'Đã hủy các buổi còn lại của đăng ký.')
+      setLoading(true)
+      setReloadKey((key) => key + 1)
+    } catch (error) { setLoadError(classApiErrorMessage(error)) }
+    finally { setCancellingId(null) }
+  }
 
   function handleSearch(event) {
     event.preventDefault()
@@ -78,6 +117,7 @@ export default function MemberClasses() {
   }
 
   async function openRegistration(classItem) {
+    setSuccessMessage('')
     setSelectedClass(classItem)
     setConfirmation(null)
     setConfirmationLoading(true)
@@ -103,7 +143,7 @@ export default function MemberClasses() {
 
   async function submitRegistration(event) {
     event.preventDefault()
-    if (!selectedClass || !confirmation) return
+    if (bookingLoading || !selectedClass || !confirmation) return
 
     setBookingLoading(true)
     setModalError('')
@@ -112,12 +152,16 @@ export default function MemberClasses() {
         paymentMethod,
         ...(paymentMethod === 'DIRECT' ? { paymentChannel } : {}),
       })
+      if (result.paymentUrl || (paymentMethod === 'DIRECT' && paymentChannel === 'Card')) {
+        window.location.assign(getVnpayPaymentUrl(result.paymentUrl))
+        return
+      }
       setSuccessMessage(result.message || `Đăng ký lớp ${result.className || selectedClass.name} thành công.`)
       setSelectedClass(null)
       setConfirmation(null)
       setReloadKey((key) => key + 1)
     } catch (error) {
-      setModalError(classApiErrorMessage(error))
+      setModalError(paymentApiErrorMessage(error))
     } finally {
       setBookingLoading(false)
     }
@@ -134,11 +178,31 @@ export default function MemberClasses() {
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">KHÁM PHÁ BỘ MÔN</span>
-          <h2>Đăng ký lớp học</h2>
+          <h2>Lớp học của bạn</h2>
           <p>Tìm lớp phù hợp, chọn hình thức thanh toán và thêm lớp đã đăng ký vào thời khóa biểu.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">sports_gymnastics</span>
       </section>
+
+      <div className="member-class-tabs" role="tablist" aria-label="Danh sách lớp học">
+        <button id="registered-classes-tab" className={activeTab === 'registered' ? 'member-register-button' : 'member-cancel-button'}
+          type="button" role="tab" aria-selected={activeTab === 'registered'} aria-controls="registered-classes-panel"
+          onClick={() => changeTab('registered')}>Lớp đã đăng ký</button>
+        <button id="available-classes-tab" className={activeTab === 'available' ? 'member-register-button' : 'member-cancel-button'}
+          type="button" role="tab" aria-selected={activeTab === 'available'} aria-controls="available-classes-panel"
+          onClick={() => changeTab('available')}>Đăng ký lớp</button>
+      </div>
+      {activeTab === 'registered' && <label className="member-registration-filter">Trạng thái đăng ký
+        <select value={registrationStatus} onChange={(event) => {
+          setRegistrationStatus(event.target.value); setLoading(true); setLoadError('')
+        }}>
+          <option value="all">Tất cả ({counts.all ?? 0})</option>
+          <option value="ongoing">Đang học ({counts.ongoing ?? 0})</option>
+          <option value="completed">Hoàn thành ({counts.completed ?? 0})</option>
+          <option value="cancelled">Đã hủy ({counts.cancelled ?? 0})</option>
+          <option value="Pending">Chờ thanh toán</option>
+        </select>
+      </label>}
 
       <form className="member-class-search" aria-label="Tìm kiếm lớp học" onSubmit={handleSearch}>
         <label className="member-class-search-input">
@@ -154,14 +218,14 @@ export default function MemberClasses() {
           Tìm kiếm
         </button>
         <span className="member-class-count">
-          {loading ? 'Đang tải lớp...' : `${classes.length} lớp đang mở`}
+          {loading ? 'Đang tải lớp...' : activeTab === 'registered' ? `${registeredClasses.length} đăng ký` : `${classes.length} lớp đang mở`}
         </span>
       </form>
 
       {successMessage && (
         <section className="member-registration-success" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
-          <span>{successMessage} Lớp đã được ghi nhận, xem tại <Link to="/member/schedule">Thời khóa biểu</Link>.</span>
+          <span>{successMessage} Xem lịch tại <Link to="/member/schedule">Thời khóa biểu</Link>.</span>
           <button type="button" aria-label="Đóng thông báo" onClick={() => setSuccessMessage('')}>×</button>
         </section>
       )}
@@ -180,7 +244,18 @@ export default function MemberClasses() {
         </div>
       )}
 
-      {!loadError && !loading && classes.length === 0 && (
+      {activeTab === 'registered' && !loadError && !loading && <section id="registered-classes-panel" role="tabpanel" aria-labelledby="registered-classes-tab">
+        {registeredClasses.length === 0 ? <div className="member-class-empty">
+          <h3>Chưa có đăng ký phù hợp</h3><p>Các lớp bạn đã đăng ký sẽ hiển thị ở đây, kể cả khi đã kết thúc.</p>
+          <button className="member-register-button" type="button" onClick={() => changeTab('available')}>Tìm lớp để đăng ký</button>
+        </div> : <div className="member-class-grid">
+          {registeredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
+            busy={cancellingId === item.bookingId} onDetail={setDetailRegistration} onCancel={cancelRegistration}
+            onRebook={(registration) => openRegistration({ classId: registration.classId })} />)}
+        </div>}
+      </section>}
+
+      {activeTab === 'available' && !loadError && !loading && classes.length === 0 && (
         <section className="member-class-empty">
           <span className="member-class-empty-icon material-symbols-outlined" aria-hidden="true">event_busy</span>
           <span className="section-heading-kicker">LỚP HỌC UNISPORTS</span>
@@ -193,8 +268,8 @@ export default function MemberClasses() {
         </section>
       )}
 
-      {!loadError && !loading && classes.length > 0 && (
-        <section className="member-class-grid" aria-label="Danh sách lớp đang hoạt động">
+      {activeTab === 'available' && !loadError && !loading && classes.length > 0 && (
+        <section id="available-classes-panel" role="tabpanel" aria-labelledby="available-classes-tab" className="member-class-grid" aria-label="Danh sách lớp đang hoạt động">
           {classes.map((classItem) => (
             <article className="member-class-card" key={classItem.classId}>
               <div className="member-class-card-heading">
@@ -236,7 +311,8 @@ export default function MemberClasses() {
                   type="button"
                   onClick={() => openRegistration(classItem)}
                 >
-                  {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? 'Đăng ký lớp' : 'Hết chỗ'}
+                  {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? 'Đăng ký lớp'
+                    : classItem.sessionId === null ? 'Không còn buổi học' : 'Hết chỗ'}
                 </button>
               </div>
             </article>
@@ -262,12 +338,23 @@ export default function MemberClasses() {
           {confirmationLoading ? (
             <div className="member-class-state" role="status">Đang tải thông tin đăng ký...</div>
           ) : confirmation ? (
-            <form onSubmit={submitRegistration}>
+            <form onSubmit={submitRegistration} aria-busy={bookingLoading}>
               <h4>{confirmation.className}</h4>
               <p>{confirmation.schedule}</p>
               <p><strong>Huấn luyện viên:</strong> {confirmation.coachName || 'Chưa cập nhật'}</p>
               <p><strong>Phòng:</strong> {confirmation.roomName || 'Chưa xác định'}</p>
-              <fieldset className="member-payment-options">
+              <div className="member-registration-summary">
+                <p><strong>Số buổi còn lại:</strong> {confirmation.sessionCount ?? 1}</p>
+                <p><strong>Giá mỗi buổi:</strong> {priceFormatter.format(confirmation.price || 0)}</p>
+                <p><strong>Tổng học phí:</strong> {priceFormatter.format(confirmation.totalAmount ?? confirmation.price ?? 0)}</p>
+                <p><strong>Thời hạn:</strong> {formatClassDate(confirmation.startDate)} – {formatClassDate(confirmation.endDate)}</p>
+                {confirmation.sessions?.length > 0 && <details><summary>Các buổi được đăng ký</summary>
+                  <ul>{confirmation.sessions.map((session) => <li key={session.sessionId}>
+                    {formatClassDate(session.sessionDate)} · {session.sessionStartTime}–{session.sessionEndTime}
+                  </li>)}</ul>
+                </details>}
+              </div>
+              <fieldset className="member-payment-options" disabled={bookingLoading}>
                 <legend>Hình thức thanh toán</legend>
                 {confirmation.packageOption?.eligible && (
                   <label>
@@ -279,6 +366,7 @@ export default function MemberClasses() {
                       value="PACKAGE"
                     />
                     {confirmation.packageOption.title || 'Trừ gói hội viên'}
+                    {` · Dùng ${confirmation.packageOption.requiredSessions ?? confirmation.sessionCount ?? 1} buổi`}
                     {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
                   </label>
                 )}
@@ -299,13 +387,16 @@ export default function MemberClasses() {
               {paymentMethod === 'DIRECT' && confirmation.directPaymentOption?.available && (
                 <label className="member-payment-channel">
                   Kênh thanh toán
-                  <select value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>
+                  <select disabled={bookingLoading} value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>
                     <option value="Bank_Transfer">Chuyển khoản</option>
                     <option value="Cash">Tiền mặt</option>
-                    <option value="Card">Thẻ</option>
+                    <option value="Card">Thẻ ATM qua VNPay</option>
                     <option value="E_Wallet">Ví điện tử</option>
                   </select>
                 </label>
+              )}
+              {paymentMethod === 'DIRECT' && paymentChannel === 'Card' && (
+                <p role="note">Bạn sẽ được chuyển tới VNPay để thanh toán bằng thẻ ATM. Đây là môi trường thanh toán thử nghiệm.</p>
               )}
               {!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available && (
                 <div className="member-class-state member-class-error" role="alert">
@@ -320,7 +411,7 @@ export default function MemberClasses() {
                   disabled={bookingLoading || (!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available)}
                   type="submit"
                 >
-                  {bookingLoading ? 'Đang đăng ký...' : 'Xác nhận đăng ký'}
+                  {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span> : 'Xác nhận đăng ký'}
                 </button>
               </div>
             </form>
@@ -334,6 +425,18 @@ export default function MemberClasses() {
           )}
         </Modal>
       )}
+      {detailRegistration && <Modal title={`Các buổi lớp ${detailRegistration.className}`} onClose={() => setDetailRegistration(null)}>
+        <p>{detailRegistration.status} · {detailRegistration.sessionCount ?? detailRegistration.sessions?.length ?? 1} buổi</p>
+        <ul className="member-registration-session-list">
+          {(detailRegistration.sessions || [detailRegistration]).map((session) => <li key={session.sessionId ?? session.sessionDate}>
+            <strong>{formatClassDate(session.sessionDate)}</strong>
+            <span>{session.sessionStartTime}–{session.sessionEndTime}</span>
+            <span>{session.rawStatus === 'Cancelled' || session.sessionStatus === 'Cancelled' ? 'Đã hủy'
+              : session.rawStatus === 'Pending' ? 'Chờ thanh toán' : session.rawStatus === 'Completed' ? 'Đã hoàn thành' : 'Đã xác nhận'}</span>
+          </li>)}
+        </ul>
+        <div className="member-booking-actions"><button className="member-cancel-button" type="button" onClick={() => setDetailRegistration(null)}>Đóng</button></div>
+      </Modal>}
     </DashboardLayout>
   )
 }

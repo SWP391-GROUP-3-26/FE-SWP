@@ -7,6 +7,7 @@ import {
   getManagedUserById,
   getManagedUsers,
   getUserManagementOptions,
+  updateManagedUserRole,
   updateManagedUserStatus,
 } from '../services/userManagementService'
 import './ServiceManagement.css'
@@ -17,7 +18,7 @@ const EMPTY_ROLE = ''
 export default function UserManagement() {
   const role = getRole()
   const [users, setUsers] = useState([])
-  const [roleOptions, setRoleOptions] = useState(['Receptionist', 'Coach', 'Member'])
+  const [roleOptions, setRoleOptions] = useState([])
   const [statusOptions, setStatusOptions] = useState(['Active', 'Inactive', 'Locked'])
   const [search, setSearch] = useState('')
   const [selectedStatus, setSelectedStatus] = useState(EMPTY_STATUS)
@@ -32,7 +33,15 @@ export default function UserManagement() {
   const [detailUser, setDetailUser] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState('')
+  const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsError, setOptionsError] = useState('')
+  const [detailRole, setDetailRole] = useState('')
+  const [roleSaving, setRoleSaving] = useState(false)
+  const [roleUpdateError, setRoleUpdateError] = useState('')
+  const [roleUpdateSuccess, setRoleUpdateSuccess] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
   const detailControllerRef = useRef(null)
+  const roleUpdatePendingRef = useRef(false)
 
   useEffect(() => {
     let isMounted = true
@@ -41,10 +50,12 @@ export default function UserManagement() {
       try {
         const options = await getUserManagementOptions()
         if (!isMounted) return
-        if (Array.isArray(options.roles) && options.roles.length) setRoleOptions(options.roles)
+        setRoleOptions(options.roles)
         if (Array.isArray(options.statuses) && options.statuses.length) setStatusOptions(options.statuses)
-      } catch {
-        if (!isMounted) return
+      } catch (err) {
+        if (isMounted) setOptionsError(err?.response?.data?.message || err?.message || 'Không thể tải danh sách vai trò.')
+      } finally {
+        if (isMounted) setOptionsLoading(false)
       }
     }
 
@@ -77,6 +88,8 @@ export default function UserManagement() {
         setUsers(response.users || [])
         setTotal(response.total || 0)
         setTotalPages(response.totalPages || 0)
+        const lastPage = Math.max((response.totalPages || 0) - 1, 0)
+        if (page > lastPage) setPage(lastPage)
       } catch (err) {
         if (!isMounted) return
         setUsers([])
@@ -91,7 +104,7 @@ export default function UserManagement() {
     return () => {
       isMounted = false
     }
-  }, [search, selectedRole, selectedStatus, page])
+  }, [search, selectedRole, selectedStatus, page, reloadKey])
 
   const roleTabs = ['Tất cả vai trò', ...roleOptions]
 
@@ -143,16 +156,23 @@ export default function UserManagement() {
   }
 
   const loadUserDetail = async (user) => {
+    if (roleUpdatePendingRef.current) return
     detailControllerRef.current?.abort()
     const controller = new AbortController()
     detailControllerRef.current = controller
     setDetailUser(user)
     setDetailLoading(true)
     setDetailError('')
+    setDetailRole('')
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
 
     try {
       const detail = await getManagedUserById(user.userId, controller.signal)
-      if (!controller.signal.aborted) setDetailUser(detail)
+      if (!controller.signal.aborted) {
+        setDetailUser(detail)
+        setDetailRole(detail.role || '')
+      }
     } catch (err) {
       if (!controller.signal.aborted) {
         setDetailError(err?.message || 'Không thể tải thông tin người dùng.')
@@ -163,11 +183,46 @@ export default function UserManagement() {
   }
 
   const closeDetail = () => {
+    if (roleUpdatePendingRef.current) return
     detailControllerRef.current?.abort()
     detailControllerRef.current = null
     setDetailUser(null)
     setDetailLoading(false)
     setDetailError('')
+    setDetailRole('')
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
+  }
+
+  const canSaveRole = Boolean(detailUser && !detailLoading && !detailError &&
+    !optionsLoading && !optionsError && roleOptions.includes(detailRole) &&
+    detailRole !== detailUser.role && !updatingUserIds.includes(detailUser.userId))
+
+  const handleSaveRole = async (event) => {
+    event.preventDefault()
+    const controller = detailControllerRef.current
+    if (!canSaveRole || roleUpdatePendingRef.current || !controller || controller.signal.aborted) return
+
+    roleUpdatePendingRef.current = true
+    setRoleSaving(true)
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
+    try {
+      const updatedUser = await updateManagedUserRole(detailUser.userId, detailRole)
+      if (controller.signal.aborted) return
+      setDetailUser(updatedUser)
+      setDetailRole(updatedUser.role)
+      setRoleUpdateSuccess('Cập nhật vai trò thành công.')
+      setReloadKey((current) => current + 1)
+    } catch (err) {
+      if (controller.signal.aborted) return
+      setRoleUpdateError(err?.response?.data?.message ||
+        (err?.request && !err?.response ? 'Không thể kết nối máy chủ. Vui lòng thử lại.' : err?.message) ||
+        'Không thể cập nhật vai trò người dùng.')
+    } finally {
+      roleUpdatePendingRef.current = false
+      if (!controller.signal.aborted) setRoleSaving(false)
+    }
   }
 
   const currentPage = totalPages > 0 ? Math.min(page + 1, totalPages) : 1
@@ -186,14 +241,6 @@ export default function UserManagement() {
       <section className="dashboard-panel service-panel user-management-panel">
         <div className="panel-heading service-heading">
           <div><h3>Tài khoản hệ thống</h3><p>Tiếp tân · Huấn luyện viên · Member</p></div>
-          <div className="user-management-actions">
-            <button className="subject-button" disabled title="Chưa có API xuất danh sách" type="button">
-              <span className="material-symbols-outlined" aria-hidden="true">download</span>Xuất danh sách
-            </button>
-            <button className="subject-button subject-primary" disabled title="Chưa có API tạo tài khoản" type="button">
-              <span className="material-symbols-outlined" aria-hidden="true">person_add</span>Thêm tài khoản mới
-            </button>
-          </div>
         </div>
 
         <div className="user-management-toolbar">
@@ -286,7 +333,7 @@ export default function UserManagement() {
                               aria-checked={user.status === 'Active'}
                               aria-label={`${user.status === 'Active' ? 'Tắt' : 'Bật'} hoạt động của ${user.username || user.fullName || user.userId}`}
                               className={`user-status-toggle${user.status === 'Active' ? ' user-status-toggle-on' : ''}`}
-                              disabled={updatingUserIds.includes(user.userId)}
+                              disabled={updatingUserIds.includes(user.userId) || (roleSaving && detailUser?.userId === user.userId)}
                               onClick={() => handleStatusToggle(user)}
                               role="switch"
                               type="button"
@@ -304,6 +351,7 @@ export default function UserManagement() {
                           className="subject-button"
                           type="button"
                           aria-label={`Xem thông tin ${user.username || user.fullName || user.userId}`}
+                          disabled={roleSaving}
                           onClick={() => loadUserDetail(user)}
                         >
                           Xem
@@ -355,7 +403,7 @@ export default function UserManagement() {
         )}
       </section>
       {detailUser && (
-        <Modal title="Chi tiết người dùng" className="user-detail-modal" onClose={closeDetail}>
+        <Modal title="Chi tiết người dùng" className="user-detail-modal" busy={roleSaving} onClose={closeDetail}>
           <div className="user-detail-content">
             <div className="user-detail-profile">
               <span className="user-detail-avatar" aria-hidden="true">{detailInitials}</span>
@@ -410,6 +458,30 @@ export default function UserManagement() {
                       </div>
                     ))}
                   </dl>
+                  <form className="auth-form service-form mt-3" onSubmit={handleSaveRole} aria-busy={roleSaving}>
+                    <fieldset disabled={roleSaving || optionsLoading || Boolean(optionsError) || updatingUserIds.includes(detailUser.userId)}>
+                      <label htmlFor="managed-user-role">Vai trò người dùng
+                        <span className="input-wrap">
+                          <select id="managed-user-role" value={detailRole} onChange={(event) => {
+                            setDetailRole(event.target.value)
+                            setRoleUpdateError('')
+                            setRoleUpdateSuccess('')
+                          }}>
+                            {!roleOptions.includes(detailRole) && <option value={detailRole}>{detailRole || 'Chọn vai trò'}</option>}
+                            {roleOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                          </select>
+                        </span>
+                      </label>
+                    </fieldset>
+                    {optionsLoading && <p role="status">Đang tải danh sách vai trò…</p>}
+                    {optionsError && <div className="auth-error" role="alert">{optionsError} Vui lòng tải lại trang để thử lại.</div>}
+                    {!optionsLoading && !optionsError && !roleOptions.length && <p role="status">Hiện chưa có vai trò khả dụng.</p>}
+                    {roleUpdateError && <div className="auth-error" role="alert">{roleUpdateError}</div>}
+                    {roleUpdateSuccess && <div className="alert alert-success mb-0" role="status">{roleUpdateSuccess}</div>}
+                    <button className="subject-button subject-primary" type="submit" disabled={roleSaving || !canSaveRole}>
+                      {roleSaving ? <span role="status">Đang lưu vai trò…</span> : 'Lưu vai trò'}
+                    </button>
+                  </form>
                 </section>
               </div>
             )}
@@ -420,7 +492,7 @@ export default function UserManagement() {
                 Thử lại
               </button>
             )}
-            <button className="subject-button" type="button" onClick={closeDetail}>Đóng</button>
+            <button className="subject-button" type="button" disabled={roleSaving} onClick={closeDetail}>Đóng</button>
           </div>
         </Modal>
       )}

@@ -780,6 +780,11 @@
   }
 }
 
+.member-schedule-other h3 { color: #34473d; font-size: 18px; }
+.member-schedule-other p { color: #65776d; font-size: 13px; line-height: 1.6; }
+.member-schedule-other .member-schedule-class strong { font-size: 14px; }
+.member-schedule-other .member-schedule-class span { font-size: 12px; }
+
 .member-schedule-loading {
   padding: 28px;
   color: #65776d;
@@ -932,3 +937,33 @@
   gap: 10px;
   margin-top: 20px;
 }
+
+.member-payment-result {
+  max-width: 720px;
+  padding: 28px;
+}
+
+.member-payment-result p {
+  margin: 12px 0;
+  color: #52665a;
+  line-height: 1.65;
+}
+
+.member-payment-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.member-payment-result-actions a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.member-class-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.member-registration-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.member-registration-filter select { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); }
+.member-registration-summary { padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; background: var(--surface-muted); }
+.member-registration-session-list { padding-left: 20px; }
+.member-registration-session-list li { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
