@@ -114,6 +114,14 @@ try {
     if (node.type === 'form' && node.props['aria-busy'] !== undefined) return node
     return [node.props?.children].flat(Infinity).map(findRegistrationForm).find(Boolean)
   }
+  function nodes(node) {
+    if (!node || typeof node !== 'object') return []
+    return [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)]
+  }
+  hooks.state = []
+  hooks.cursor = 0
+  ClassesPage()
+  assert.equal(hooks.state[18], 'Card', 'Default to ATM via VNPay')
   let redirectedTo
   globalThis.window = { location: { assign: (value) => { redirectedTo = value } } }
   for (const paymentUrl of [url, null, 'javascript:alert(1)']) {
@@ -123,6 +131,7 @@ try {
     redirectedTo = null
     payload = { ...payment, paymentUrl, message: 'Đã tạo yêu cầu thanh toán VNPay' }
     await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
+    assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'DIRECT', paymentChannel: 'Card' })
     assert.equal(hooks.state[19], '', 'Creating a card payment must never announce registration success')
     assert.notEqual(hooks.state[12], null, 'Card creation must not follow the completed booking branch')
     if (paymentUrl === url) assert.equal(redirectedTo, url)
@@ -131,6 +140,30 @@ try {
       assert.ok(hooks.state[16], 'A missing or unsafe payment URL must show an error')
     }
   }
+  hooks.state = [[], 'registered', [], {}, 'all', null, null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
+    { className: 'Yoga', directPaymentOption: { available: true } }, false, false, '', 'DIRECT', 'Card', '']
+  hooks.cursor = 0
+  const channel = nodes(ClassesPage()).find((node) => node.type === 'select' && node.props.value === 'Card')
+  assert.deepEqual(nodes(channel).filter((node) => node.type === 'option').map((node) =>
+    [node.props.value, node.props.children]), [['Card', 'Thẻ ATM qua VNPay'], ['E_Wallet', 'Ví điện tử']])
+  channel.props.onChange({ target: { value: 'E_Wallet' } })
+  hooks.cursor = 0
+  redirectedTo = null
+  payload = { success: true, paymentStatus: 'Paid', message: 'Đăng ký lớp học thành công!' }
+  await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
+  assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'DIRECT', paymentChannel: 'E_Wallet' })
+  assert.equal(redirectedTo, null, 'Wallet follows the backend success flow without a gateway URL')
+  assert.equal(hooks.state[19], payload.message)
+  assert.equal(hooks.state[12], null)
+
+  hooks.state[0] = [{ classId: 4, name: 'Yoga', canRegister: true }]
+  hooks.state[1] = 'available'
+  hooks.cursor = 0
+  payload = { success: true, className: 'Yoga', directPaymentOption: { available: true } }
+  const registerButton = nodes(ClassesPage()).find((node) => node.type === 'button' && !node.props.role && node.props.children === 'Đăng ký lớp')
+  await registerButton.props.onClick()
+  assert.equal(hooks.state[18], 'Card', 'Reopening the form resets the channel to ATM via VNPay')
+
   for (const success of [true, false]) {
     hooks.state = [[], 'registered', [], {}, 'all', null, null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
       { className: 'Yoga', packageOption: { eligible: true, remainingSessions: 3 } },

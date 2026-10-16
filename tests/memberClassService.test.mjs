@@ -58,12 +58,20 @@ try {
   assert.deepEqual(await service.getClassConfirmation(4), payload)
   assert.equal(lastRequest.url, '/api/member/classes/4/confirm')
 
-  const request = { paymentMethod: 'DIRECT', paymentChannel: 'Bank_Transfer' }
   payload = { success: true, bookingId: 10 }
-  assert.deepEqual(await service.registerForClass(4, request), payload)
-  assert.equal(lastRequest.method, 'post')
-  assert.equal(lastRequest.url, '/api/member/classes/4/register')
-  assert.deepEqual(JSON.parse(lastRequest.data), request)
+  for (const paymentChannel of ['Card', 'E_Wallet']) {
+    const request = { paymentMethod: 'DIRECT', paymentChannel }
+    assert.deepEqual(await service.registerForClass(4, request), payload)
+    assert.equal(lastRequest.method, 'post')
+    assert.equal(lastRequest.url, '/api/member/classes/4/register')
+    assert.deepEqual(JSON.parse(lastRequest.data), request)
+    assert.equal(lastRequest.headers.Authorization, 'Bearer member-class-test-token')
+  }
+  for (const paymentChannel of ['Cash', 'Bank_Transfer', '', undefined, 'invalid']) {
+    lastRequest = null
+    await assert.rejects(service.registerForClass(4, { paymentMethod: 'DIRECT', paymentChannel }), /Vui lòng chọn/)
+    assert.equal(lastRequest, null, 'Invalid channels must not send a request')
+  }
 
   payload = { success: false, message: 'No payment option available' }
   await assert.rejects(service.getClassConfirmation(4), /No payment option available/)
