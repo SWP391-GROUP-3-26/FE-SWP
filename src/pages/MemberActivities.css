@@ -903,3 +903,9 @@
 .member-registration-summary { padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; background: var(--surface-muted); }
 .member-registration-session-list { padding-left: 20px; }
 .member-registration-session-list li { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
+
+.member-qr-payment { margin: 24px 0; padding-top: 20px; border-top: 1px solid var(--border); }
+.member-payment-qr { display: block; width: min(280px, 100%); height: auto; margin: 20px auto; background: white; border-radius: 12px; }
+.member-qr-test-note { padding: 16px; border: 1px solid #e5bb55; border-radius: 10px; background: #fff8e6; color: #674b10; }
+.member-qr-test-note p { color: inherit; }
+.member-qr-payment dd { overflow-wrap: anywhere; }

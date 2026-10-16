@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
+import MemberQrPayment from '../components/MemberQrPayment'
 import useMemberPayment from '../hooks/useMemberPayment'
 import { isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import './MemberActivities.css'
@@ -12,7 +13,7 @@ export default function MemberPaymentResult() {
   const [params] = useSearchParams()
   const paymentId = params.get('paymentId')
   const validId = params.getAll('paymentId').length === 1 && isValidPaymentId(paymentId)
-  const { payment, error, loading, timedOut, retry } = useMemberPayment(paymentId, validId)
+  const { payment, error, loading, timedOut, retry } = useMemberPayment(paymentId, validId, 15 * 60_000)
   const review = payment?.paymentStatus === 'Paid' && (payment.requiresReview ||
     !['Đang diễn ra', 'Đã hoàn thành'].includes(payment.bookingStatus))
   const status = payment?.paymentStatus
@@ -49,6 +50,7 @@ export default function MemberPaymentResult() {
               )}
           </div>
         )}
+        {!error && status === 'Pending' && payment?.qrPayment && <MemberQrPayment payment={payment} />}
         {payment && <dl className="member-class-details">
           <div><dt>Mã thanh toán</dt><dd>{payment.paymentId}</dd></div>
           <div><dt>Số tiền</dt><dd>{priceFormatter.format(payment.paymentAmount)}</dd></div>

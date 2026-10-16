@@ -14,6 +14,15 @@ export function getVnpayPaymentUrl(value) {
   throw new Error('Không thể mở trang thanh toán. Vui lòng kiểm tra trạng thái đăng ký trước khi thử lại.')
 }
 
+export function getSepayQrUrl(value) {
+  try {
+    const url = new URL(value)
+    if (url.origin === 'https://vietqr.app' && url.pathname === '/img' &&
+      !url.username && !url.password) return url.href
+  } catch { /* Reject malformed QR URLs. */ }
+  throw new Error('Không thể tải mã QR thanh toán. Vui lòng kiểm tra lại sau.')
+}
+
 export function paymentApiErrorMessage(error) {
   const status = error.response?.status
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để kiểm tra thanh toán.'
@@ -41,6 +50,16 @@ export async function getMemberPayment(paymentId, { signal } = {}) {
     payment.paymentAmount < 0 || typeof payment.bookingStatus !== 'string' ||
     typeof payment.requiresReview !== 'boolean') {
     throw new Error('Chưa thể xác nhận trạng thái thanh toán. Vui lòng kiểm tra lại sau.')
+  }
+  if (payment.qrPayment != null) {
+    const qr = payment.qrPayment
+    if (typeof qr.testMode !== 'boolean' || typeof qr.bankCode !== 'string' || !qr.bankCode ||
+      typeof qr.accountNumber !== 'string' || !qr.accountNumber ||
+      typeof qr.accountName !== 'string' || !qr.accountName || qr.paymentCode !== `SWP${payment.paymentId}` ||
+      typeof payment.expiresAt !== 'string' || !Number.isFinite(Date.parse(payment.expiresAt))) {
+      throw new Error('Thông tin thanh toán QR không hợp lệ. Vui lòng kiểm tra lại sau.')
+    }
+    getSepayQrUrl(qr.qrUrl)
   }
   return payment
 }

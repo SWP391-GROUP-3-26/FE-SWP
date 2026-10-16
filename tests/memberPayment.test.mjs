@@ -92,6 +92,22 @@ try {
   assert.equal(requests.at(-1).headers.Authorization, 'Bearer unit-test-token')
 
   assert.equal(requests.at(-1).signal, controller.signal)
+  const qrPayment = {
+    qrUrl: 'https://vietqr.app/img?acc=0123456789&bank=MBBank&amount=250000&des=SWP105&template=compact',
+    bankCode: 'MBBank', accountNumber: '0123456789', accountName: 'NGUYEN VAN TEST', paymentCode: 'SWP105', testMode: true,
+  }
+  assert.equal(service.getSepayQrUrl(qrPayment.qrUrl), qrPayment.qrUrl)
+  for (const invalid of ['javascript:alert(1)', 'https://vietqr.app.evil.test/img', 'http://vietqr.app/img', 'https://vietqr.app/other']) {
+    assert.throws(() => service.getSepayQrUrl(invalid))
+  }
+  payload.qrPayment = qrPayment
+  assert.deepEqual((await service.getMemberPayment('105')).qrPayment, qrPayment)
+  for (const invalid of [{ ...qrPayment, testMode: 'true' }, { ...qrPayment, paymentCode: 'SWP106' },
+    { ...qrPayment, qrUrl: 'javascript:alert(1)' }]) {
+    payload.qrPayment = invalid
+    await assert.rejects(service.getMemberPayment('105'))
+  }
+  delete payload.qrPayment
   for (const status of ['Paid', 'Failed']) {
     payload.paymentStatus = status
     assert.equal((await service.getMemberPayment('105')).paymentStatus, status)
@@ -149,12 +165,12 @@ try {
   channel.props.onChange({ target: { value: 'E_Wallet' } })
   hooks.cursor = 0
   redirectedTo = null
-  payload = { success: true, paymentStatus: 'Paid', message: 'Đăng ký lớp học thành công!' }
+  payload = { ...payment, message: 'Đã tạo yêu cầu thanh toán QR SePay' }
   await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
   assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'DIRECT', paymentChannel: 'E_Wallet' })
-  assert.equal(redirectedTo, null, 'Wallet follows the backend success flow without a gateway URL')
-  assert.equal(hooks.state[19], payload.message)
-  assert.equal(hooks.state[12], null)
+  assert.equal(redirectedTo, '/member/payment-result?paymentId=105', 'Wallet opens QR checkout without announcing success')
+  assert.equal(hooks.state[19], '')
+  assert.notEqual(hooks.state[12], null)
 
   hooks.state[0] = [{ classId: 4, name: 'Yoga', canRegister: true }]
   hooks.state[1] = 'available'
@@ -277,6 +293,13 @@ try {
   const pendingPage = page('paymentId=105&vnp_ResponseCode=00', { payment })
   assert.match(pendingPage, /Đang chờ xác nhận/)
   assert.doesNotMatch(pendingPage, /Thanh toán và đăng ký thành công|Tới lịch tập/)
+  const qrPage = page('paymentId=105', { payment: { ...payment, qrPayment } })
+  assert.match(qrPage, /QR thanh toán SWP105/)
+  assert.match(qrPage, /không chuyển tiền thật/)
+  assert.match(qrPage, /0123456789/)
+  assert.match(qrPage, /Mô phỏng chuyển khoản/)
+  assert.doesNotMatch(page('paymentId=105', { payment: { ...payment, qrPayment, paymentStatus: 'Paid' } }), /QR thanh toán SWP105/)
+  assert.doesNotMatch(page('paymentId=105', { payment: { ...payment, qrPayment, paymentStatus: 'Failed' } }), /QR thanh toán SWP105/)
   assert.match(page('paymentId=105', { payment, timedOut: true }), /Kiểm tra lại/)
   const paid = page('paymentId=105&vnp_ResponseCode=99', {
     payment: { ...payment, paymentStatus: 'Paid', bookingStatus: 'Đang diễn ra' },
@@ -300,7 +323,7 @@ try {
   assert.doesNotMatch(protectedPage(), /PAYMENT_CONTENT/)
   storage.delete('accessToken')
   assert.doesNotMatch(protectedPage(), /PAYMENT_CONTENT/)
-  console.log('PASS: VNPay URL/ID validation, flat API/JWT contract, polling deadline/retry/cleanup, payment UI and Member protection (unit tests)')
+  console.log('PASS: VNPay/SePay URL validation, QR checkout, flat API/JWT contract, polling deadline/retry/cleanup, payment UI and Member protection (unit tests)')
 } finally {
   mock.timers.reset()
   delete globalThis.__paymentTestHooks

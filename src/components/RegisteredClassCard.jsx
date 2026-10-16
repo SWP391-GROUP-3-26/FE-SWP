@@ -1,4 +1,5 @@
 import { formatClassDate } from '../utils/classSchedule'
+import { Link } from 'react-router-dom'
 
 export default function RegisteredClassCard({ item, busy, onDetail, onCancel, onRebook }) {
   return (
@@ -20,6 +21,8 @@ export default function RegisteredClassCard({ item, busy, onDetail, onCancel, on
       </dl>
       {item.requiresReview && <p role="note">Thanh toán cần trung tâm kiểm tra. Chưa có xác nhận hoàn tiền.</p>}
       <div className="member-booking-actions">
+        {item.paymentStatus === 'Pending' && item.paymentId && <Link className="member-register-button"
+          to={`/member/payment-result?paymentId=${item.paymentId}`}>Tiếp tục thanh toán</Link>}
         <button className="member-cancel-button" type="button" onClick={() => onDetail(item)}>Chi tiết các buổi</button>
         {item.canCancel && <button className="member-cancel-button" disabled={busy} type="button" onClick={() => onCancel(item)}>
           {busy ? 'Đang hủy...' : 'Hủy đăng ký'}</button>}

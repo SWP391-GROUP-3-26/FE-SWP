@@ -5,7 +5,7 @@ import Modal from '../components/Modal'
 import RegisteredClassCard from '../components/RegisteredClassCard'
 import { formatClassDate } from '../utils/classSchedule'
 import memberMenuItems from '../components/memberMenuItems'
-import { getVnpayPaymentUrl, paymentApiErrorMessage } from '../services/memberPaymentService'
+import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import {
   classApiErrorMessage,
   getAvailableClasses,
@@ -152,6 +152,13 @@ export default function MemberClasses() {
         paymentMethod,
         ...(paymentMethod === 'DIRECT' ? { paymentChannel } : {}),
       })
+      if (paymentMethod === 'DIRECT' && paymentChannel === 'E_Wallet') {
+        if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
+          throw new Error('Chưa thể mở thanh toán QR. Vui lòng kiểm tra đăng ký trước khi thử lại.')
+        }
+        window.location.assign(`/member/payment-result?paymentId=${result.paymentId}`)
+        return
+      }
       if (result.paymentUrl || (paymentMethod === 'DIRECT' && paymentChannel === 'Card')) {
         window.location.assign(getVnpayPaymentUrl(result.paymentUrl))
         return
@@ -395,6 +402,9 @@ export default function MemberClasses() {
               )}
               {paymentMethod === 'DIRECT' && paymentChannel === 'Card' && (
                 <p role="note">Bạn sẽ được chuyển tới VNPay để thanh toán bằng thẻ ATM. Đây là môi trường thanh toán thử nghiệm.</p>
+              )}
+              {paymentMethod === 'DIRECT' && paymentChannel === 'E_Wallet' && (
+                <p role="note">Thanh toán bằng QR chuyển khoản qua SePay. Đăng ký chỉ được xác nhận sau khi hệ thống nhận thanh toán.</p>
               )}
               {!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available && (
                 <div className="member-class-state member-class-error" role="alert">
