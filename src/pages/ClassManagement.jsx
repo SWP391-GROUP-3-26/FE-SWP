@@ -22,28 +22,10 @@ const EMPTY_FORM = {
   slotId: '',
   startTime: '',
   endTime: '',
-  durationWeeks: '',
   maxCapacity: '',
   price: '',
   startDate: '',
   durationWeeks: '',
-}
-
-function timeToMinutes(value) {
-  const match = /^(\d{2}):(\d{2})$/.exec(value || '')
-  return match ? Number(match[1]) * 60 + Number(match[2]) : null
-}
-
-function findSelectedTimeSlot(timeSlots, startTime, endTime) {
-  const start = timeToMinutes(startTime)
-  const end = timeToMinutes(endTime)
-  if (start === null || end === null) return null
-
-  return timeSlots.find((slot) => {
-    const slotStart = timeToMinutes(slot.startTime)
-    const slotEnd = timeToMinutes(slot.endTime)
-    return slotStart !== null && slotEnd !== null && start >= slotStart && end <= slotEnd
-  }) || null
 }
 
 function errorMessage(error) {
@@ -151,18 +133,6 @@ export default function ClassManagement() {
       setModalError('Vui lòng chọn ít nhất một ngày học.')
       return
     }
-<<<<<<< HEAD
-    if (!selectedTimeSlot) {
-      setModalError('Giờ học phải nằm trong một slot học hợp lệ. Chọn giờ bắt đầu và kết thúc trong cùng một khung giờ.')
-      return
-    }
-    if (!form.startDate) {
-      setModalError('Vui lòng chọn ngày học đầu tiên.')
-      return
-    }
-    if (!Number.isInteger(Number(form.durationWeeks)) || Number(form.durationWeeks) < 1) {
-      setModalError('Vui lòng nhập số tuần học hợp lệ (ít nhất 1 tuần).')
-=======
     const termValidation = validateClassTerm(form)
     if (termValidation.startDate || termValidation.durationWeeks) {
       setModalError(termValidation.startDate || termValidation.durationWeeks)
@@ -175,7 +145,6 @@ export default function ClassManagement() {
     }
     if (form.endTime <= form.startTime) {
       setModalError('Giờ kết thúc phải sau giờ bắt đầu.')
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
       return
     }
     const payload = {
@@ -184,16 +153,10 @@ export default function ClassManagement() {
       subjectId: Number(form.subjectId),
       coachId: Number(form.coachId),
       roomId: Number(form.roomId),
-      slotId: selectedTimeSlot.id,
-      durationWeeks: Number(form.durationWeeks),
       maxCapacity: Number(form.maxCapacity),
       price: Number(form.price),
-<<<<<<< HEAD
-      status: 'Active',
-=======
       startDate: form.startDate,
       durationWeeks: Number(form.durationWeeks),
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
     }
     setBusy(true)
     setModalError('')
@@ -237,13 +200,9 @@ export default function ClassManagement() {
   const totalPages = Math.max(1, Math.ceil(classes.length / 5))
   const visibleClasses = useMemo(() => classes.slice((page - 1) * 5, page * 5), [classes, page])
   const dayOptions = optionsLoading ? [] : options
-<<<<<<< HEAD
-  const selectedTimeSlot = findSelectedTimeSlot(options.timeSlots, form.startTime, form.endTime)
-=======
   const selectedSlot = options.timeSlots.find((slot) => String(slot.id) === form.slotId)
   const termErrors = validateClassTerm(form)
   const previewEndDate = calculateClassEndDate(form.startDate, form.durationWeeks)
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
@@ -347,20 +306,7 @@ export default function ClassManagement() {
                 ? `Chọn giờ học trong khoảng ${selectedSlot.startTime} – ${selectedSlot.endTime}. Giờ kết thúc phải sau giờ bắt đầu.`
                 : 'Chọn slot trước khi chọn giờ bắt đầu và kết thúc.'}</p>
               <div className="service-form-grid">
-<<<<<<< HEAD
-                <label>Giờ bắt đầu <span className="input-wrap"><input required type="time" value={form.startTime} onChange={(event) => setForm({ ...form, startTime: event.target.value })} /></span></label>
-                <label>Giờ kết thúc <span className="input-wrap"><input required type="time" value={form.endTime} onChange={(event) => setForm({ ...form, endTime: event.target.value })} /></span></label>
-                <label>Số tuần học <span className="input-wrap"><input required type="number" min="1" step="1" value={form.durationWeeks} onChange={(event) => setForm({ ...form, durationWeeks: event.target.value })} /></span></label>
-                <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value })} /></span></label>
-                <label>Học phí (VND) <span className="input-wrap"><input required type="number" min="0" step="1000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /></span></label>
-                <label>Ngày bắt đầu <span className="input-wrap"><input required type="date" value={form.startDate} onChange={(event) => setForm({ ...form, startDate: event.target.value })} /></span></label>
-              </div>
-              {selectedTimeSlot && (
-                <p className="class-time-slot-hint" role="status">
-                  Slot học #{selectedTimeSlot.id}: {selectedTimeSlot.startTime} – {selectedTimeSlot.endTime}
-                </p>
-              )}
-=======
+
                 <label>Giờ bắt đầu <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.startTime} onChange={(event) => handleTimeChange('startTime', event.target.value)} /></span></label>
                 <label>Giờ kết thúc <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={form.startTime || selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.endTime} onChange={(event) => handleTimeChange('endTime', event.target.value)} /></span></label>
                 <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value })} /></span></label>
@@ -372,7 +318,6 @@ export default function ClassManagement() {
               <p id="class-start-date-help" className="mb-0">Ngày bắt đầu là buổi học đầu tiên. Tuần chứa ngày này là tuần thứ nhất; lớp kết thúc vào Chủ Nhật của tuần cuối.</p>
               {form.startDate && termErrors.startDate && <p id="class-start-date-error" className="field-error mb-0" role="alert">{termErrors.startDate}</p>}
               {form.durationWeeks && termErrors.durationWeeks && <p id="class-duration-error" className="field-error mb-0" role="alert">{termErrors.durationWeeks}</p>}
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
             </fieldset>
             <div className="subject-modal-actions"><button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Hủy</button>
               <button className="subject-button subject-primary" disabled={busy || optionsLoading} type="submit">{busy ? 'Đang tạo...' : 'Tạo lớp học'}</button></div>

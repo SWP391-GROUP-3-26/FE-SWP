@@ -52,7 +52,7 @@ export default function MemberClasses() {
   const [bookingLoading, setBookingLoading] = useState(false)
   const [modalError, setModalError] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('DIRECT')
-  const [paymentChannel, setPaymentChannel] = useState('Bank_Transfer')
+  const [paymentChannel, setPaymentChannel] = useState('Card')
   const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
@@ -122,7 +122,7 @@ export default function MemberClasses() {
     setConfirmation(null)
     setConfirmationLoading(true)
     setModalError('')
-    setPaymentChannel('Bank_Transfer')
+    setPaymentChannel('Card')
     try {
       const details = await getClassConfirmation(classItem.classId)
       setConfirmation(details)
@@ -388,8 +388,6 @@ export default function MemberClasses() {
                 <label className="member-payment-channel">
                   Kênh thanh toán
                   <select disabled={bookingLoading} value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>
-                    <option value="Bank_Transfer">Chuyển khoản</option>
-                    <option value="Cash">Tiền mặt</option>
                     <option value="Card">Thẻ ATM qua VNPay</option>
                     <option value="E_Wallet">Ví điện tử</option>
                   </select>

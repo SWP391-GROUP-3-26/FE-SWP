@@ -72,6 +72,9 @@ export async function getClassConfirmation(classId) {
 }
 
 export async function registerForClass(classId, payload) {
+  if (payload.paymentMethod === 'DIRECT' && !['Card', 'E_Wallet'].includes(payload.paymentChannel)) {
+    throw new Error('Vui lòng chọn Thẻ ATM qua VNPay hoặc Ví điện tử.')
+  }
   const token = getAccessToken()
   const response = await axiosClient.post(`/api/member/classes/${classId}/register`, payload, {
     timeout: 15000,

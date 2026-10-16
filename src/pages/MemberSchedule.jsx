@@ -3,32 +3,13 @@ import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberSessionCard from '../components/MemberSessionCard'
 import { classApiErrorMessage, getMyClasses } from '../services/memberClassService'
-<<<<<<< HEAD
-import { calendarDateKey, getCalendarSessions } from '../utils/memberSchedule'
-=======
 import { addCalendarDays, getMonday, isConfirmedBooking, MEMBER_TIME_SLOTS, memberWeekSchedule } from '../utils/classSchedule'
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
 import './MemberActivities.css'
 
 const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật']
 
 function formatDate(date) {
-<<<<<<< HEAD
-  return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(date)
-}
-
-function addDays(date, amount) {
-  const result = new Date(date)
-  result.setDate(result.getDate() + amount)
-  return result
-}
-
-function timeSortValue(value) {
-  const match = value.match(/^(\d{1,2}):(\d{2})/)
-  return match ? Number(match[1]) * 60 + Number(match[2]) : Number.MAX_SAFE_INTEGER
-=======
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
 }
 
 export default function MemberSchedule() {
@@ -40,15 +21,9 @@ export default function MemberSchedule() {
   const today = new Date()
   const weekEnd = addCalendarDays(weekStart, 6)
   const weekLabel = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
-<<<<<<< HEAD
-  const calendarSessions = getCalendarSessions(classes)
-  const timeSlots = [...new Set([...DEFAULT_TIME_SLOTS, ...calendarSessions.map((entry) => entry.timeSlot)])]
-    .sort((left, right) => timeSortValue(left) - timeSortValue(right))
-=======
   const { sessions, otherSessions } = memberWeekSchedule(classes, weekStart)
   const weekSessionCount = sessions.length + otherSessions.filter((entry) => entry.date).length
   const hasBookings = classes.some((item) => isConfirmedBooking(item) || item.sessions?.some(isConfirmedBooking))
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
 
   useEffect(() => {
     const controller = new AbortController()
@@ -156,43 +131,13 @@ export default function MemberSchedule() {
                         <span>{slot.startTime}–{slot.endTime}</span>
                       </th>
                       {WEEKDAYS.map((weekday, dayIndex) => {
-<<<<<<< HEAD
-                        const dateKey = calendarDateKey(addDays(weekStart, dayIndex))
-                        const dayClasses = calendarSessions.filter((entry) => (
-                          entry.timeSlot === slot && entry.date === dateKey
-                        ))
-                        return (
-                          <td className="member-calendar-class-cell" key={`${slot}-${weekday}`}>
-                            {dayClasses.map(({ classItem, session }) => (
-                              <article className="member-schedule-class" key={session.sessionId ?? `${classItem.bookingId}-${dateKey}`}>
-                                <div className="member-schedule-class-heading">
-                                  <span className="member-schedule-class-icon material-symbols-outlined" aria-hidden="true">fitness_center</span>
-                                  <span className="member-schedule-status">Đã đăng ký</span>
-                                </div>
-                                <strong>{classItem.className}</strong>
-                                <span className="member-schedule-class-code">{classItem.classCode || `Lớp #${classItem.classId}`}</span>
-                                {classItem.roomName && (
-                                  <span className="member-schedule-meta">
-                                    <span className="material-symbols-outlined" aria-hidden="true">location_on</span>
-                                    {classItem.roomName}
-                                  </span>
-                                )}
-                                {classItem.coachName && (
-                                  <span className="member-schedule-meta">
-                                    <span className="material-symbols-outlined" aria-hidden="true">person</span>
-                                    {classItem.coachName}
-                                  </span>
-                                )}
-                              </article>
-                            ))}
-=======
                         const dayClasses = sessions.filter((entry) => (
                           entry.slotId === slot.id && entry.dayIndex === dayIndex
                         ))
                         return (
                           <td className="member-calendar-class-cell" key={`${slot.id}-${weekday}`}>
                             {dayClasses.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
+
                             {dayClasses.length === 0 && (
                               <span className="member-calendar-empty-label" aria-hidden="true">—</span>
                             )}

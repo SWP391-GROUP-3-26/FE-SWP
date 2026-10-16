@@ -32,13 +32,8 @@ export async function getClasses({ search = '', status = '', signal } = {}) {
 export async function getClassFormOptions(signal) {
   const result = await request('get', '/options', undefined, { signal })
   const options = result?.data
-<<<<<<< HEAD
-  if (!Array.isArray(options?.subjects) || !Array.isArray(options?.coaches)
-    || !Array.isArray(options?.rooms) || !Array.isArray(options?.timeSlots)) {
-=======
   if (!Array.isArray(options?.subjects) || !Array.isArray(options?.coaches) || !Array.isArray(options?.rooms)
     || !Array.isArray(options?.timeSlots) || options.timeSlots.length !== 4) {
->>>>>>> f4bae8eb31fa975b901be78d45ec1cb8393806e1
     throw new Error('Danh mục tạo lớp học từ máy chủ không hợp lệ.')
   }
   return options
