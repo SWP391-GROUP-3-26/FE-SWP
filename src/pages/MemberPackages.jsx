@@ -3,8 +3,6 @@ import basicPackageImage from '../assets/member-package-basic.jpg'
 import centerWorkoutImage from '../assets/center-manager-dashboard.jpg'
 import premierPackageImage from '../assets/member-package-premier.jpg'
 import standardPackageImage from '../assets/member-package-standard.jpg'
-import runningImage from '../assets/hero.png'
-import yogaImage from '../assets/member-yoga-class.jpg'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
 import memberMenuItems from '../components/memberMenuItems'
@@ -29,8 +27,6 @@ const paymentMethods = [
   { value: 'Bank_Transfer', label: 'Chuyển khoản' },
   { value: 'E_Wallet', label: 'Ví điện tử' },
 ]
-
-const packageImages = [yogaImage, runningImage, centerWorkoutImage]
 
 function packageImageFor(name, durationDays) {
   const packageName = String(name || '')
@@ -355,7 +351,7 @@ export default function MemberPackages() {
 
         {!catalogError && !catalogLoading && packages.length > 0 && (
           <div className="member-package-grid" aria-label="Danh sách gói đang mở bán">
-            {packages.map((packageItem, index) => {
+            {packages.map((packageItem) => {
               const isStandardThreeMonthPackage = /standard/i.test(packageItem.name || '')
                 && (Number(packageItem.durationMonths) === 3 || /3\s*tháng/i.test(packageItem.name || ''))
               const isPremierTwelveMonthPackage = /premier|premium/i.test(packageItem.name || '')
@@ -368,7 +364,7 @@ export default function MemberPackages() {
                   ? premierPackageImage
                   : isStandardThreeMonthPackage
                     ? standardPackageImage
-                    : packageImages[index % packageImages.length]
+                    : centerWorkoutImage
               const durationLabel = packageDurationLabel(packageItem)
               return (
                 <article className="member-package-card" key={packageItem.id}>

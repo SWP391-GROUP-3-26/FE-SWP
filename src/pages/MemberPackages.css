@@ -155,22 +155,8 @@
   border-radius: 999px;
   color: #35684c;
   background: #e9f4ec;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
-}
-
-.member-package-card:nth-child(3n + 2) .member-package-duration {
-  color: #28614d;
-  background: #dff3e9;
-}
-
-.member-package-card:nth-child(3n) {
-  border-color: #a9cbb5;
-}
-
-.member-package-card:nth-child(3n) .member-package-duration {
-  color: #fff;
-  background: #4b8766;
 }
 
 .member-package-image {
@@ -208,7 +194,7 @@
   max-width: calc(100% - 20px);
   overflow: hidden;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -224,7 +210,7 @@
 
 .member-package-code {
   color: var(--member-package-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: .06em;
 }
@@ -241,7 +227,7 @@
 .member-package-benefits,
 .member-package-terms {
   color: var(--member-package-muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.5;
   white-space: pre-line;
 }
@@ -273,7 +259,7 @@
 .member-package-terms {
   margin: 0 0 12px;
   color: var(--member-package-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .member-package-facts {
@@ -292,7 +278,7 @@
 .member-package-facts dt,
 .member-package-facts dd {
   margin: 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .member-package-facts dt {
@@ -330,7 +316,7 @@
 
 .member-package-card-footer > div > span {
   color: #718077;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .member-package-card-footer strong {
@@ -346,7 +332,7 @@
   justify-content: center;
   gap: 2px;
   padding: 0 9px;
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 

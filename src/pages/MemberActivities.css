@@ -142,6 +142,20 @@
   font-size: 18px;
 }
 
+.member-schedule-empty-week {
+  align-items: center;
+  border-color: #b9dfc7;
+  border-left: 4px solid #23845a;
+  color: #17583c;
+  background: #eff9f2;
+  font-size: 14px;
+}
+
+.member-schedule-empty-week .material-symbols-outlined {
+  color: #23845a;
+  font-size: 22px;
+}
+
 .member-calendar-scroll {
   overflow-x: auto;
   padding: 16px;

@@ -17,6 +17,7 @@ try {
     registerMemberPackage,
   } = await server.ssrLoadModule('/src/services/memberPackageService.js')
   const { default: MemberPackages } = await server.ssrLoadModule('/src/pages/MemberPackages.jsx')
+  const { default: MemberDashboard } = await server.ssrLoadModule('/src/pages/MemberDashboard.jsx')
 
   let lastRequest
   let body = {
@@ -70,6 +71,15 @@ try {
   assert.ok(page.includes('Gói dịch vụ đang mở bán'))
   assert.ok(page.includes('Gói tập của tôi'))
   assert.ok(!page.includes('Backend chưa có API'))
+
+  const dashboard = renderToStaticMarkup(createElement(
+    MemoryRouter,
+    {},
+    createElement(MemberDashboard),
+  ))
+  assert.match(dashboard, /Theo dõi gói đang dùng, thời hạn và các gói đang mở bán/)
+  assert.doesNotMatch(dashboard, /sẽ hiển thị tại đây|khi được kết nối với hệ thống/)
+  assert.doesNotMatch(dashboard, /member-journey-panel|class="notification-button"/)
   console.log('PASS: member package catalog, subscriptions, registration and response validation')
 } finally {
   delete globalThis.localStorage

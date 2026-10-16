@@ -120,6 +120,18 @@ try {
   }
   hooks.state = []
   hooks.cursor = 0
+  const registeredClassPage = ClassesPage()
+  const classTabs = nodes(registeredClassPage).filter((node) => node.type === 'button'
+    && node.props['aria-pressed'] !== undefined)
+  assert.deepEqual(classTabs.map((node) => node.props['aria-pressed']), [true, false])
+  assert.ok(classTabs.every((node) => node.props.role === undefined))
+  classTabs[1].props.onClick()
+  hooks.cursor = 0
+  const availableClassPage = ClassesPage()
+  assert.deepEqual(nodes(availableClassPage).filter((node) => node.type === 'button'
+    && node.props['aria-pressed'] !== undefined).map((node) => node.props['aria-pressed']), [false, true])
+  hooks.state = []
+  hooks.cursor = 0
   ClassesPage()
   assert.equal(hooks.state[18], 'Card', 'Default to ATM via VNPay')
   let redirectedTo
@@ -160,7 +172,8 @@ try {
   hooks.state[1] = 'available'
   hooks.cursor = 0
   payload = { success: true, className: 'Yoga', directPaymentOption: { available: true } }
-  const registerButton = nodes(ClassesPage()).find((node) => node.type === 'button' && !node.props.role && node.props.children === 'Đăng ký lớp')
+  const registerButton = nodes(ClassesPage()).find((node) => node.type === 'button'
+    && node.props['aria-pressed'] === undefined && node.props.children === 'Đăng ký lớp')
   await registerButton.props.onClick()
   assert.equal(hooks.state[18], 'Card', 'Reopening the form resets the channel to ATM via VNPay')
 

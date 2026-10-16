@@ -14,6 +14,10 @@
   box-shadow: 0 12px 36px rgba(22, 41, 31, 0.07);
 }
 
+.member-overview-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .member-welcome-copy {
   position: relative;
   z-index: 1;
@@ -43,83 +47,14 @@
   font-size: clamp(68px, 10vw, 120px);
 }
 
-.member-journey-panel {
-  display: grid;
-  gap: 22px;
-  padding: 24px;
-  background:
-    radial-gradient(ellipse at 92% 10%, rgba(47, 125, 89, 0.08), transparent 34%),
-    #fff;
-}
-
-.member-journey-heading {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.member-journey-icon {
-  display: grid;
-  flex: 0 0 52px;
-  width: 52px;
-  height: 52px;
-  place-items: center;
-  border-radius: 15px;
-  color: var(--primary);
-  background: var(--color-surface-tint);
-  font-size: 28px;
-}
-
-.member-journey-heading h3 {
-  margin: 5px 0;
-}
-
-.member-journey-heading p {
-  margin: 0;
-  color: var(--color-secondary-text);
-  line-height: 1.55;
-}
-
-.member-journey-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e9f0eb;
-}
-
-.member-journey-footer > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-secondary-text);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.member-journey-footer > span .material-symbols-outlined {
-  flex: 0 0 auto;
-  color: var(--primary);
-  font-size: 18px;
-}
-
-.member-journey-footer > a {
-  flex: 0 0 auto;
-  color: var(--primary-dark);
-  font-size: 14px;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.member-journey-footer > a:hover {
-  text-decoration: underline;
-}
-
 @media (max-width: 640px) {
   .member-welcome-banner {
     min-height: 240px;
     background-position: 62% center;
+  }
+
+  .dashboard-grid.member-overview-grid {
+    grid-template-columns: 1fr;
   }
 
   .member-welcome-icon {
@@ -128,12 +63,4 @@
     opacity: 0.55;
   }
 
-  .member-journey-panel {
-    padding: 18px;
-  }
-
-  .member-journey-footer {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }

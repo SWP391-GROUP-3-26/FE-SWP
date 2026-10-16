@@ -184,12 +184,12 @@ export default function MemberClasses() {
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">sports_gymnastics</span>
       </section>
 
-      <div className="member-class-tabs" role="tablist" aria-label="Danh sách lớp học">
-        <button id="registered-classes-tab" className={activeTab === 'registered' ? 'member-register-button' : 'member-cancel-button'}
-          type="button" role="tab" aria-selected={activeTab === 'registered'} aria-controls="registered-classes-panel"
+      <div className="member-class-tabs" aria-label="Danh sách lớp học">
+        <button className={activeTab === 'registered' ? 'member-register-button' : 'member-cancel-button'}
+          type="button" aria-pressed={activeTab === 'registered'}
           onClick={() => changeTab('registered')}>Lớp đã đăng ký</button>
-        <button id="available-classes-tab" className={activeTab === 'available' ? 'member-register-button' : 'member-cancel-button'}
-          type="button" role="tab" aria-selected={activeTab === 'available'} aria-controls="available-classes-panel"
+        <button className={activeTab === 'available' ? 'member-register-button' : 'member-cancel-button'}
+          type="button" aria-pressed={activeTab === 'available'}
           onClick={() => changeTab('available')}>Đăng ký lớp</button>
       </div>
       {activeTab === 'registered' && <label className="member-registration-filter">Trạng thái đăng ký
@@ -244,7 +244,7 @@ export default function MemberClasses() {
         </div>
       )}
 
-      {activeTab === 'registered' && !loadError && !loading && <section id="registered-classes-panel" role="tabpanel" aria-labelledby="registered-classes-tab">
+      {activeTab === 'registered' && !loadError && !loading && <section aria-label="Lớp đã đăng ký">
         {registeredClasses.length === 0 ? <div className="member-class-empty">
           <h3>Chưa có đăng ký phù hợp</h3><p>Các lớp bạn đã đăng ký sẽ hiển thị ở đây, kể cả khi đã kết thúc.</p>
           <button className="member-register-button" type="button" onClick={() => changeTab('available')}>Tìm lớp để đăng ký</button>
@@ -269,7 +269,7 @@ export default function MemberClasses() {
       )}
 
       {activeTab === 'available' && !loadError && !loading && classes.length > 0 && (
-        <section id="available-classes-panel" role="tabpanel" aria-labelledby="available-classes-tab" className="member-class-grid" aria-label="Danh sách lớp đang hoạt động">
+        <section className="member-class-grid" aria-label="Danh sách lớp đang hoạt động">
           {classes.map((classItem) => (
             <article className="member-class-card" key={classItem.classId}>
               <div className="member-class-card-heading">
