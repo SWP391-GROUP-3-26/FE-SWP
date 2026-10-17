@@ -110,16 +110,15 @@ export default function MemberSchedule() {
               <table className="member-calendar">
                 <thead>
                   <tr>
-                    <th className="member-time-heading" scope="col">Khung giờ</th>
+                    <th className="member-time-heading" scope="col">Slot</th>
                     {WEEKDAYS.map((weekday, index) => {
                       const date = addCalendarDays(weekStart, index)
                       const isToday = date.toDateString() === today.toDateString()
                       return (
-                        <th className="member-day-heading-cell" key={weekday} scope="col">
+                        <th className={`member-day-heading-cell${isToday ? ' is-today' : ''}${index === 6 ? ' is-sunday' : ''}`}
+                          key={weekday} scope="col" aria-current={isToday ? 'date' : undefined}>
                           <div className={`member-day-heading${isToday ? ' member-day-today' : ''}${index === 6 ? ' member-day-sunday' : ''}`}>
-                            <span>{weekday}</span>
-                            <strong>{date.getDate()}</strong>
-                            {isToday && <small>Hôm nay</small>}
+                            <span>{weekday} ({String(date.getDate()).padStart(2, '0')}/{String(date.getMonth() + 1).padStart(2, '0')})</span>
                           </div>
                         </th>
                       )
@@ -130,8 +129,7 @@ export default function MemberSchedule() {
                   {MEMBER_TIME_SLOTS.map((slot) => (
                     <tr key={slot.id}>
                       <th className="member-time-cell" scope="row">
-                        <strong>Slot {slot.id}</strong>
-                        <span>{slot.startTime}–{slot.endTime}</span>
+                        <strong>{slot.id}</strong>
                       </th>
                       {WEEKDAYS.map((weekday, dayIndex) => {
                         const dayClasses = sessions.filter((entry) => (

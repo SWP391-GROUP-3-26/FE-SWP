@@ -1,45 +1,40 @@
 import DashboardLayout from '../components/DashboardLayout'
-
-const menuItems = [
-  { icon: 'calendar_month', label: 'Lich day', route: '/coach' },
-  { icon: 'groups', label: 'Danh sach lop', route: '/coach' },
-  { icon: 'fitness_center', label: 'Ke hoach tap', route: '/coach' },
-  { icon: 'insights', label: 'Danh gia', route: '/coach' },
-]
+import coachMenuItems from '../components/coachMenuItems'
 
 export default function CoachDashboard() {
   return (
     <DashboardLayout
       eyebrow="UniSports / Lịch dạy"
-      menuItems={menuItems}
+      menuItems={coachMenuItems}
       role="Coach"
-      subtitle="Shell cho huan luyen vien theo doi lich day, lop phu trach va ghi chu tap luyen."
-      title="Lich day & Danh sach lop"
+      roleLabel="Huấn luyện viên"
+      subtitle="Theo dõi lịch dạy, các lớp phụ trách và ghi chú tập luyện."
+      title="Lịch dạy và danh sách lớp"
     >
       <div className="coach-board">
         <section className="dashboard-panel">
           <div className="panel-heading">
-            <h3>Lich day</h3>
-            <span>Placeholder</span>
+            <h3>Lịch dạy</h3>
+            <span>Bản xem trước</span>
           </div>
           <div className="schedule-placeholder">
             <div>06:00</div>
-            <div>Yoga can bang</div>
-            <div>Studio A</div>
+            <div>Yoga cân bằng</div>
+            <div>Phòng tập A</div>
           </div>
           <div className="schedule-placeholder muted">
             <div>18:30</div>
-            <div>Functional Training</div>
-            <div>Zone 2</div>
+            <div>Rèn luyện chức năng</div>
+            <div>Khu tập 2</div>
           </div>
         </section>
 
         <section className="dashboard-panel">
           <div className="panel-heading">
-            <h3>Danh sach lop</h3>
-            <span>Empty state</span>
+            <h3>Danh sách lớp</h3>
+            <span>Chưa có dữ liệu</span>
           </div>
-          <div className="placeholder-box">Danh sach lop se lay tu API nghiep vu sau.</div>
+          <div className="placeholder-box">Danh sách lớp phụ trách sẽ hiển thị tại đây.</div>
         </section>
       </div>
     </DashboardLayout>

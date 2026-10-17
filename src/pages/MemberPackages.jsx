@@ -51,8 +51,26 @@ function packageDurationLabel(packageItem) {
 
 function formatDate(value) {
   if (!value) return 'Chưa cập nhật'
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value).slice(0, 10))
   return match ? `${match[3]}/${match[2]}/${match[1]}` : value
+}
+
+function dateOrdinal(value) {
+  const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').slice(0, 10))
+  return date ? Date.UTC(Number(date[1]), Number(date[2]) - 1, Number(date[3])) / 86400000 : null
+}
+
+function subscriptionTimeline(subscription) {
+  const purchaseDate = subscription.paymentDate?.slice(0, 10) || subscription.startDate
+  const purchaseDay = dateOrdinal(purchaseDate)
+  const expiryDay = dateOrdinal(subscription.endDate)
+  const today = dateOrdinal(currentDate())
+  const totalDays = purchaseDay != null && expiryDay != null ? Math.max(1, expiryDay - purchaseDay + 1) : 1
+  const elapsedDays = purchaseDay != null && today != null ? today - purchaseDay : 0
+  const progress = Math.max(0, Math.min(100, Math.round((elapsedDays / totalDays) * 100)))
+  const remainingDays = expiryDay != null && today != null ? Math.max(0, expiryDay - today + 1) : null
+
+  return { purchaseDate, progress, remainingDays }
 }
 
 function currentDate() {
@@ -260,8 +278,10 @@ export default function MemberPackages() {
             {subscriptions.data.map((subscription) => {
               const durationLabel = subscriptionDurationLabel(subscription.durationDays)
               const image = packageImageFor(subscription.packageName, subscription.durationDays)
+              const showTimeline = isCurrentlyActive(subscription)
+              const timeline = showTimeline ? subscriptionTimeline(subscription) : null
               return (
-                <article className="member-subscription-card" key={subscription.subscriptionId}>
+                <article className={`member-subscription-card${showTimeline ? ' has-timeline' : ''}`} key={subscription.subscriptionId}>
                   <div className="member-package-image member-subscription-image">
                     <img src={image} alt={`Hình minh họa gói ${subscription.packageName}`} loading="lazy" />
                     <span>{durationLabel}</span>
@@ -289,6 +309,26 @@ export default function MemberPackages() {
                       </div>
                     </dl>
                   </div>
+                  {timeline && (
+                    <aside className="member-subscription-timeline" aria-label="Thời hạn gói tập hiện tại">
+                      <div className="member-subscription-timeline-heading">
+                        <span className="material-symbols-outlined" aria-hidden="true">event_available</span>
+                        <strong>Thời hạn gói</strong>
+                      </div>
+                      <div className="member-subscription-timeline-dates">
+                        <span><small>Ngày mua</small><strong>{formatDate(timeline.purchaseDate)}</strong></span>
+                        <span><small>Hết hạn</small><strong>{formatDate(subscription.endDate)}</strong></span>
+                      </div>
+                      <div className="member-subscription-progress" role="progressbar"
+                        aria-label="Thời hạn đã sử dụng" aria-valuemin="0" aria-valuemax="100" aria-valuenow={timeline.progress}>
+                        <span style={{ width: `${timeline.progress}%` }} />
+                      </div>
+                      <div className="member-subscription-timeline-footer">
+                        <span>{timeline.progress}% thời hạn đã sử dụng</span>
+                        {timeline.remainingDays != null && <strong>Còn {timeline.remainingDays} ngày</strong>}
+                      </div>
+                    </aside>
+                  )}
                 </article>
               )
             })}

@@ -324,7 +324,7 @@
   font-size: 14px;
 }
 
-.member-class-search-input {
+.member-classes-page .member-class-search-input {
   display: flex;
   align-items: center;
   flex: 1;
@@ -333,7 +333,7 @@
   color: var(--primary);
 }
 
-.member-class-search-input input {
+.member-classes-page .member-class-search-input input {
   width: 100%;
   min-height: 40px;
   padding: 0 10px;
@@ -364,7 +364,7 @@
   cursor: wait;
 }
 
-.member-class-count {
+.member-classes-page .member-class-count {
   min-width: 150px;
   color: var(--color-secondary-text);
   font-size: 12px;
@@ -577,7 +577,7 @@
 }
 
 @media (max-width: 640px) {
-  .member-page-heading {
+  .member-classes-page .member-page-heading {
     align-items: flex-start;
     padding: 20px;
   }
@@ -621,7 +621,7 @@
     flex-wrap: wrap;
   }
 
-  .member-class-count {
+  .member-classes-page .member-class-count {
     width: 100%;
     text-align: left;
   }
@@ -798,6 +798,71 @@
 .member-schedule-other p { color: #65776d; font-size: 13px; line-height: 1.6; }
 .member-schedule-other .member-schedule-class strong { font-size: 14px; }
 .member-schedule-other .member-schedule-class span { font-size: 12px; }
+
+/* Member week view: compact timetable aligned to the requested slot/day layout. */
+.member-calendar-scroll { padding: 12px; }
+.member-calendar {
+  width: 100%;
+  min-width: 1180px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid #d9dee7;
+  background: #fff;
+}
+.member-calendar th,
+.member-calendar td { border: 1px solid #d9dee7; }
+.member-calendar th:first-child { width: 56px; }
+.member-calendar thead { height: 40px; }
+.member-calendar .member-time-heading,
+.member-calendar .member-day-heading-cell { height: 40px; padding: 8px 6px; color: #26364b; background: #f2f3f6; font-size: 12px; font-weight: 800; text-align: center; white-space: nowrap; }
+.member-calendar .member-time-heading { display: table-cell; width: 56px; vertical-align: middle; white-space: nowrap; }
+.member-calendar .member-day-heading-cell.is-today { color: #087c74; background: #d4e9e2; }
+.member-calendar .member-day-heading-cell.is-sunday { color: #29384a; }
+.member-calendar .member-day-heading-cell.is-today.is-sunday { color: #087c74; }
+.member-calendar .member-day-heading-cell > .member-day-heading { display: block; padding: 0; color: inherit; font-size: inherit; font-weight: inherit; }
+.member-calendar tbody tr { height: 92px; }
+.member-calendar .member-time-cell { display: table-cell; width: 56px; height: 100%; padding: 8px 4px; color: #43536b; background: #fafbfc; text-align: center; vertical-align: middle; }
+.member-calendar .member-time-cell strong { color: inherit; font-size: 12px; font-weight: 600; }
+.member-calendar .member-time-cell span { display: none; }
+.member-calendar-class-cell { min-width: 0; padding: 8px; vertical-align: top; }
+.member-calendar-empty-label { padding-top: 16px; color: #a3afbe; font-size: 12px; text-align: left; }
+.member-schedule-class {
+  display: grid;
+  gap: 4px;
+  padding: 2px 0 8px;
+  border: 0;
+  border-bottom: 1px solid #e2e6ec;
+  border-radius: 0;
+  color: #66758a;
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  line-height: 1.35;
+  transition: none;
+}
+.member-schedule-class + .member-schedule-class { padding-top: 8px; }
+.member-schedule-class:hover { border-color: #d4dce5; box-shadow: none; transform: none; }
+.member-schedule-class:last-child { border-bottom: 0; }
+.member-schedule-class-heading { align-items: flex-start; gap: 6px; }
+.member-schedule-class-heading > strong { color: #2547a7; font-size: 12px; font-weight: 700; line-height: 1.4; }
+.member-schedule-status { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 3px; padding: 0; color: #0b9a91; background: transparent; font-size: 10px; font-weight: 700; }
+.member-schedule-status > .material-symbols-outlined { font-size: 13px; }
+.member-schedule-status.is-completed { color: #758293; }
+.member-schedule-class-code { display: inline-flex; align-items: center; gap: 4px; width: fit-content; padding: 0; border-radius: 0; color: #53647b; background: transparent; font-size: 10px; font-weight: 700; }
+.member-schedule-class-code .material-symbols-outlined { color: #3454b4; font-size: 14px; }
+.member-schedule-class .member-schedule-meta { display: flex; align-items: flex-start; gap: 4px; color: #77869a; font-size: 10px; line-height: 1.35; }
+.member-schedule-class .member-schedule-meta .material-symbols-outlined { flex: 0 0 auto; color: #8291a5; font-size: 13px; }
+.member-schedule-class .member-schedule-time strong { color: #a87300; font-size: 10px; font-weight: 700; }
+.member-schedule-class .member-schedule-time .material-symbols-outlined { color: #8291a5; }
+
+@media (max-width: 640px) {
+  .member-calendar-scroll { padding: 10px; }
+  .member-calendar { min-width: 1120px; }
+  .member-calendar .member-time-heading,
+  .member-calendar .member-day-heading-cell { font-size: 11px; }
+  .member-calendar-class-cell { padding: 7px; }
+  .member-schedule-class-heading { flex-direction: column; }
+}
 
 .member-schedule-loading {
   padding: 28px;
@@ -976,8 +1041,73 @@
   text-decoration: none;
 }
 .member-class-tabs { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
-.member-registration-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
-.member-registration-filter select { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); }
+.member-classes-page .member-page-heading {
+  min-height: 112px;
+  padding: 22px 26px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.member-classes-page .member-class-heading-action { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 16px; border-radius: 9px; font-size: 13px; }
+.member-classes-page .member-class-list-toolbar {
+  display: grid;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid #e2ebe4;
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  background: #fff;
+}
+.member-classes-page .member-registration-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 0; padding: 4px; border-radius: 9px; background: #f2f6f2; width: fit-content; max-width: 100%; }
+.member-classes-page .member-registration-filter button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 7px; color: #53665a; background: transparent; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .18s ease, color .18s ease, box-shadow .18s ease; }
+.member-classes-page .member-registration-filter button:hover { color: #245d40; background: #fff; }
+.member-classes-page .member-registration-filter button[aria-pressed="true"] { color: #20583b; background: #fff; box-shadow: 0 1px 4px rgba(22, 41, 31, .12); }
+.member-classes-page .member-registration-filter select { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); }
+.member-classes-page .member-class-list-toolbar .member-class-search { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0; border: 0; background: transparent; box-shadow: none; }
+.member-classes-page .member-class-search-input { position: relative; display: flex; flex: 1 1 260px; align-items: center; max-width: 420px; }
+.member-classes-page .member-class-search-input > .material-symbols-outlined { position: absolute; left: 11px; color: #829188; font-size: 18px; }
+.member-classes-page .member-class-search-input input { min-height: 40px; padding-left: 36px; border-color: #e2ebe4; border-radius: 8px; background: #f9fbf9; font: inherit; font-size: 13px; }
+.member-classes-page .member-class-search-button { min-height: 40px; padding: 0 14px; border: 1px solid #dfe9e1; border-radius: 8px; color: #385445; background: #f6f9f6; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.member-classes-page .member-class-count { flex: 1 1 auto; min-width: 120px; color: #718077; font-size: 12px; text-align: right; }
+.member-classes-page .member-class-table-wrap { overflow-x: auto; border: 1px solid #e2ebe4; border-radius: 0 0 14px 14px; background: #fff; box-shadow: 0 8px 24px rgba(22, 41, 31, .035); }
+.member-classes-page .member-registrations-table { width: 100%; min-width: 880px; border-collapse: collapse; }
+.member-classes-page .member-registrations-table th { padding: 13px 12px; color: #65776d; background: #f7faf7; font-size: 10px; font-weight: 800; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.member-classes-page .member-registrations-table td { padding: 13px 12px; border-top: 1px solid #edf2ee; color: #405249; font-size: 12px; vertical-align: middle; }
+.member-classes-page .member-registrations-table tbody tr { transition: background .16s ease; }
+.member-classes-page .member-registrations-table tbody tr:hover { background: #fbfdfb; }
+.member-classes-page .member-registration-name { display: grid; gap: 3px; min-width: 150px; }
+.member-classes-page .member-registration-name strong { color: #243b2e; font-size: 13px; }
+.member-classes-page .member-registration-name span { color: #7b8980; font-size: 11px; }
+.member-classes-page .member-registration-code { display: inline-block; padding: 5px 7px; border-radius: 5px; color: #476352; background: #eef4ef; font-size: 10px; font-weight: 700; }
+.member-classes-page .member-registration-status { display: inline-flex; padding: 5px 9px; border-radius: 999px; color: #66746b; background: #edf1ee; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.member-classes-page .member-registration-status.is-active { color: #246744; background: #dff3e6; }
+.member-classes-page .member-class-row-actions { display: flex; align-items: center; gap: 8px; }
+.member-classes-page .member-row-action { padding: 5px 7px; border: 0; border-radius: 6px; color: #43614f; background: transparent; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.member-classes-page .member-row-action:hover { background: #eef5ef; }
+.member-classes-page .member-row-action-danger { color: #bd3c34; }
+.member-classes-page .member-row-action-danger:hover { background: #fff1ef; }
+.member-classes-page .member-row-action:disabled { opacity: .6; cursor: wait; }
+.member-cancel-confirm-modal { width: min(520px, calc(100% - 32px)); max-height: calc(100dvh - 40px); padding: 22px 24px 20px; border: 1px solid #e5e9e5; border-radius: 16px; color: #26332c; background: #fff; box-shadow: 0 24px 80px rgba(20, 38, 27, .22); }
+.member-cancel-confirm-modal::backdrop { background: rgba(20, 34, 26, .44); backdrop-filter: blur(2px); }
+.member-cancel-confirm-modal .panel-heading { gap: 12px; margin: 0 0 8px; }
+.member-cancel-confirm-modal .panel-heading h3 { display: flex; align-items: center; gap: 10px; margin: 0; color: #26332c; font-size: 19px; }
+.member-cancel-modal-icon { display: inline-grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; border-radius: 50%; color: #c7473d; background: #fff0ee; font-size: 21px; }
+.member-cancel-confirm-question { margin: 10px 0 16px; color: #48564e; font-size: 14px; }
+.member-cancel-class-summary { display: grid; gap: 10px; margin: 0; padding: 16px; border: 1px solid #e4eee6; border-radius: 11px; background: #f1f7f2; }
+.member-cancel-class-summary > div { display: grid; grid-template-columns: minmax(100px, .7fr) minmax(0, 1.3fr); gap: 12px; align-items: start; }
+.member-cancel-class-summary dt, .member-cancel-class-summary dd { margin: 0; font-size: 12px; line-height: 1.45; }
+.member-cancel-class-summary dt { color: #75847a; }
+.member-cancel-class-summary dd { color: #385244; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.member-cancel-class-summary > div:first-child dd { color: #367553; font-size: 14px; }
+.member-cancel-policy-note { display: flex; align-items: flex-start; gap: 8px; margin: 13px 0 0; color: #77837b; font-size: 11px; line-height: 1.55; }
+.member-cancel-policy-note > .material-symbols-outlined { flex: 0 0 auto; color: #85968a; font-size: 16px; }
+.member-cancel-confirm-modal .member-booking-actions { justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.member-cancel-confirm-modal .member-cancel-button, .member-cancel-confirm-button { min-height: 40px; padding: 0 18px; border: 0; border-radius: 8px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.member-cancel-confirm-modal .member-cancel-button { color: #405249; background: #eff4f0; }
+.member-cancel-confirm-button { color: #fff; background: #c52e2b; }
+.member-cancel-confirm-button:hover:not(:disabled) { background: #a92322; }
+.member-cancel-confirm-button:disabled { opacity: .65; cursor: wait; }
 .member-registration-summary { padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; background: var(--surface-muted); }
 .member-registration-session-list { padding-left: 20px; }
 .member-registration-session-list li { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
@@ -987,3 +1117,20 @@
 .member-qr-test-note { padding: 16px; border: 1px solid #e5bb55; border-radius: 10px; background: #fff8e6; color: #674b10; }
 .member-qr-test-note p { color: inherit; }
 .member-qr-payment dd { overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .member-classes-page .member-page-heading { align-items: flex-start; flex-direction: column; gap: 14px; padding: 12px 2px 18px; }
+  .member-classes-page .member-class-heading-action { align-self: stretch; justify-content: center; }
+  .member-classes-page .member-class-list-toolbar { padding: 14px; }
+  .member-classes-page .member-registration-filter { width: 100%; }
+  .member-classes-page .member-registration-filter button { flex: 1 1 auto; padding-inline: 8px; }
+  .member-classes-page .member-class-list-toolbar .member-class-search { align-items: stretch; }
+  .member-classes-page .member-class-search-input { flex-basis: 100%; max-width: none; }
+  .member-classes-page .member-class-search-button { flex: 1; }
+  .member-classes-page .member-class-count { flex-basis: 100%; text-align: left; }
+  .member-cancel-confirm-modal { padding: 18px; }
+  .member-cancel-confirm-modal .panel-heading h3 { font-size: 17px; }
+  .member-cancel-confirm-modal .member-booking-actions > button { flex: 1; padding-inline: 10px; }
+  .member-cancel-class-summary { padding: 13px; }
+  .member-cancel-class-summary > div { grid-template-columns: minmax(76px, .65fr) minmax(0, 1.35fr); gap: 8px; }
+}

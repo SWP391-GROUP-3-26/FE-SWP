@@ -40,6 +40,8 @@ export default function MemberClasses() {
   const [counts, setCounts] = useState({})
   const [registrationStatus, setRegistrationStatus] = useState('all')
   const [detailRegistration, setDetailRegistration] = useState(null)
+  const [cancelTarget, setCancelTarget] = useState(null)
+  const [cancelError, setCancelError] = useState('')
   const [cancellingId, setCancellingId] = useState(null)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
@@ -85,16 +87,34 @@ export default function MemberClasses() {
     setSubmittedSearch('')
   }
 
-  async function cancelRegistration(item) {
-    if (cancellingId != null || !window.confirm(`Hủy các buổi còn lại của lớp “${item.className}”? Các buổi đã học vẫn được giữ trong lịch sử. Hoàn tiền cần trung tâm kiểm tra.`)) return
-    setCancellingId(item.bookingId)
-    setLoadError('')
+  function askToCancelRegistration(item) {
+    if (cancellingId != null) return
+    setCancelTarget(item)
+    setCancelError('')
+  }
+
+  function closeCancelConfirmation() {
+    if (cancellingId != null) return
+    setCancelTarget(null)
+    setCancelError('')
+  }
+
+  async function confirmCancellation() {
+    if (!cancelTarget || cancellingId != null) return
+    if (cancelTarget.bookingId == null) {
+      setCancelError('Không tìm thấy thông tin đăng ký lớp để hủy.')
+      return
+    }
+
+    setCancellingId(cancelTarget.bookingId)
+    setCancelError('')
     try {
-      const result = await cancelClassRegistration(item.bookingId)
+      const result = await cancelClassRegistration(cancelTarget.bookingId)
       setSuccessMessage(result.message || 'Đã hủy các buổi còn lại của đăng ký.')
+      setCancelTarget(null)
       setLoading(true)
       setReloadKey((key) => key + 1)
-    } catch (error) { setLoadError(classApiErrorMessage(error)) }
+    } catch (error) { setCancelError(classApiErrorMessage(error)) }
     finally { setCancellingId(null) }
   }
 
@@ -182,52 +202,62 @@ export default function MemberClasses() {
       showIntro={false}
       title="Lớp học"
     >
+      <div className="member-classes-page">
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">KHÁM PHÁ BỘ MÔN</span>
-          <h2>Lớp học của bạn</h2>
-          <p>Tìm lớp phù hợp, chọn hình thức thanh toán và thêm lớp đã đăng ký vào thời khóa biểu.</p>
+          <h2>Lớp học của tôi</h2>
+          <p>Theo dõi lịch tập, trạng thái và thông tin các lớp bạn đã đăng ký.</p>
         </div>
-        <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">sports_gymnastics</span>
+        <button className="member-register-button member-class-heading-action" type="button"
+          onClick={() => changeTab(activeTab === 'registered' ? 'available' : 'registered')}>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            {activeTab === 'registered' ? 'add' : 'arrow_back'}
+          </span>
+          {activeTab === 'registered' ? 'Đăng ký lớp' : 'Lớp đã đăng ký'}
+        </button>
       </section>
 
-      <div className="member-class-tabs" aria-label="Danh sách lớp học">
-        <button className={activeTab === 'registered' ? 'member-register-button' : 'member-cancel-button'}
-          type="button" aria-pressed={activeTab === 'registered'}
-          onClick={() => changeTab('registered')}>Lớp đã đăng ký</button>
-        <button className={activeTab === 'available' ? 'member-register-button' : 'member-cancel-button'}
-          type="button" aria-pressed={activeTab === 'available'}
-          onClick={() => changeTab('available')}>Đăng ký lớp</button>
-      </div>
-      {activeTab === 'registered' && <label className="member-registration-filter">Trạng thái đăng ký
-        <select value={registrationStatus} onChange={(event) => {
-          setRegistrationStatus(event.target.value); setLoading(true); setLoadError('')
-        }}>
-          <option value="all">Tất cả ({counts.all ?? 0})</option>
-          <option value="ongoing">Đang học ({counts.ongoing ?? 0})</option>
-          <option value="completed">Hoàn thành ({counts.completed ?? 0})</option>
-          <option value="cancelled">Đã hủy ({counts.cancelled ?? 0})</option>
-          <option value="Pending">Chờ thanh toán</option>
-        </select>
-      </label>}
+      <div className="member-class-list-toolbar">
+        {activeTab === 'registered' && (
+          <div className="member-registration-filter" role="group" aria-label="Lọc lớp theo trạng thái">
+            {[
+              { value: 'all', label: 'Tất cả', count: counts.all },
+              { value: 'ongoing', label: 'Đang học', count: counts.ongoing },
+              { value: 'completed', label: 'Hoàn thành', count: counts.completed },
+              { value: 'cancelled', label: 'Đã hủy', count: counts.cancelled },
+              { value: 'Pending', label: 'Chờ thanh toán' },
+            ].map((filter) => (
+              <button key={filter.value} type="button" aria-pressed={registrationStatus === filter.value}
+                onClick={() => {
+                  setRegistrationStatus(filter.value)
+                  setLoading(true)
+                  setLoadError('')
+                }}>
+                {filter.label}{filter.count != null ? ` (${filter.count})` : ''}
+              </button>
+            ))}
+          </div>
+        )}
 
-      <form className="member-class-search" aria-label="Tìm kiếm lớp học" onSubmit={handleSearch}>
-        <label className="member-class-search-input">
-          <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          <input
-            aria-label="Tìm lớp, môn học, huấn luyện viên hoặc phòng"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Tìm lớp, môn học, huấn luyện viên hoặc phòng"
-            value={search}
-          />
-        </label>
-        <button className="member-class-search-button" disabled={loading} type="submit">
-          Tìm kiếm
-        </button>
-        <span className="member-class-count">
-          {loading ? 'Đang tải lớp...' : activeTab === 'registered' ? `${registeredClasses.length} đăng ký` : `${classes.length} lớp đang mở`}
-        </span>
-      </form>
+        <form className="member-class-search" aria-label="Tìm kiếm lớp học" onSubmit={handleSearch}>
+          <label className="member-class-search-input">
+            <span className="material-symbols-outlined" aria-hidden="true">search</span>
+            <input
+              aria-label="Tìm lớp, môn học, huấn luyện viên hoặc phòng"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Tìm lớp, môn học, huấn luyện viên hoặc phòng"
+              value={search}
+            />
+          </label>
+          <button className="member-class-search-button" disabled={loading} type="submit">
+            Tìm kiếm
+          </button>
+          <span className="member-class-count">
+            {loading ? 'Đang tải lớp...' : activeTab === 'registered' ? `${registeredClasses.length} đăng ký` : `${classes.length} lớp đang mở`}
+          </span>
+        </form>
+      </div>
 
       {successMessage && (
         <section className="member-registration-success" role="status">
@@ -255,10 +285,25 @@ export default function MemberClasses() {
         {registeredClasses.length === 0 ? <div className="member-class-empty">
           <h3>Chưa có đăng ký phù hợp</h3><p>Các lớp bạn đã đăng ký sẽ hiển thị ở đây, kể cả khi đã kết thúc.</p>
           <button className="member-register-button" type="button" onClick={() => changeTab('available')}>Tìm lớp để đăng ký</button>
-        </div> : <div className="member-class-grid">
-          {registeredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
-            busy={cancellingId === item.bookingId} onDetail={setDetailRegistration} onCancel={cancelRegistration}
-            onRebook={(registration) => openRegistration({ classId: registration.classId })} />)}
+        </div> : <div className="member-class-table-wrap">
+          <table className="member-registrations-table">
+            <thead>
+              <tr>
+                <th scope="col">Tên lớp</th>
+                <th scope="col">Mã lớp</th>
+                <th scope="col">Lịch tập</th>
+                <th scope="col">Khung giờ</th>
+                <th scope="col">Huấn luyện viên</th>
+                <th scope="col">Trạng thái</th>
+                <th scope="col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registeredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
+                busy={cancellingId === item.bookingId} onDetail={setDetailRegistration} onCancel={askToCancelRegistration}
+                onRebook={(registration) => openRegistration({ classId: registration.classId })} />)}
+            </tbody>
+          </table>
         </div>}
       </section>}
 
@@ -433,6 +478,35 @@ export default function MemberClasses() {
           )}
         </Modal>
       )}
+      {cancelTarget && (
+        <Modal
+          busy={cancellingId === cancelTarget.bookingId}
+          className="member-cancel-confirm-modal"
+          onClose={closeCancelConfirmation}
+          title={<><span className="member-cancel-modal-icon material-symbols-outlined" aria-hidden="true">warning</span>Xác nhận hủy lớp học</>}
+        >
+          <p className="member-cancel-confirm-question">Bạn có chắc chắn muốn hủy đăng ký lớp học này không?</p>
+          <dl className="member-cancel-class-summary">
+            <div><dt>Lớp:</dt><dd>{cancelTarget.className || 'Chưa cập nhật'}</dd></div>
+            <div><dt>Mã lớp:</dt><dd>{cancelTarget.classCode || 'Chưa cập nhật'}</dd></div>
+            <div><dt>Thời gian:</dt><dd>{[cancelTarget.schedule, cancelTarget.timeSlot].filter(Boolean).join(' · ') || 'Chưa cập nhật'}</dd></div>
+            <div><dt>HLV hướng dẫn:</dt><dd>{cancelTarget.coachName || 'Chưa cập nhật'}</dd></div>
+          </dl>
+          <p className="member-cancel-policy-note">
+            <span className="material-symbols-outlined" aria-hidden="true">info</span>
+            <span>Lưu ý: Các buổi đã học vẫn được giữ trong lịch sử. Hoàn tiền (nếu có) cần trung tâm kiểm tra.</span>
+          </p>
+          {cancelError && <div className="member-class-state member-class-error" role="alert">{cancelError}</div>}
+          <div className="member-booking-actions">
+            <button className="member-cancel-button" disabled={cancellingId != null} onClick={closeCancelConfirmation} type="button">
+              Đóng
+            </button>
+            <button className="member-cancel-confirm-button" disabled={cancellingId != null} onClick={confirmCancellation} type="button">
+              {cancellingId != null ? 'Đang hủy...' : 'Xác nhận hủy'}
+            </button>
+          </div>
+        </Modal>
+      )}
       {detailRegistration && <Modal title={`Các buổi lớp ${detailRegistration.className}`} onClose={() => setDetailRegistration(null)}>
         <p>{detailRegistration.status} · {detailRegistration.sessionCount ?? detailRegistration.sessions?.length ?? 1} buổi</p>
         <ul className="member-registration-session-list">
@@ -445,6 +519,7 @@ export default function MemberClasses() {
         </ul>
         <div className="member-booking-actions"><button className="member-cancel-button" type="button" onClick={() => setDetailRegistration(null)}>Đóng</button></div>
       </Modal>}
+      </div>
     </DashboardLayout>
   )
 }

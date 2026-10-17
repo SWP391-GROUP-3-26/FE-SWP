@@ -6,6 +6,7 @@ import { ROLES } from './auth/roleConfig'
 import CenterManagerDashboard from './pages/CenterManagerDashboard'
 import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
+import CoachClasses from './pages/CoachClasses'
 import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
 import Login from './pages/Login'
@@ -106,6 +107,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.COACH]}>
               <CoachDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coach/classes"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.COACH]}>
+              <CoachClasses />
             </ProtectedRoute>
           }
         />
