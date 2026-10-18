@@ -28,7 +28,11 @@ export async function searchMembers(keyword, page = 0, signal) {
 
 export async function getMemberById(id, signal) {
   const result = await request(`/${encodeURIComponent(id)}`, undefined, signal)
-  if (!Number.isInteger(result.data?.userId)) {
+  if (!Number.isInteger(result.data?.userId)
+    || !Array.isArray(result.data.activePackages)
+    || !result.data.activePackages.every((pack) => Number.isInteger(pack?.subscriptionId))
+    || !Array.isArray(result.data.activeClasses)
+    || !result.data.activeClasses.every((course) => Number.isInteger(course?.classId))) {
     throw new Error('Thông tin học viên từ máy chủ không hợp lệ.')
   }
   return result.data

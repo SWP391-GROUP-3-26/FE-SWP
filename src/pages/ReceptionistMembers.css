@@ -16,6 +16,10 @@
 .member-details div { min-width: 0; padding-bottom: 12px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .member-details dt { color: var(--muted); font-size: 14px; }
 .member-details dd { margin: 6px 0 0; }
+.member-enrollments { display: grid; gap: 16px; padding-top: 24px; border-top: 1px solid var(--border); min-width: 0; }
+.member-enrollments h3, .member-enrollment-card h4 { margin: 0; }
+.member-enrollment-card { display: grid; align-content: start; gap: 16px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); min-width: 0; overflow-wrap: anywhere; }
+.member-enrollment-card h4 { font-size: 18px; }
 @media (max-width: 640px) {
   .member-results, .member-details { grid-template-columns: 1fr; }
   .member-panel { padding: 16px; }
