@@ -4,6 +4,7 @@ import './App.css'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ROLES } from './auth/roleConfig'
 import CenterManagerDashboard from './pages/CenterManagerDashboard'
+import AuditLog from './pages/AuditLog'
 import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
 import CoachClasses from './pages/CoachClasses'
@@ -131,6 +132,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/center-manager/audit-logs"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+              <AuditLog />
             </ProtectedRoute>
           }
         />

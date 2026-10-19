@@ -13,7 +13,7 @@ export const staffMenuItems = {
         { icon: 'menu_book', label: 'Môn học', route: '/subjects' },
       ],
     },
-    { icon: 'history', label: 'Audit log', disabled: true },
+    { icon: 'history', label: 'Nhật ký hoạt động', route: '/center-manager/audit-logs' },
   ],
   [ROLES.RECEPTIONIST]: [
     { icon: 'person_add', label: 'Đăng ký người dùng', route: '/receptionist/register-member' },
