@@ -6,6 +6,7 @@ export function classApiErrorMessage(error) {
   if (error.response?.status === 403) return 'Bạn không có quyền thực hiện thao tác này.'
   if (error.response?.status === 404) return 'Không tìm thấy API lớp học. Vui lòng kiểm tra backend.'
   if (error.response?.status >= 500) return 'Backend gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.'
+  if (error.response?.data?.message) return error.response.data.message
   if (error.request) return 'Không thể kết nối backend. Hãy kiểm tra máy chủ hoặc cấu hình CORS.'
   return error.response?.data?.message || error.message || 'Không thể tải danh sách lớp.'
 }

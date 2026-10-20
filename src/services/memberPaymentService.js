@@ -35,10 +35,10 @@ export function paymentApiErrorMessage(error) {
   return error.message || 'Không thể kiểm tra thanh toán. Vui lòng thử lại.'
 }
 
-export async function getMemberPayment(paymentId, { signal } = {}) {
+export async function getMemberPayment(paymentId, { signal, memberId } = {}) {
   if (!isValidPaymentId(paymentId)) throw new Error('Mã thanh toán không hợp lệ.')
   const token = getAccessToken()
-  const response = await axiosClient.get(`/api/member/payments/${paymentId}`, {
+  const response = await axiosClient.get(memberId ? `/api/receptionist/registrations/members/${encodeURIComponent(memberId)}/payments/${paymentId}` : `/api/member/payments/${paymentId}`, {
     signal,
     timeout: 15000,
     headers: token ? { Authorization: `Bearer ${token}` } : {},

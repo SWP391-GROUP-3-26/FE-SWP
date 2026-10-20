@@ -26,16 +26,24 @@ const server = await createServer({
     name: 'payment-hook-test', enforce: 'pre',
     transform(code, id) {
       if (['/src/hooks/useMemberPayment.js', '/src/pages/MemberClasses.jsx'].some((file) => id.replaceAll('\\', '/').endsWith(file))) {
-        return code.replace("from 'react'", "from 'virtual:payment-test-hooks'")
+        const transformed = code.replace("from 'react'", "from 'virtual:payment-test-hooks'")
+        return id.replaceAll('\\', '/').endsWith('/src/pages/MemberClasses.jsx')
+          ? transformed.replace("from 'react-router-dom'", "from 'virtual:payment-test-router'") : transformed
       }
     },
     resolveId(source) {
       if (source === 'virtual:payment-test-hooks') return '\0payment-test-hooks'
+      if (source === 'virtual:payment-test-router') return '\0payment-test-router'
     },
     load(id) {
+      if (id === '\0payment-test-router') return `
+        export const Link = globalThis.__ssrTestDependencies['react-router-dom'].Link;
+        export const useNavigate = () => (url) => { globalThis.__paymentTestHooks.navigation = url; };
+      `
       if (id === '\0payment-test-hooks') return `
         export const useState = (initial) => globalThis.__paymentTestHooks.useState(initial);
         export const useEffect = (effect) => { globalThis.__paymentTestHooks.effect = effect; };
+        export const useRef = (initial) => ({ current: initial });
       `
     },
   }],
@@ -137,38 +145,37 @@ try {
   hooks.state = []
   hooks.cursor = 0
   const registeredClassPage = ClassesPage()
-  const classTabs = nodes(registeredClassPage).filter((node) => node.type === 'button'
-    && node.props['aria-pressed'] !== undefined)
-  assert.deepEqual(classTabs.map((node) => node.props['aria-pressed']), [true, false])
-  assert.ok(classTabs.every((node) => node.props.role === undefined))
-  classTabs[1].props.onClick()
+  const headingAction = nodes(registeredClassPage).find((node) => node.type === 'button'
+    && node.props.className?.includes('member-class-heading-action'))
+  headingAction.props.onClick()
   hooks.cursor = 0
   const availableClassPage = ClassesPage()
-  assert.deepEqual(nodes(availableClassPage).filter((node) => node.type === 'button'
-    && node.props['aria-pressed'] !== undefined).map((node) => node.props['aria-pressed']), [false, true])
+  assert.equal(hooks.state[1], 'available')
+  assert.equal(nodes(availableClassPage).filter((node) => node.type === 'button'
+    && node.props['aria-pressed'] !== undefined).length, 0)
   hooks.state = []
   hooks.cursor = 0
   ClassesPage()
-  assert.equal(hooks.state[18], 'Card', 'Default to ATM via VNPay')
+  assert.equal(hooks.state[20], 'Card', 'Default to ATM via VNPay')
   let redirectedTo
   globalThis.window = { location: { assign: (value) => { redirectedTo = value } } }
   for (const paymentUrl of [url, null, 'javascript:alert(1)']) {
-    hooks.state = [[], 'registered', [], {}, 'all', null, null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
+    hooks.state = [[], 'registered', [], {}, 'all', null, null, '', null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
       { className: 'Yoga', directPaymentOption: { available: true } }, false, false, '', 'DIRECT', 'Card', '']
     hooks.cursor = 0
     redirectedTo = null
     payload = { ...payment, paymentUrl, message: 'Đã tạo yêu cầu thanh toán VNPay' }
     await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
     assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'DIRECT', paymentChannel: 'Card' })
-    assert.equal(hooks.state[19], '', 'Creating a card payment must never announce registration success')
-    assert.notEqual(hooks.state[12], null, 'Card creation must not follow the completed booking branch')
+    assert.equal(hooks.state[21], '', 'Creating a card payment must never announce registration success')
+    assert.notEqual(hooks.state[14], null, 'Card creation must not follow the completed booking branch')
     if (paymentUrl === url) assert.equal(redirectedTo, url)
     else {
       assert.equal(redirectedTo, null)
-      assert.ok(hooks.state[16], 'A missing or unsafe payment URL must show an error')
+      assert.ok(hooks.state[18], 'A missing or unsafe payment URL must show an error')
     }
   }
-  hooks.state = [[], 'registered', [], {}, 'all', null, null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
+  hooks.state = [[], 'registered', [], {}, 'all', null, null, '', null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
     { className: 'Yoga', directPaymentOption: { available: true } }, false, false, '', 'DIRECT', 'Card', '']
   hooks.cursor = 0
   const channel = nodes(ClassesPage()).find((node) => node.type === 'select' && node.props.value === 'Card')
@@ -181,8 +188,8 @@ try {
   await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
   assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'DIRECT', paymentChannel: 'E_Wallet' })
   assert.equal(redirectedTo, '/member/payment-result?paymentId=105', 'Wallet opens QR checkout without announcing success')
-  assert.equal(hooks.state[19], '')
-  assert.notEqual(hooks.state[12], null)
+  assert.equal(hooks.state[21], '')
+  assert.notEqual(hooks.state[14], null)
 
   hooks.state[0] = [{ classId: 4, name: 'Yoga', canRegister: true }]
   hooks.state[1] = 'available'
@@ -191,10 +198,10 @@ try {
   const registerButton = nodes(ClassesPage()).find((node) => node.type === 'button'
     && node.props['aria-pressed'] === undefined && node.props.children === 'Đăng ký lớp')
   await registerButton.props.onClick()
-  assert.equal(hooks.state[18], 'Card', 'Reopening the form resets the channel to ATM via VNPay')
+  assert.equal(hooks.state[20], 'Card', 'Reopening the form resets the channel to ATM via VNPay')
 
   for (const success of [true, false]) {
-    hooks.state = [[], 'registered', [], {}, 'all', null, null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
+    hooks.state = [[], 'registered', [], {}, 'all', null, null, '', null, '', '', false, '', 0, { classId: 4, name: 'Yoga' },
       { className: 'Yoga', packageOption: { eligible: true, remainingSessions: 3 } },
       false, false, '', 'PACKAGE', 'Card', '']
     hooks.cursor = 0
@@ -208,17 +215,17 @@ try {
     await findRegistrationForm(ClassesPage()).props.onSubmit({ preventDefault() {} })
     assert.deepEqual(JSON.parse(requests.at(-1).data), { paymentMethod: 'PACKAGE' })
     assert.equal(redirectedTo, null, 'PACKAGE must never redirect to VNPay')
-    assert.equal(hooks.state[15], false)
+    assert.equal(hooks.state[17], false)
     if (success) {
-      assert.equal(hooks.state[19], payload.message)
-      assert.equal(hooks.state[12], null)
-      assert.equal(hooks.state[13], null)
-      assert.equal(hooks.state[11], 1, 'Refresh classes after a successful package booking')
+      assert.equal(hooks.state[21], payload.message)
+      assert.equal(hooks.state[14], null)
+      assert.equal(hooks.state[15], null)
+      assert.equal(hooks.state[13], 1, 'Refresh classes after a successful package booking')
     } else {
-      assert.equal(hooks.state[19], '')
-      assert.equal(hooks.state[16], payload.message)
-      assert.notEqual(hooks.state[12], null, 'Keep the modal open on a package booking error')
-      assert.equal(hooks.state[11], 0)
+      assert.equal(hooks.state[21], '')
+      assert.equal(hooks.state[18], payload.message)
+      assert.notEqual(hooks.state[14], null, 'Keep the modal open on a package booking error')
+      assert.equal(hooks.state[13], 0)
     }
   }
   delete globalThis.window

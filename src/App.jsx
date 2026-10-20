@@ -20,6 +20,8 @@ import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import ReceptionistMemberDetail from './pages/ReceptionistMemberDetail'
+import ReceptionistRegistrationPage from './pages/ReceptionistRegistrationPage'
+import ReceptionistCheckout from './pages/ReceptionistCheckout'
 import Register from './pages/Register'
 import ReceptionistRegisterMember from './pages/ReceptionistRegisterMember'
 import SubjectManagement from './pages/SubjectManagement'
@@ -103,6 +105,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {['classes', 'packages', 'payment-result'].map((path) => <Route key={path} path={'/receptionist/members/:id/' + path}
+          element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><ReceptionistRegistrationPage type={path} /></ProtectedRoute>} />)}
+        <Route path="/receptionist/members/:id/checkout/:serviceType/:serviceId"
+          element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><ReceptionistCheckout /></ProtectedRoute>} />
         <Route
           path="/coach"
           element={

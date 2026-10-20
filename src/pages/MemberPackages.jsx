@@ -1,4 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import ReceptionistMemberContext from '../components/ReceptionistMemberContext'
+import { staffMenuItems } from '../components/staffMenuItems'
+import { ROLES } from '../auth/roleConfig'
+import { getReceptionistPackages, getReceptionistSubscriptions, registerReceptionistPackage } from '../services/receptionistRegistrationService'
+import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import basicPackageImage from '../assets/member-package-basic.jpg'
 import centerWorkoutImage from '../assets/center-manager-dashboard.jpg'
 import premierPackageImage from '../assets/member-package-premier.jpg'
@@ -113,7 +119,8 @@ function EmptyState({ icon, title, children }) {
   )
 }
 
-export default function MemberPackages() {
+export default function MemberPackages({ receptionist = false, memberId = null } = {}) {
+  const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
@@ -125,6 +132,7 @@ export default function MemberPackages() {
   const [registrationLoading, setRegistrationLoading] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const submitting = useRef(false)
 
   const catalogRequestKey = JSON.stringify([submittedSearch, page, reloadKey])
   const catalog = catalogResult?.key === catalogRequestKey ? catalogResult : null
@@ -138,7 +146,8 @@ export default function MemberPackages() {
 
   useEffect(() => {
     const controller = new AbortController()
-    getMemberPackageCatalog({
+    const loadCatalog = memberId ? getReceptionistPackages : getMemberPackageCatalog
+    loadCatalog({
       search: submittedSearch,
       page,
       size: 20,
@@ -154,11 +163,12 @@ export default function MemberPackages() {
     })
 
     return () => controller.abort()
-  }, [catalogRequestKey, page, reloadKey, submittedSearch])
+  }, [catalogRequestKey, page, reloadKey, submittedSearch, memberId])
 
   useEffect(() => {
     const controller = new AbortController()
-    getMyMemberPackageSubscriptions({ signal: controller.signal }).then((result) => {
+    const loadSubscriptions = memberId ? (options) => getReceptionistSubscriptions(memberId, options) : getMyMemberPackageSubscriptions
+    loadSubscriptions({ signal: controller.signal }).then((result) => {
       if (!controller.signal.aborted) {
         setSubscriptionsResult({ key: reloadKey, data: result.data })
       }
@@ -169,9 +179,10 @@ export default function MemberPackages() {
     })
 
     return () => controller.abort()
-  }, [reloadKey])
+  }, [reloadKey, memberId])
 
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
+  const pendingSubscription = memberId && subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
 
   function submitSearch(event) {
     event.preventDefault()
@@ -186,6 +197,10 @@ export default function MemberPackages() {
   }
 
   function openRegistration(packageItem) {
+    if (receptionist) {
+      navigate(`/receptionist/members/${memberId}/checkout/packages/${packageItem.id}`)
+      return
+    }
     setSelectedPackage(packageItem)
     setPaymentMethod('Cash')
     setRegistrationError('')
@@ -199,33 +214,45 @@ export default function MemberPackages() {
 
   async function submitRegistration(event) {
     event.preventDefault()
-    if (!selectedPackage) return
+    if (!selectedPackage || registrationLoading || submitting.current) return
 
+    submitting.current = true
     setRegistrationLoading(true)
     setRegistrationError('')
     try {
-      const result = await registerMemberPackage({
+      const register = memberId ? (body) => registerReceptionistPackage(memberId, body) : registerMemberPackage
+      const result = await register({
         packageId: selectedPackage.id,
         paymentMethod,
       })
+      if (memberId && paymentMethod !== 'Cash') {
+        if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
+          throw new Error('Chưa thể mở thanh toán. Hãy kiểm tra lịch sử trước khi thử lại.')
+        }
+        window.location.assign(paymentMethod === 'Card' ? getVnpayPaymentUrl(result.paymentUrl)
+          : `/receptionist/members/${memberId}/payment-result?paymentId=${result.paymentId}`)
+        return
+      }
       setSuccessMessage(result.message || `Đăng ký gói "${selectedPackage.name}" thành công.`)
       setSelectedPackage(null)
       setReloadKey((key) => key + 1)
     } catch (error) {
-      setRegistrationError(memberPackageApiErrorMessage(error))
+      setRegistrationError(memberId ? paymentApiErrorMessage(error) : memberPackageApiErrorMessage(error))
     } finally {
+      submitting.current = false
       setRegistrationLoading(false)
     }
   }
 
   return (
     <DashboardLayout
-      eyebrow="Hội viên / Gói tập"
-      menuItems={memberMenuItems}
-      role="Hội viên"
+      eyebrow={receptionist ? 'Lễ tân / Đăng ký gói cho hội viên' : 'Hội viên / Gói tập'}
+      menuItems={receptionist ? staffMenuItems[ROLES.RECEPTIONIST] : memberMenuItems}
+      role={receptionist ? "Receptionist" : "Hội viên"}
       showIntro={false}
-      title="Gói tập của tôi"
+      title={receptionist ? 'Gói tập của hội viên' : 'Gói tập của tôi'}
     >
+      {memberId && <ReceptionistMemberContext memberId={memberId} />}
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">QUYỀN LỢI HỘI VIÊN</span>
@@ -238,7 +265,7 @@ export default function MemberPackages() {
       {successMessage && (
         <section className="member-registration-success" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
-          <span>{successMessage}</span>
+          <span>{successMessage} {memberId && <Link to={`/receptionist/members/${memberId}`}>Về thông tin hội viên</Link>}</span>
           <button type="button" aria-label="Đóng thông báo" onClick={() => setSuccessMessage('')}>×</button>
         </section>
       )}
@@ -247,7 +274,7 @@ export default function MemberPackages() {
         <div className="member-data-section-heading">
           <div>
             <span className="section-heading-kicker">THẺ HỘI VIÊN</span>
-            <h3>Gói tập của tôi</h3>
+            <h3>{receptionist ? 'Gói tập của hội viên' : 'Gói tập của tôi'}</h3>
           </div>
           {!subscriptionsError && !subscriptionsLoading && (
             <span className={`member-package-badge${activeSubscription ? ' is-active' : ''}`}>
@@ -360,6 +387,9 @@ export default function MemberPackages() {
           </button>
         </form>
 
+        {pendingSubscription && <p className="member-package-note" role="status">
+          Hội viên có giao dịch gói đang chờ thanh toán. <Link to={`/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra hoặc hủy yêu cầu thanh toán</Link>.
+        </p>}
         {activeSubscription && (
           <p className="member-package-note" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">info</span>
@@ -414,7 +444,7 @@ export default function MemberPackages() {
                   </div>
                   <div className="member-package-image">
                     <img src={image} alt={`Hình minh họa gói ${packageItem.name}`} loading="lazy" />
-                    <span>{packageItem.includedClasses === 0 ? 'Tập luyện không giới hạn' : `${packageItem.includedClasses ?? 'Linh hoạt'} buổi tập`}</span>
+                    <span>{`${packageItem.includedClasses ?? 'Chưa cập nhật'} buổi tập`}</span>
                   </div>
                   <div className="member-package-card-content">
                     <span className="member-package-code">{packageItem.code || `GÓI #${packageItem.id}`}</span>
@@ -427,7 +457,7 @@ export default function MemberPackages() {
                       </div>
                       <div>
                         <dt><span className="material-symbols-outlined" aria-hidden="true">fitness_center</span>Số buổi</dt>
-                        <dd>{packageItem.includedClasses === 0 ? 'Không giới hạn' : `${packageItem.includedClasses ?? 'Chưa cập nhật'} buổi`}</dd>
+                        <dd>{`${packageItem.includedClasses ?? 'Chưa cập nhật'} buổi`}</dd>
                       </div>
                     </dl>
                     {packageItem.benefits && (
@@ -445,7 +475,7 @@ export default function MemberPackages() {
                     </div>
                     <button
                       className="member-class-search-button"
-                      disabled={Boolean(activeSubscription)}
+                      disabled={Boolean(activeSubscription || pendingSubscription)}
                       onClick={() => openRegistration(packageItem)}
                       type="button"
                     >
@@ -481,6 +511,7 @@ export default function MemberPackages() {
           title="Xác nhận đăng ký gói"
         >
           <form onSubmit={submitRegistration}>
+            {memberId && <ReceptionistMemberContext memberId={memberId} />}
             <p className="member-package-modal-name">{selectedPackage.name}</p>
             <p className="member-package-modal-price">{priceFormatter.format(Number(selectedPackage.price || 0))}</p>
             <label className="member-package-payment-field">
@@ -490,13 +521,16 @@ export default function MemberPackages() {
                 onChange={(event) => setPaymentMethod(event.target.value)}
                 value={paymentMethod}
               >
-                {paymentMethods.map((method) => (
+                {(memberId ? [{ value: "Cash", label: "Thanh toán tại quầy — Tiền mặt" }, { value: "Card", label: "Thẻ ATM qua VNPay" }, { value: "E_Wallet", label: "QR chuyển khoản qua SePay" }] : paymentMethods).map((method) => (
                   <option key={method.value} value={method.value}>{method.label}</option>
                 ))}
               </select>
             </label>
             <p className="member-package-payment-warning" role="note">
-              Lưu ý: Backend hiện ghi nhận thanh toán là đã trả ngay khi đăng ký; cổng thanh toán chưa được tích hợp. Chỉ xác nhận khi bạn đã thanh toán theo hình thức đã chọn.
+              {memberId ? paymentMethod === 'Cash'
+                ? 'Chỉ xác nhận sau khi lễ tân đã nhận đủ tiền. Tổng tiền sẽ được kiểm tra lại trên máy chủ.'
+                : 'Gói chỉ được kích hoạt khi cổng thanh toán xác nhận giao dịch thành công.'
+                : 'Lưu ý: Backend hiện ghi nhận thanh toán là đã trả ngay khi đăng ký; cổng thanh toán chưa được tích hợp. Chỉ xác nhận khi bạn đã thanh toán theo hình thức đã chọn.'}
             </p>
             {registrationError && <p className="member-package-form-error" role="alert">{registrationError}</p>}
             <div className="member-package-modal-actions">
@@ -504,7 +538,7 @@ export default function MemberPackages() {
                 Hủy
               </button>
               <button className="member-class-search-button" disabled={registrationLoading} type="submit">
-                {registrationLoading ? 'Đang xử lý...' : 'Xác nhận đăng ký'}
+                {registrationLoading ? 'Đang xử lý...' : memberId && paymentMethod === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
               </button>
             </div>
           </form>

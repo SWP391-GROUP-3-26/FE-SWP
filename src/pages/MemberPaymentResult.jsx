@@ -5,23 +5,47 @@ import memberMenuItems from '../components/memberMenuItems'
 import MemberQrPayment from '../components/MemberQrPayment'
 import useMemberPayment from '../hooks/useMemberPayment'
 import { isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
+import { staffMenuItems } from '../components/staffMenuItems'
+import { ROLES } from '../auth/roleConfig'
+import ReceptionistMemberContext from '../components/ReceptionistMemberContext'
 import './MemberActivities.css'
+import { useRef, useState } from 'react'
+import Modal from '../components/Modal'
+import { cancelReceptionistPayment } from '../services/receptionistRegistrationService'
 
 const priceFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
-export default function MemberPaymentResult() {
+export default function MemberPaymentResult({ receptionist = false, memberId = null } = {}) {
+  const backPath = memberId ? `/receptionist/members/${memberId}` : '/member/classes'
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
+  const inFlight = useRef(false)
   const [params] = useSearchParams()
   const paymentId = params.get('paymentId')
   const validId = params.getAll('paymentId').length === 1 && isValidPaymentId(paymentId)
-  const { payment, error, loading, timedOut, retry } = useMemberPayment(paymentId, validId, 15 * 60_000)
+  const { payment, error, loading, timedOut, retry } = useMemberPayment(paymentId, validId, 15 * 60_000, memberId)
   const review = payment?.paymentStatus === 'Paid' && (payment.requiresReview ||
     !['Đang diễn ra', 'Đã hoàn thành'].includes(payment.bookingStatus))
   const status = payment?.paymentStatus
   const errorStatus = error?.response?.status
+  async function cancelPayment() {
+    if (inFlight.current) return
+    inFlight.current = true
+    setCancelling(true)
+    setCancelError('')
+    try {
+      await cancelReceptionistPayment(memberId, paymentId)
+      setCancelOpen(false)
+      retry()
+    } catch (e) { setCancelError(paymentApiErrorMessage(e)); retry() }
+    finally { inFlight.current = false; setCancelling(false) }
+  }
 
   return (
-    <DashboardLayout eyebrow="Hội viên / Thanh toán" title="Kết quả thanh toán"
-      menuItems={memberMenuItems} role="Hội viên" showIntro={false}>
+    <DashboardLayout eyebrow={receptionist ? 'Lễ tân / Thanh toán cho hội viên' : 'Hội viên / Thanh toán'} title="Kết quả thanh toán"
+      menuItems={receptionist ? staffMenuItems[ROLES.RECEPTIONIST] : memberMenuItems} role={receptionist ? "Receptionist" : "Hội viên"} showIntro={false}>
+      {memberId && <ReceptionistMemberContext memberId={memberId} />}
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">ĐĂNG KÝ LỚP HỌC</span>
@@ -39,8 +63,8 @@ export default function MemberPaymentResult() {
           <div role="status" aria-live="polite" aria-atomic="true">
             {loading ? <p><span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />Đang kiểm tra thanh toán...</p>
               : status === 'Paid' ? (
-                review ? <><h3>Đã thanh toán, cần xác nhận đăng ký</h3><p>Trung tâm đã ghi nhận thanh toán nhưng chưa xác nhận lớp. Vui lòng liên hệ trung tâm và cung cấp mã thanh toán {paymentId} để được hỗ trợ.</p></>
-                  : <><h3>Thanh toán và đăng ký thành công</h3><p>Lớp đã được ghi nhận trong lịch tập của bạn.</p></>
+                review ? <><h3>Đã thanh toán, cần xác nhận đăng ký</h3><p>Trung tâm đã ghi nhận thanh toán nhưng chưa xác nhận đăng ký. Vui lòng liên hệ trung tâm và cung cấp mã thanh toán {paymentId} để được hỗ trợ.</p></>
+                  : <><h3>Thanh toán và đăng ký thành công</h3><p>Đăng ký đã được ghi nhận cho hội viên.</p></>
               ) : status === 'Failed' ? (
                 <><h3>Thanh toán không thành công</h3><p>Đăng ký chưa được xác nhận. Bạn có thể quay lại danh sách lớp để đăng ký lại.</p></>
               ) : (
@@ -52,18 +76,31 @@ export default function MemberPaymentResult() {
         )}
         {!error && status === 'Pending' && payment?.qrPayment && <MemberQrPayment payment={payment} />}
         {payment && <dl className="member-class-details">
+          {payment.memberName && <div><dt>Hội viên</dt><dd>{payment.memberName} · #{payment.memberId}</dd></div>}
+          {payment.itemName && <div><dt>Lớp / Gói</dt><dd>{payment.itemName}</dd></div>}
           <div><dt>Mã thanh toán</dt><dd>{payment.paymentId}</dd></div>
           <div><dt>Số tiền</dt><dd>{priceFormatter.format(payment.paymentAmount)}</dd></div>
-          <div><dt>Đăng ký lớp</dt><dd>{payment.bookingStatus}</dd></div>
+          <div><dt>Trạng thái đăng ký</dt><dd>{payment.bookingStatus}</dd></div>
         </dl>}
         <div className="member-payment-result-actions">
+          {memberId && status === 'Pending' && <button className="member-cancel-button" type="button" onClick={() => setCancelOpen(true)}>Hủy yêu cầu thanh toán</button>}
           {errorStatus === 401 ? <Link className="member-register-button" to="/login" onClick={clearAuth}>Đăng nhập lại</Link>
             : validId && !loading && (timedOut || (error && ![403, 404].includes(errorStatus))) &&
               <button className="member-register-button" type="button" onClick={retry}>Kiểm tra lại</button>}
-          {status === 'Paid' && !review && <Link className="member-register-button" to="/member/schedule">Tới lịch tập</Link>}
-          <Link className="member-cancel-button" to="/member/classes">Về danh sách lớp</Link>
+          {!memberId && status === 'Paid' && !review && <Link className="member-register-button" to="/member/schedule">Tới lịch tập</Link>}
+          <Link className="member-cancel-button" to={backPath}>{memberId ? "Về thông tin hội viên" : "Về danh sách lớp"}</Link>
         </div>
       </section>
+      {cancelOpen && <Modal title="Hủy yêu cầu thanh toán" busy={cancelling} onClose={() => !cancelling && setCancelOpen(false)}>
+        <p>Hội viên: {payment?.memberName} · #{memberId}</p>
+        <p>{payment?.itemName} · Thanh toán #{paymentId} · {priceFormatter.format(payment?.paymentAmount || 0)}</p>
+        <p>Hủy yêu cầu đang chờ và giải phóng chỗ giữ nếu có. Tiền chuyển đến sau khi hủy cần trung tâm đối soát, chưa tự động hoàn tiền.</p>
+        {cancelError && <p role="alert">{cancelError}</p>}
+        <div className="member-booking-actions">
+          <button className="member-cancel-button" disabled={cancelling} type="button" onClick={() => setCancelOpen(false)}>Đóng</button>
+          <button className="member-register-button" disabled={cancelling} type="button" onClick={cancelPayment}>{cancelling ? 'Đang hủy…' : 'Xác nhận hủy yêu cầu'}</button>
+        </div>
+      </Modal>}
     </DashboardLayout>
   )
 }

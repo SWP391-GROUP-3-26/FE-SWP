@@ -1,7 +1,6 @@
-import { formatClassDate } from '../utils/classSchedule'
 import { Link } from 'react-router-dom'
 
-export default function RegisteredClassCard({ item, busy, onDetail, onCancel, onRebook }) {
+export default function RegisteredClassCard({ item, busy, onDetail, onCancel, onRebook, paymentBasePath = '/member' }) {
   return (
     <tr className="member-registration-row">
       <td data-label="Tên lớp">
@@ -18,11 +17,12 @@ export default function RegisteredClassCard({ item, busy, onDetail, onCancel, on
         <span className={`member-registration-status${item.canCancel ? ' is-active' : ''}`}>
           {item.status || 'Chưa xác định'}
         </span>
+        {item.requiresReview && <small>Thanh toán cần đối soát, chưa tự hoàn tiền.</small>}
       </td>
       <td data-label="Thao tác">
         <div className="member-class-row-actions">
           {item.paymentStatus === 'Pending' && item.paymentId && <Link className="member-row-action member-row-action-primary"
-            to={`/member/payment-result?paymentId=${item.paymentId}`}>Thanh toán</Link>}
+            to={`${paymentBasePath}/payment-result?paymentId=${item.paymentId}`}>Thanh toán</Link>}
           <button className="member-row-action" type="button" onClick={() => onDetail(item)}>Chi tiết</button>
           {item.canCancel && <button className="member-row-action member-row-action-danger" disabled={busy} type="button" onClick={() => onCancel(item)}>
             {busy ? 'Đang hủy...' : 'Hủy lớp'}

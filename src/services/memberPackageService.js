@@ -6,6 +6,7 @@ export function memberPackageApiErrorMessage(error) {
   if (error.response?.status === 403) return 'Chỉ tài khoản hội viên đang hoạt động mới sử dụng được chức năng này.'
   if (error.response?.status === 404) return 'Không tìm thấy API hoặc gói tập. Vui lòng kiểm tra backend.'
   if (error.response?.status >= 500) return 'Backend gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.'
+  if (error.response?.data?.message) return error.response.data.message
   if (error.request) return 'Không thể kết nối backend. Hãy kiểm tra máy chủ hoặc cấu hình CORS.'
   return error.response?.data?.message || error.message || 'Không thể thực hiện yêu cầu về gói tập.'
 }

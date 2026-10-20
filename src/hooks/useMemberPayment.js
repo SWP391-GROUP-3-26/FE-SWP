@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getMemberPayment } from '../services/memberPaymentService'
 
-export default function useMemberPayment(paymentId, enabled, pollingTimeout = 60000) {
+export default function useMemberPayment(paymentId, enabled, pollingTimeout = 60000, memberId = null) {
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
 
@@ -14,7 +14,7 @@ export default function useMemberPayment(paymentId, enabled, pollingTimeout = 60
 
     async function check() {
       try {
-        const payment = await getMemberPayment(paymentId, { signal: controller.signal })
+        const payment = await getMemberPayment(paymentId, { signal: controller.signal, memberId })
         if (controller.signal.aborted) return
         const timedOut = Date.now() - startedAt >= pollingTimeout
         setResult({ paymentId, attempt, payment, timedOut })
@@ -43,7 +43,7 @@ export default function useMemberPayment(paymentId, enabled, pollingTimeout = 60
       clearTimeout(deadline)
       controller.abort()
     }
-  }, [paymentId, enabled, attempt, pollingTimeout])
+  }, [paymentId, enabled, attempt, pollingTimeout, memberId])
 
   const current = enabled && result?.paymentId === paymentId && result.attempt === attempt ? result : null
   return {
