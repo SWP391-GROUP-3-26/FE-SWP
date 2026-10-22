@@ -40,3 +40,37 @@ export async function getCoachClassDetail(classId, signal) {
   return result
 }
 
+export async function getCoachClassSessions(classId, signal) {
+  const response = await axiosClient.get(
+    `/api/coach/classes/${encodeURIComponent(classId)}/sessions`,
+    authConfig(signal),
+  )
+  if (response.data?.success !== true || !Array.isArray(response.data.data)) {
+    throw new Error(response.data?.message || 'Không thể tải lịch các buổi học của lớp.')
+  }
+  return response.data.data
+}
+
+export async function getCoachSessionAttendance(classId, sessionId, signal) {
+  const response = await axiosClient.get(
+    `/api/coach/classes/${encodeURIComponent(classId)}/sessions/${encodeURIComponent(sessionId)}/attendance`,
+    authConfig(signal),
+  )
+  if (response.data?.success !== true || !response.data.data?.session || !Array.isArray(response.data.data.members)) {
+    throw new Error(response.data?.message || 'Không thể tải danh sách điểm danh của buổi học.')
+  }
+  return response.data.data
+}
+
+export async function saveCoachSessionAttendance(classId, sessionId, records, signal) {
+  const response = await axiosClient.put(
+    `/api/coach/classes/${encodeURIComponent(classId)}/sessions/${encodeURIComponent(sessionId)}/attendance`,
+    { records },
+    authConfig(signal),
+  )
+  if (response.data?.success !== true || !response.data.data?.session || !Array.isArray(response.data.data.members)) {
+    throw new Error(response.data?.message || 'Không thể lưu điểm danh của buổi học.')
+  }
+  return response.data.data
+}
+

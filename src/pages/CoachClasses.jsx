@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
-import Modal from '../components/Modal'
 import coachMenuItems from '../components/coachMenuItems'
 import {
-  getCoachClassDetail,
   getCoachClasses,
   coachClassApiErrorMessage,
 } from '../services/coachClassService'
@@ -16,16 +15,10 @@ const filters = [
   { value: 'cancelled', label: 'Đã hủy' },
 ]
 
-const currency = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 })
-
 function formatDate(value) {
   if (!value) return 'Chưa cập nhật'
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value))
   return match ? `${match[3]}/${match[2]}/${match[1]}` : value
-}
-
-function formatTime(value) {
-  return value ? String(value).slice(0, 5) : ''
 }
 
 function classPeriod(item) {
@@ -57,11 +50,6 @@ export default function CoachClasses() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
-  const [selectedClass, setSelectedClass] = useState(null)
-  const [classDetail, setClassDetail] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [detailError, setDetailError] = useState('')
-  const [detailReloadKey, setDetailReloadKey] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -83,36 +71,10 @@ export default function CoachClasses() {
     return () => controller.abort()
   }, [reloadKey, status, submittedSearch])
 
-  useEffect(() => {
-    if (!selectedClass) return undefined
-    const controller = new AbortController()
-    setClassDetail(null)
-    setDetailLoading(true)
-    setDetailError('')
-    getCoachClassDetail(selectedClass.classId, controller.signal)
-      .then((detail) => {
-        if (controller.signal.aborted) return
-        setClassDetail(detail)
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted) setDetailError(coachClassApiErrorMessage(error))
-      })
-      .finally(() => { if (!controller.signal.aborted) setDetailLoading(false) })
-    return () => controller.abort()
-  }, [selectedClass, detailReloadKey])
-
   function submitSearch(event) {
     event.preventDefault()
     setSubmittedSearch(search.trim())
     if (search.trim() === submittedSearch) setReloadKey((key) => key + 1)
-  }
-
-  function retryDetail() {
-    setDetailReloadKey((key) => key + 1)
-  }
-
-  function openClassDetail(item) {
-    setSelectedClass(item)
   }
 
   return (
@@ -188,9 +150,9 @@ export default function CoachClasses() {
                   <td>{classPeriod(item)}</td>
                   <td><span className="coach-class-student-count">{item.enrolledStudentsCount ?? 0}<small> / {item.maxCapacity ?? '—'}</small></span></td>
                   <td><span className={`coach-class-status status-${String(item.status || '').toLowerCase()}`}>{statusLabel(item)}</span></td>
-                  <td><button className="coach-class-detail-button" type="button" onClick={() => openClassDetail(item)}>
+                  <td><Link className="coach-class-detail-button" to={`/coach/classes/${item.classId}`}>
                     <span className="material-symbols-outlined" aria-hidden="true">visibility</span>Chi tiết
-                  </button></td>
+                  </Link></td>
                 </tr>
               ))}</tbody>
             </table>
@@ -199,38 +161,6 @@ export default function CoachClasses() {
         {!loading && !loadError && <div className="coach-class-results-count">Hiển thị {classes.length} lớp</div>}
       </section>
 
-      {selectedClass && <Modal className="coach-class-detail-modal" title="Chi tiết lớp học" onClose={() => setSelectedClass(null)}>
-        {detailLoading && <div className="coach-class-message" role="status">Đang tải thông tin lớp...</div>}
-        {detailError && <div className="coach-class-message is-error" role="alert">
-          <span>{detailError}</span><button type="button" onClick={retryDetail}>Thử lại</button>
-        </div>}
-        {classDetail && <>
-          <div className="coach-class-detail-heading">
-            <div><span>{classDetail.classCode}</span><h4>{classDetail.name}</h4></div>
-            <span className="coach-class-status">{statusLabel(classDetail)}</span>
-          </div>
-          <dl className="coach-class-detail-facts">
-            <div><dt>Môn học</dt><dd>{classDetail.subjectName || 'Chưa phân môn'}</dd></div>
-            <div><dt>Lịch học</dt><dd>{classDetail.schedule || 'Chưa cập nhật'}</dd></div>
-            <div><dt>Phòng tập</dt><dd>{classDetail.roomName || 'Chưa xếp phòng'}</dd></div>
-            <div><dt>Thời hạn lớp</dt><dd>{classPeriod(classDetail)}</dd></div>
-            <div><dt>Sĩ số</dt><dd>{classDetail.enrolledStudentsCount ?? classDetail.students.length} / {classDetail.maxCapacity ?? '—'} học viên</dd></div>
-            <div><dt>Học phí</dt><dd>{currency.format(Number(classDetail.price || 0))}</dd></div>
-          </dl>
-          <div className="coach-class-students-heading"><h4>Danh sách học viên</h4><span>{classDetail.students.length} học viên</span></div>
-          {classDetail.students.length === 0 ? <p className="coach-class-no-students">Lớp hiện chưa có học viên.</p> : (
-            <div className="coach-class-students">
-              {classDetail.students.map((student) => (
-                <article key={student.userId}>
-                  <span className="coach-class-student-avatar">{student.fullName?.trim()?.charAt(0)?.toUpperCase() || 'H'}</span>
-                  <div><strong>{student.fullName || 'Học viên'}</strong><small>{student.phone || student.email || student.username || 'Chưa có thông tin liên hệ'}</small></div>
-                  <span className="coach-student-status">{student.statusDisplay || 'Đang theo học'}</span>
-                </article>
-              ))}
-            </div>
-          )}
-        </>}
-      </Modal>}
     </DashboardLayout>
   )
 }

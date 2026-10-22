@@ -8,6 +8,7 @@ import AuditLog from './pages/AuditLog'
 import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
 import CoachClasses from './pages/CoachClasses'
+import CoachClassDetail from './pages/CoachClassDetail'
 import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
 import Login from './pages/Login'
@@ -122,6 +123,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.COACH]}>
               <CoachClasses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coach/classes/:classId"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.COACH]}>
+              <CoachClassDetail />
             </ProtectedRoute>
           }
         />

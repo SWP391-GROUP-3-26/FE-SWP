@@ -103,7 +103,7 @@
 .coach-class-status { display: inline-flex; width: fit-content; padding: 5px 9px; border-radius: 999px; color: #256744; background: #e4f4e9; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .coach-class-status.status-completed { color: #5d6871; background: #eef1f2; }
 .coach-class-status.status-cancelled, .coach-class-status.status-cancel { color: #a53c34; background: #fff0ee; }
-.coach-class-detail-button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; border: 0; border-radius: 7px; color: #356b4c; background: #edf5ef; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.coach-class-detail-button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; border: 0; border-radius: 7px; color: #356b4c; background: #edf5ef; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
 .coach-class-detail-button:hover { background: #e0efe4; }
 .coach-class-detail-button .material-symbols-outlined { font-size: 16px; }
 .coach-class-results-count { padding: 12px 18px; border-top: 1px solid #edf2ee; color: #7b8980; font-size: 11px; }
