@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import ReceptionistMemberContext from '../components/ReceptionistMemberContext'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { ROLES } from '../auth/roleConfig'
+import { getAuth } from '../auth/authStorage'
 import { getReceptionistPackages, getReceptionistSubscriptions, registerReceptionistPackage } from '../services/receptionistRegistrationService'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import basicPackageImage from '../assets/member-package-basic.jpg'
@@ -14,7 +15,10 @@ import Modal from '../components/Modal'
 import memberMenuItems from '../components/memberMenuItems'
 import {
   getMemberPackageCatalog,
+  getMemberPackage,
   getMyMemberPackageSubscriptions,
+  previewMemberPackageRenewal,
+  renewMemberPackage,
   memberPackageApiErrorMessage,
   registerMemberPackage,
 } from '../services/memberPackageService'
@@ -121,6 +125,7 @@ function EmptyState({ icon, title, children }) {
 
 export default function MemberPackages({ receptionist = false, memberId = null } = {}) {
   const navigate = useNavigate()
+  const [authIdentity, setAuthIdentity] = useState(() => getAuth().userId || 'anonymous')
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
@@ -131,18 +136,37 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   const [paymentMethod, setPaymentMethod] = useState('Cash')
   const [registrationLoading, setRegistrationLoading] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
+  const [packageDetailLoading, setPackageDetailLoading] = useState(false)
+  const [choiceSelection, setChoiceSelection] = useState({})
+  const [renewalStart, setRenewalStart] = useState('IMMEDIATE')
+  const [renewalPreview, setRenewalPreview] = useState(null)
+  const [renewalPreviewLoading, setRenewalPreviewLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const submitting = useRef(false)
 
-  const catalogRequestKey = JSON.stringify([submittedSearch, page, reloadKey])
+  const catalogRequestKey = JSON.stringify([authIdentity, submittedSearch, page, reloadKey])
+  const subscriptionRequestKey = JSON.stringify([authIdentity, reloadKey])
   const catalog = catalogResult?.key === catalogRequestKey ? catalogResult : null
-  const subscriptions = subscriptionsResult?.key === reloadKey ? subscriptionsResult : null
+  const subscriptions = subscriptionsResult?.key === subscriptionRequestKey ? subscriptionsResult : null
   const packages = catalog?.data || []
   const totalPackages = catalog?.total || 0
   const catalogLoading = !catalog
   const subscriptionsLoading = !subscriptions
   const catalogError = catalog?.error || ''
   const subscriptionsError = subscriptions?.error || ''
+
+  useEffect(() => {
+    function syncAuthIdentity(event) {
+      if (event.key && !['accessToken', 'userId'].includes(event.key)) return
+      const nextIdentity = getAuth().userId || 'anonymous'
+      setAuthIdentity((current) => current === nextIdentity ? current : nextIdentity)
+      setSelectedPackage(null)
+      setRegistrationError('')
+      setRenewalPreview(null)
+    }
+    window.addEventListener('storage', syncAuthIdentity)
+    return () => window.removeEventListener('storage', syncAuthIdentity)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -163,26 +187,30 @@ export default function MemberPackages({ receptionist = false, memberId = null }
     })
 
     return () => controller.abort()
-  }, [catalogRequestKey, page, reloadKey, submittedSearch, memberId])
+  }, [authIdentity, catalogRequestKey, page, reloadKey, submittedSearch, memberId])
 
   useEffect(() => {
     const controller = new AbortController()
     const loadSubscriptions = memberId ? (options) => getReceptionistSubscriptions(memberId, options) : getMyMemberPackageSubscriptions
     loadSubscriptions({ signal: controller.signal }).then((result) => {
       if (!controller.signal.aborted) {
-        setSubscriptionsResult({ key: reloadKey, data: result.data })
+        setSubscriptionsResult({ key: subscriptionRequestKey, data: result.data })
       }
     }).catch((error) => {
       if (!controller.signal.aborted) {
-        setSubscriptionsResult({ key: reloadKey, error: memberPackageApiErrorMessage(error) })
+        setSubscriptionsResult({ key: subscriptionRequestKey, error: memberPackageApiErrorMessage(error) })
       }
     })
 
     return () => controller.abort()
-  }, [reloadKey, memberId])
+  }, [authIdentity, memberId, reloadKey, subscriptionRequestKey])
 
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
-  const pendingSubscription = memberId && subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
+  const pendingSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending')
+  const visiblePackages = activeSubscription
+    ? packages.filter((packageItem) => Number(packageItem.id) !== Number(activeSubscription.packageId))
+    : packages
+  const visiblePackageCount = Math.max(0, totalPackages - (packages.length - visiblePackages.length))
 
   function submitSearch(event) {
     event.preventDefault()
@@ -201,30 +229,75 @@ export default function MemberPackages({ receptionist = false, memberId = null }
       navigate(`/receptionist/members/${memberId}/checkout/packages/${packageItem.id}`)
       return
     }
-    setSelectedPackage(packageItem)
+    const isRenewal = Boolean(activeSubscription)
+    setSelectedPackage({ ...packageItem, isRenewal })
     setPaymentMethod('Cash')
     setRegistrationError('')
+    setChoiceSelection({})
+    setRenewalStart('IMMEDIATE')
+    setRenewalPreview(null)
+    setPackageDetailLoading(true)
+    getMemberPackage(packageItem.id).then((detail) => {
+      setSelectedPackage({ ...detail, isRenewal })
+    }).catch((error) => {
+      setRegistrationError(memberPackageApiErrorMessage(error))
+    }).finally(() => setPackageDetailLoading(false))
   }
 
   function closeRegistration() {
     if (registrationLoading) return
     setSelectedPackage(null)
     setRegistrationError('')
+    setRenewalPreview(null)
   }
 
   async function submitRegistration(event) {
     event.preventDefault()
-    if (!selectedPackage || registrationLoading || submitting.current) return
+    if (!selectedPackage || packageDetailLoading || registrationLoading || renewalPreviewLoading || submitting.current) return
+
+    const choiceGroups = (selectedPackage.choiceGroups || []).map((group) => ({
+      choiceGroupId: group.id,
+      sportIds: choiceSelection[group.id] || [],
+    }))
+    const incompleteGroup = (selectedPackage.choiceGroups || []).find((group) =>
+      (choiceSelection[group.id] || []).length !== group.requiredSelection)
+    if (incompleteGroup) {
+      setRegistrationError(`Vui lòng chọn chính xác ${incompleteGroup.requiredSelection} môn cho nhóm “${incompleteGroup.name}”.`)
+      return
+    }
+
+    if (selectedPackage.isRenewal && !renewalPreview) {
+      setRenewalPreviewLoading(true)
+      setRegistrationError('')
+      try {
+        const preview = await previewMemberPackageRenewal({
+          packageId: selectedPackage.id,
+          renewalStart,
+          choiceGroups,
+        })
+        setRenewalPreview(preview)
+      } catch (error) {
+        setRegistrationError(memberPackageApiErrorMessage(error))
+      } finally {
+        setRenewalPreviewLoading(false)
+      }
+      return
+    }
 
     submitting.current = true
     setRegistrationLoading(true)
     setRegistrationError('')
     try {
-      const register = memberId ? (body) => registerReceptionistPackage(memberId, body) : registerMemberPackage
-      const result = await register({
+      const payload = {
         packageId: selectedPackage.id,
         paymentMethod,
-      })
+        choiceGroups,
+        renewalStart,
+      }
+      const register = memberId
+        ? (body) => registerReceptionistPackage(memberId, body)
+        : selectedPackage.isRenewal ? renewMemberPackage : registerMemberPackage
+      const result = await register(payload)
       if (memberId && paymentMethod !== 'Cash') {
         if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
           throw new Error('Chưa thể mở thanh toán. Hãy kiểm tra lịch sử trước khi thử lại.')
@@ -242,6 +315,18 @@ export default function MemberPackages({ receptionist = false, memberId = null }
       submitting.current = false
       setRegistrationLoading(false)
     }
+  }
+
+  function toggleChoiceSport(group, sportId) {
+    setRegistrationError('')
+    setRenewalPreview(null)
+    setChoiceSelection((current) => {
+      const selected = current[group.id] || []
+      const next = selected.includes(sportId)
+        ? selected.filter((id) => id !== sportId)
+        : selected.length < group.requiredSelection ? [...selected, sportId] : selected
+      return { ...current, [group.id]: next }
+    })
   }
 
   return (
@@ -369,7 +454,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             <span className="section-heading-kicker">LỰA CHỌN CỦA BẠN</span>
             <h3>Gói dịch vụ đang mở bán</h3>
           </div>
-          <span className="member-package-total">{totalPackages} gói</span>
+          <span className="member-package-total">{visiblePackageCount} gói</span>
         </div>
 
         <form className="member-class-search member-package-search" aria-label="Tìm kiếm gói tập" onSubmit={submitSearch}>
@@ -388,14 +473,16 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         </form>
 
         {pendingSubscription && <p className="member-package-note" role="status">
-          Hội viên có giao dịch gói đang chờ thanh toán. <Link to={`/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra hoặc hủy yêu cầu thanh toán</Link>.
+          {memberId && pendingSubscription.paymentStatus === 'Pending'
+            ? <>Hội viên có giao dịch gói đang chờ thanh toán. <Link to={`/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra hoặc hủy yêu cầu thanh toán</Link>.</>
+            : <>Gói gia hạn đã được ghi nhận và đang chờ ngày bắt đầu {formatDate(pendingSubscription.startDate)}.</>}
         </p>}
         {activeSubscription && (
           <p className="member-package-note" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">info</span>
             <span>
               <strong>Bạn đang có gói hoạt động đến {formatDate(activeSubscription.endDate)}.</strong>
-              {' '}Hiện tại, bạn không được đăng ký gói mới khi gói này còn hiệu lực.
+              {' '}Bạn có thể chọn gói mới để gia hạn và bắt đầu ngay hoặc sau khi gói hiện tại kết thúc.
             </span>
           </p>
         )}
@@ -411,7 +498,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           <div className="member-package-state" role="status">Đang tải danh sách gói từ backend...</div>
         )}
 
-        {!catalogError && !catalogLoading && packages.length === 0 && (
+        {!catalogError && !catalogLoading && visiblePackages.length === 0 && (
           <EmptyState icon="inventory_2" title={submittedSearch ? 'Không tìm thấy gói phù hợp' : 'Chưa có gói đang mở bán'}>
             {submittedSearch
               ? 'Thử tìm với từ khóa khác.'
@@ -419,9 +506,9 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           </EmptyState>
         )}
 
-        {!catalogError && !catalogLoading && packages.length > 0 && (
+        {!catalogError && !catalogLoading && visiblePackages.length > 0 && (
           <div className="member-package-grid" aria-label="Danh sách gói đang mở bán">
-            {packages.map((packageItem) => {
+            {visiblePackages.map((packageItem) => {
               const isStandardThreeMonthPackage = /standard/i.test(packageItem.name || '')
                 && (Number(packageItem.durationMonths) === 3 || /3\s*tháng/i.test(packageItem.name || ''))
               const isPremierTwelveMonthPackage = /premier|premium/i.test(packageItem.name || '')
@@ -475,11 +562,11 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                     </div>
                     <button
                       className="member-class-search-button"
-                      disabled={Boolean(activeSubscription || pendingSubscription)}
+                      disabled={Boolean(pendingSubscription)}
                       onClick={() => openRegistration(packageItem)}
                       type="button"
                     >
-                      Chọn gói <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                      {activeSubscription ? 'Chọn gói gia hạn' : 'Chọn gói'} <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                     </button>
                   </div>
                 </article>
@@ -488,13 +575,13 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           </div>
         )}
 
-        {!catalogError && !catalogLoading && totalPackages > 20 && (
+        {!catalogError && !catalogLoading && visiblePackageCount > 20 && (
           <div className="member-package-pagination">
             <button type="button" disabled={page === 0} onClick={() => setPage((value) => value - 1)}>Trang trước</button>
             <span>Trang {page + 1} / {Math.ceil(totalPackages / 20)}</span>
             <button
               type="button"
-              disabled={(page + 1) * 20 >= totalPackages}
+              disabled={(page + 1) * 20 >= visiblePackageCount}
               onClick={() => setPage((value) => value + 1)}
             >
               Trang sau
@@ -514,6 +601,51 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             {memberId && <ReceptionistMemberContext memberId={memberId} />}
             <p className="member-package-modal-name">{selectedPackage.name}</p>
             <p className="member-package-modal-price">{priceFormatter.format(Number(selectedPackage.price || 0))}</p>
+            {packageDetailLoading && <p className="member-package-note" role="status">Đang tải quyền lợi và môn học của gói...</p>}
+            {!packageDetailLoading && selectedPackage.includedSports?.length > 0 && (
+              <section className="member-package-choice-section" aria-label="Môn học được bao gồm">
+                <h4>Môn học đã bao gồm</h4>
+                <div className="member-package-sport-tags">
+                  {selectedPackage.includedSports.map((sport) => <span key={sport.id}>{sport.name}</span>)}
+                </div>
+              </section>
+            )}
+            {!packageDetailLoading && (selectedPackage.choiceGroups || []).map((group) => (
+              <fieldset className="member-package-choice-section" key={group.id}>
+                <legend>{group.name} <small>Chọn đúng {group.requiredSelection} môn</small></legend>
+                {group.description && <p>{group.description}</p>}
+                <div className="member-package-sport-options">
+                  {(group.sports || []).map((sport) => {
+                    const checked = (choiceSelection[group.id] || []).includes(sport.id)
+                    return (
+                      <label className={checked ? 'is-selected' : ''} key={sport.id}>
+                        <input checked={checked} disabled={registrationLoading || renewalPreviewLoading || (!checked && (choiceSelection[group.id] || []).length >= group.requiredSelection)} onChange={() => toggleChoiceSport(group, sport.id)} type="checkbox" />
+                        <span>{sport.name}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+                <small className="member-package-choice-count">Đã chọn {(choiceSelection[group.id] || []).length}/{group.requiredSelection}</small>
+              </fieldset>
+            ))}
+            {selectedPackage.isRenewal && (
+              <label className="member-package-payment-field">
+                Thời điểm bắt đầu gói mới
+                <select disabled={registrationLoading || renewalPreviewLoading} onChange={(event) => { setRenewalStart(event.target.value); setRenewalPreview(null) }} value={renewalStart}>
+                  <option value="IMMEDIATE">Bắt đầu ngay</option>
+                  <option value="AFTER_CURRENT">Sau khi gói hiện tại kết thúc</option>
+                </select>
+              </label>
+            )}
+            {renewalPreview && (
+              <div className="member-package-renewal-preview" role="status">
+                <strong>Kiểm tra thông tin gia hạn</strong>
+                <span>Hiệu lực: {formatDate(renewalPreview.newStartDate)} – {formatDate(renewalPreview.newEndDate)}</span>
+                <span>Giá gói: {priceFormatter.format(Number(renewalPreview.listedPrice || 0))}</span>
+                <span>Ưu đãi: {priceFormatter.format(Number(renewalPreview.discountAmount || 0))}</span>
+                <b>Cần thanh toán: {priceFormatter.format(Number(renewalPreview.totalAmount || 0))}</b>
+              </div>
+            )}
             <label className="member-package-payment-field">
               Hình thức thanh toán
               <select
@@ -534,11 +666,11 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             </p>
             {registrationError && <p className="member-package-form-error" role="alert">{registrationError}</p>}
             <div className="member-package-modal-actions">
-              <button className="member-package-cancel" disabled={registrationLoading} onClick={closeRegistration} type="button">
+              <button className="member-package-cancel" disabled={registrationLoading || renewalPreviewLoading} onClick={closeRegistration} type="button">
                 Hủy
               </button>
-              <button className="member-class-search-button" disabled={registrationLoading} type="submit">
-                {registrationLoading ? 'Đang xử lý...' : memberId && paymentMethod === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
+              <button className="member-class-search-button" disabled={packageDetailLoading || registrationLoading || renewalPreviewLoading} type="submit">
+                {registrationLoading ? 'Đang xử lý...' : renewalPreviewLoading ? 'Đang tính...' : selectedPackage.isRenewal && !renewalPreview ? 'Kiểm tra gia hạn' : selectedPackage.isRenewal ? 'Xác nhận gia hạn' : memberId && paymentMethod === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
               </button>
             </div>
           </form>

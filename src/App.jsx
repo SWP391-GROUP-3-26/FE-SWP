@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
 
@@ -27,6 +28,8 @@ import Register from './pages/Register'
 import ReceptionistRegisterMember from './pages/ReceptionistRegisterMember'
 import SubjectManagement from './pages/SubjectManagement'
 import UserManagement from './pages/UserManagement'
+
+const MemberChat = lazy(() => import('./pages/MemberChat'))
 
 function App() {
   return (
@@ -87,6 +90,16 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
               <MemberClasses />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/member/chat"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <Suspense fallback={<div className="member-chat-widget-loading" role="status">Đang mở hộp chat...</div>}>
+                <MemberChat />
+              </Suspense>
             </ProtectedRoute>
           }
         />

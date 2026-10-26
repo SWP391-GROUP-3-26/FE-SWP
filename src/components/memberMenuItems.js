@@ -3,6 +3,7 @@ const memberMenuItems = [
   { icon: 'calendar_month', label: 'Lịch tập', route: '/member/schedule' },
   { icon: 'card_membership', label: 'Gói tập', route: '/member/packages' },
   { icon: 'sports_gymnastics', label: 'Lớp học', route: '/member/classes' },
+  { icon: 'chat', label: 'Trao đổi HLV', route: '/member/chat' },
   { icon: 'person', label: 'Hồ sơ', route: '/member/profile' },
 ]
 

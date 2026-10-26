@@ -6,6 +6,7 @@ import {
   resolveAvatarUrl,
 } from '../services/memberProfileService'
 import Sidebar from './Sidebar'
+import MemberChatLauncher from './MemberChatLauncher'
 
 export default function DashboardLayout({
   role,
@@ -17,6 +18,7 @@ export default function DashboardLayout({
   profile,
   showIntro = true,
   className = '',
+  showChatLauncher = true,
   children,
 }) {
   const [auth, setAuth] = useState(getAuth)
@@ -107,6 +109,7 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+      {showChatLauncher && getRole() === 'Member' && <MemberChatLauncher />}
     </div>
   )
 }

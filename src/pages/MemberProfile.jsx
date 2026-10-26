@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import { updateAuthProfile } from '../auth/authStorage'
 import memberMenuItems from '../components/memberMenuItems'
+import { getMyMemberPackageSubscriptions, memberPackageApiErrorMessage } from '../services/memberPackageService'
 import {
   getMyProfile,
   profileErrorMessage,
@@ -40,6 +42,43 @@ function statusLabel(status) {
   return status || 'Chưa cập nhật'
 }
 
+function currentDate() {
+  const date = new Date()
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function isActiveSubscription(subscription) {
+  const today = currentDate()
+  return subscription.subscriptionStatus?.toLowerCase() === 'active'
+    && subscription.startDate <= today
+    && subscription.endDate >= today
+}
+
+function formatDate(value) {
+  if (!value) return 'Chưa cập nhật'
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value).slice(0, 10))
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : value
+}
+
+function dateOrdinal(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').slice(0, 10))
+  return match ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / 86400000 : null
+}
+
+function packageTimeline(subscription) {
+  const purchaseDate = subscription.paymentDate?.slice(0, 10) || subscription.startDate
+  const purchaseDay = dateOrdinal(purchaseDate)
+  const expiryDay = dateOrdinal(subscription.endDate)
+  const todayDay = dateOrdinal(currentDate())
+  const totalDays = purchaseDay != null && expiryDay != null ? Math.max(1, expiryDay - purchaseDay + 1) : 1
+  const elapsedDays = purchaseDay != null && todayDay != null ? todayDay - purchaseDay : 0
+  return {
+    purchaseDate,
+    progress: Math.max(0, Math.min(100, Math.round((elapsedDays / totalDays) * 100))),
+    remainingDays: expiryDay != null && todayDay != null ? Math.max(0, expiryDay - todayDay + 1) : null,
+  }
+}
+
 export default function MemberProfile() {
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState(emptyProfile)
@@ -51,10 +90,13 @@ export default function MemberProfile() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [failedAvatarSrc, setFailedAvatarSrc] = useState('')
+  const [activePackage, setActivePackage] = useState(null)
+  const [packageLoading, setPackageLoading] = useState(true)
+  const [packageError, setPackageError] = useState('')
+  const [packageReloadKey, setPackageReloadKey] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
-
     getMyProfile(controller.signal)
       .then((data) => {
         if (controller.signal.aborted) return
@@ -77,6 +119,23 @@ export default function MemberProfile() {
     return () => controller.abort()
   }, [reloadKey])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    setPackageLoading(true)
+    setPackageError('')
+    getMyMemberPackageSubscriptions({ page: 0, size: 100, signal: controller.signal })
+      .then((result) => {
+        if (controller.signal.aborted) return
+        setActivePackage(result.data.find(isActiveSubscription) || null)
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setPackageError(memberPackageApiErrorMessage(error))
+      })
+      .finally(() => { if (!controller.signal.aborted) setPackageLoading(false) })
+
+    return () => controller.abort()
+  }, [packageReloadKey])
+
   const isDirty = useMemo(() => {
     if (!profile) return false
     const original = toEditableProfile(profile)
@@ -94,6 +153,12 @@ export default function MemberProfile() {
     setLoading(true)
     setLoadError('')
     setReloadKey((key) => key + 1)
+  }
+
+  function retryPackageLoading() {
+    setPackageLoading(true)
+    setPackageError('')
+    setPackageReloadKey((key) => key + 1)
   }
 
   async function handleSubmit(event) {
@@ -171,6 +236,7 @@ export default function MemberProfile() {
   const displayName = profile?.fullName || profile?.username || 'Hội viên'
   const avatarSrc = resolveAvatarUrl(form.avatarUrl)
   const showAvatar = avatarSrc && avatarSrc !== failedAvatarSrc
+  const timeline = activePackage ? packageTimeline(activePackage) : null
 
   return (
     <DashboardLayout
@@ -359,7 +425,36 @@ export default function MemberProfile() {
             </article>
             <article className="member-account-panel">
               <h3><span className="material-symbols-outlined" aria-hidden="true">card_membership</span> Gói tập &amp; thời hạn</h3>
-              <p>Backend hiện chưa cung cấp thông tin gói tập hoặc ngày hết hạn hội viên.</p>
+              {packageLoading ? <p role="status">Đang tải gói tập...</p> : packageError ? (
+                <div className="member-profile-package-error" role="alert">
+                  <p>{packageError}</p><button type="button" onClick={retryPackageLoading}>Thử lại</button>
+                </div>
+              ) : activePackage && timeline ? (
+                <div className="member-profile-package">
+                  <div className="member-profile-package-heading">
+                    <div><small>GÓI ĐANG SỬ DỤNG</small><strong>{activePackage.packageName || 'Gói hội viên'}</strong></div>
+                    <span className="member-profile-package-status">Đang hoạt động</span>
+                  </div>
+                  <div className="member-profile-package-dates">
+                    <div><small>Ngày mua</small><strong>{formatDate(timeline.purchaseDate)}</strong></div>
+                    <span className="material-symbols-outlined" aria-hidden="true">trending_flat</span>
+                    <div><small>Ngày hết hạn</small><strong>{formatDate(activePackage.endDate)}</strong></div>
+                  </div>
+                  <div className="member-profile-package-progress" role="progressbar" aria-label="Thời hạn gói tập đã sử dụng"
+                    aria-valuemin={0} aria-valuemax={100} aria-valuenow={timeline.progress}>
+                    <span style={{ width: `${timeline.progress}%` }} />
+                  </div>
+                  <div className="member-profile-package-progress-label">
+                    <span>{timeline.progress}% thời hạn đã sử dụng</span>
+                    {timeline.remainingDays != null && <strong>Còn {timeline.remainingDays} ngày</strong>}
+                  </div>
+                </div>
+              ) : (
+                <div className="member-profile-package-empty">
+                  <p>Bạn hiện chưa có gói tập đang hoạt động.</p>
+                  <Link to="/member/packages">Xem các gói tập</Link>
+                </div>
+              )}
             </article>
           </section>
         </>
