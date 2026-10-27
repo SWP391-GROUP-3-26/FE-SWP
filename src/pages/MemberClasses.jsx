@@ -381,8 +381,9 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               </dl>
               <div className="member-class-card-footer">
                 <strong>
-                  {classItem.priceFormatted || (classItem.price == null ? 'Liên hệ trung tâm' : priceFormatter.format(classItem.price))}
+                  Giá niêm yết: {classItem.priceFormatted || (classItem.price == null ? 'Liên hệ trung tâm' : priceFormatter.format(classItem.price))}
                 </strong>
+                {classItem.packageNote && <small className="member-class-package-note">{classItem.packageNote}</small>}
                 <button
                   className="member-register-button"
                   disabled={!classItem.canRegister || classItem.enrolled || Boolean(selectedClass)}
@@ -424,8 +425,24 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               <p><strong>Phòng:</strong> {confirmation.roomName || 'Chưa xác định'}</p>
               <div className="member-registration-summary">
                 <p><strong>Số buổi còn lại:</strong> {confirmation.sessionCount ?? 1}</p>
-                <p><strong>Giá mỗi buổi:</strong> {priceFormatter.format(confirmation.price || 0)}</p>
-                <p><strong>Tổng học phí:</strong> {priceFormatter.format(confirmation.totalAmount ?? confirmation.price ?? 0)}</p>
+                {confirmation.packageOption?.eligible ? (
+                  <div className="member-package-covered-notice" role="status">
+                    <span className="material-symbols-outlined" aria-hidden="true">verified</span>
+                    <div>
+                      <strong>Đã bao gồm trong gói {confirmation.packageOption.packageName || ''}</strong>
+                      <p>{confirmation.packageOption.subtitle || 'Không thu thêm học phí cho lớp này.'}</p>
+                    </div>
+                    <b>0 ₫ thêm</b>
+                  </div>
+                ) : (
+                  <>
+                    <p><strong>Giá niêm yết mỗi buổi:</strong> {priceFormatter.format(confirmation.price || 0)}</p>
+                    <p><strong>Học phí trực tiếp:</strong> {priceFormatter.format(confirmation.totalAmount ?? confirmation.price ?? 0)}</p>
+                    {confirmation.packageOption?.subtitle && (
+                      <p className="member-package-unavailable-note"><strong>Quyền lợi gói:</strong> {confirmation.packageOption.subtitle}</p>
+                    )}
+                  </>
+                )}
                 <p><strong>Thời hạn:</strong> {formatClassDate(confirmation.startDate)} – {formatClassDate(confirmation.endDate)}</p>
                 {confirmation.sessions?.length > 0 && <details><summary>Các buổi được đăng ký</summary>
                   <ul>{confirmation.sessions.map((session) => <li key={session.sessionId}>
@@ -455,7 +472,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                     {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
                   </label>
                 )}
-                {confirmation.directPaymentOption?.available && (
+                {confirmation.directPaymentOption?.available && !confirmation.packageOption?.eligible && (
                   <label>
                     <input
                       checked={paymentMethod === 'DIRECT'}
@@ -469,7 +486,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   </label>
                 )}
               </fieldset>
-              {paymentMethod === 'DIRECT' && confirmation.directPaymentOption?.available && (
+              {paymentMethod === 'DIRECT' && confirmation.directPaymentOption?.available && !confirmation.packageOption?.eligible && (
                 <label className="member-payment-channel">
                   Kênh thanh toán
                   <select disabled={bookingLoading} value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>

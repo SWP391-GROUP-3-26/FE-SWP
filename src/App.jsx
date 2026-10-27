@@ -16,6 +16,7 @@ import Login from './pages/Login'
 import MemberClasses from './pages/MemberClasses'
 import MemberDashboard from './pages/MemberDashboard'
 import MemberPackages from './pages/MemberPackages'
+import MemberPackageHistory from './pages/MemberPackageHistory'
 import MemberPaymentResult from './pages/MemberPaymentResult'
 import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
@@ -80,6 +81,14 @@ function App() {
           }
         />
         <Route
+          path="/member/packages/history"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
+              <MemberPackageHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/member/payment-result"
           element={
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
@@ -101,6 +110,16 @@ function App() {
             <ProtectedRoute allowedRoles={[ROLES.MEMBER]}>
               <Suspense fallback={<div className="member-chat-widget-loading" role="status">Đang mở hộp chat...</div>}>
                 <MemberChat />
+              </Suspense>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/coach/chat"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.COACH]}>
+              <Suspense fallback={<div className="member-chat-widget-loading" role="status">Đang mở hộp chat...</div>}>
+                <MemberChat audience="coach" />
               </Suspense>
             </ProtectedRoute>
           }

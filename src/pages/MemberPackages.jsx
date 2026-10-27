@@ -209,6 +209,11 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
   const pendingSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
   const scheduledSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Paid')
+  const memberCurrentSubscriptions = subscriptions?.data?.filter((subscription) =>
+    isCurrentlyActive(subscription)
+      || (subscription.subscriptionStatus?.toLowerCase() === 'pending'
+        && ['Pending', 'Paid'].includes(subscription.paymentStatus))) || []
+  const displayedSubscriptions = memberId ? (subscriptions?.data || []) : memberCurrentSubscriptions
   const hasScheduledPackage = Boolean(subscriptions?.data?.some((s) =>
     s.subscriptionStatus === 'Pending' && s.startDate > currentDate()))
 
@@ -325,11 +330,23 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             <span className="section-heading-kicker">THẺ HỘI VIÊN</span>
             <h3>{receptionist ? 'Gói tập của hội viên' : 'Gói tập của tôi'}</h3>
           </div>
-          {!subscriptionsError && !subscriptionsLoading && (
-            <span className={`member-package-badge${activeSubscription ? ' is-active' : ''}`}>
-              {activeSubscription ? 'Đang có gói hoạt động' : `${subscriptions.data.length} gói trong lịch sử`}
-            </span>
-          )}
+          <div className="member-package-heading-actions">
+            {!subscriptionsError && !subscriptionsLoading && (
+              <span className={`member-package-badge${activeSubscription ? ' is-active' : ''}`}>
+                {activeSubscription
+                  ? 'Đang có gói hoạt động'
+                  : displayedSubscriptions.length
+                    ? `${displayedSubscriptions.length} gói đang chờ`
+                    : 'Chưa có gói hoạt động'}
+              </span>
+            )}
+            {!memberId && (
+              <Link className="member-package-history-link" to="/member/packages/history">
+                <span className="material-symbols-outlined" aria-hidden="true">history</span>
+                Lịch sử đăng ký gói
+              </Link>
+            )}
+          </div>
         </div>
 
         {subscriptionsError && (
@@ -343,15 +360,17 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           <div className="member-package-state" role="status">Đang tải lịch sử gói tập...</div>
         )}
 
-        {!subscriptionsError && !subscriptionsLoading && subscriptions.data.length === 0 && (
-          <EmptyState icon="wallet" title="Bạn chưa đăng ký gói tập">
-            Sau khi đăng ký, thông tin gói và thời hạn sử dụng sẽ hiển thị tại đây.
+        {!subscriptionsError && !subscriptionsLoading && displayedSubscriptions.length === 0 && (
+          <EmptyState icon="wallet" title={subscriptions.data.length ? 'Bạn chưa có gói đang sử dụng' : 'Bạn chưa đăng ký gói tập'}>
+            {subscriptions.data.length
+              ? <>Các gói đã đăng ký, kể cả gói đã hủy, được lưu trong <Link to="/member/packages/history">lịch sử đăng ký gói</Link>.</>
+              : 'Sau khi đăng ký, thông tin gói đang sử dụng sẽ hiển thị tại đây.'}
           </EmptyState>
         )}
 
-        {!subscriptionsError && !subscriptionsLoading && subscriptions.data.length > 0 && (
+        {!subscriptionsError && !subscriptionsLoading && displayedSubscriptions.length > 0 && (
           <div className="member-subscription-list">
-            {subscriptions.data.map((subscription) => {
+            {displayedSubscriptions.map((subscription) => {
               const durationLabel = subscriptionDurationLabel(subscription.durationDays)
               const image = packageImageFor(subscription.packageName, subscription.durationDays)
               const showTimeline = isCurrentlyActive(subscription)
