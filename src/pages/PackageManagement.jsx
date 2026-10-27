@@ -3,6 +3,7 @@ import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
+import { getSubjects } from '../services/subjectService'
 import {
   createPackage,
   deletePackage,
@@ -36,6 +37,10 @@ const EMPTY_FORM = {
   status: 'Active',
   includedClasses: '',
   benefits: '',
+  discount: 0,
+  termConditions: '',
+  includedSportIds: [],
+  choiceGroups: [],
 }
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -84,6 +89,9 @@ export default function PackageManagement() {
   const [busy, setBusy] = useState(false)
   const [detail, setDetail] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [subjects, setSubjects] = useState([])
+  const [subjectsError, setSubjectsError] = useState('')
+  const [replaceBenefits, setReplaceBenefits] = useState(false)
 
   const listController  = useRef(null)
   const detailController = useRef(null)
@@ -117,6 +125,16 @@ export default function PackageManagement() {
     }
   }, [loadPackages])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    getSubjects(controller.signal).then((result) => {
+      if (!controller.signal.aborted) setSubjects(result.data || [])
+    }).catch((error) => {
+      if (!controller.signal.aborted) setSubjectsError(errorMessage(error))
+    })
+    return () => controller.abort()
+  }, [])
+
   /* ── Modal helpers ── */
   function closeModal() {
     detailController.current?.abort()
@@ -127,6 +145,7 @@ export default function PackageManagement() {
 
   function openCreate() {
     setForm(EMPTY_FORM)
+    setReplaceBenefits(true)
     setModalError('')
     setModal({ type: 'create' })
   }
@@ -140,7 +159,12 @@ export default function PackageManagement() {
       status: pkg.status ?? 'Active',
       includedClasses: pkg.includedClasses != null ? String(pkg.includedClasses) : '',
       benefits: pkg.benefits ?? '',
+      discount: pkg.discount ?? 0,
+      termConditions: pkg.termConditions ?? '',
+      includedSportIds: [],
+      choiceGroups: [],
     })
+    setReplaceBenefits(false)
     setModalError('')
     setModal({ type: 'edit', pkg })
   }
@@ -150,6 +174,44 @@ export default function PackageManagement() {
     setModalError('')
     setModal({ type: 'detail', pkg })
     loadDetail(pkg)
+  }
+
+  function updateGroup(index, key, value) {
+    setForm((current) => ({
+      ...current,
+      choiceGroups: current.choiceGroups.map((group, groupIndex) =>
+        groupIndex === index ? { ...group, [key]: value } : group),
+    }))
+  }
+
+  function toggleSport(listKey, sportId) {
+    setForm((current) => {
+      const selected = current[listKey] || []
+      return { ...current, [listKey]: selected.includes(sportId)
+        ? selected.filter((id) => id !== sportId) : [...selected, sportId] }
+    })
+  }
+
+  function toggleGroupSport(index, sportId) {
+    setForm((current) => ({
+      ...current,
+      choiceGroups: current.choiceGroups.map((group, groupIndex) => {
+        if (groupIndex !== index) return group
+        const sportIds = group.sportIds || []
+        return { ...group, sportIds: sportIds.includes(sportId)
+          ? sportIds.filter((id) => id !== sportId) : [...sportIds, sportId] }
+      }),
+    }))
+  }
+
+  function validateBenefits() {
+    const invalidGroup = form.choiceGroups.find((group) =>
+      !group.groupName.trim() || !group.requiredSelection || group.sportIds.length < Number(group.requiredSelection))
+    if (invalidGroup) {
+      setModalError(`Nhóm “${invalidGroup.groupName || 'chưa đặt tên'}” cần có tên và đủ số môn theo yêu cầu.`)
+      return false
+    }
+    return true
   }
 
   function openDelete(pkg) {
@@ -185,6 +247,7 @@ export default function PackageManagement() {
     const price = parseFloat(form.price)
     if (!form.name.trim()) { setModalError('Vui lòng nhập tên gói dịch vụ.'); return }
     if (isNaN(price) || price <= 0) { setModalError('Vui lòng nhập giá niêm yết hợp lệ (lớn hơn 0).'); return }
+    if (!validateBenefits()) return
 
     setBusy(true)
     setModalError('')
@@ -197,6 +260,10 @@ export default function PackageManagement() {
         status: form.status,
         includedClasses: form.includedClasses !== '' ? Number(form.includedClasses) : 0,
         benefits: form.benefits.trim() || null,
+        discount: Number(form.discount) || 0,
+        termConditions: form.termConditions.trim() || null,
+        includedSportIds: form.includedSportIds,
+        choiceGroups: form.choiceGroups.map((group, index) => ({ ...group, sortOrder: index })),
       })
       closeModal()
       setNotice('Tạo gói dịch vụ thành công.')
@@ -215,11 +282,12 @@ export default function PackageManagement() {
     const price = parseFloat(form.price)
     if (!form.name.trim()) { setModalError('Vui lòng nhập tên gói dịch vụ.'); return }
     if (isNaN(price) || price <= 0) { setModalError('Vui lòng nhập giá niêm yết hợp lệ (lớn hơn 0).'); return }
+    if (replaceBenefits && !validateBenefits()) return
 
     setBusy(true)
     setModalError('')
     try {
-      await updatePackage(modal.pkg.id, {
+      const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
         durationMonths: Number(form.durationMonths),
@@ -227,7 +295,14 @@ export default function PackageManagement() {
         status: form.status,
         includedClasses: form.includedClasses !== '' ? Number(form.includedClasses) : 0,
         benefits: form.benefits.trim() || null,
-      })
+        discount: Number(form.discount) || 0,
+        termConditions: form.termConditions.trim() || null,
+      }
+      if (replaceBenefits) {
+        payload.includedSportIds = form.includedSportIds
+        payload.choiceGroups = form.choiceGroups.map((group, index) => ({ ...group, sortOrder: index }))
+      }
+      await updatePackage(modal.pkg.id, payload)
       closeModal()
       setNotice(`Cập nhật gói "${form.name.trim()}" thành công.`)
       await loadPackages()
@@ -327,6 +402,12 @@ export default function PackageManagement() {
           </span>
         </label>
         <label>
+          Chiết khấu (%) <span className="input-wrap">
+            <input type="number" min="0" max="100" step="0.1" value={form.discount}
+              onChange={(e) => setField('discount', e.target.value)} />
+          </span>
+        </label>
+        <label>
           Số buổi học bao gồm <span className="input-wrap">
             <input
               type="number" min="0" name="includedClasses"
@@ -345,6 +426,77 @@ export default function PackageManagement() {
             onChange={(e) => setField('benefits', e.target.value)}
           />
         </label>
+        <label>
+          Điều khoản và điều kiện
+          <textarea rows={3} value={form.termConditions}
+            onChange={(e) => setField('termConditions', e.target.value)} />
+        </label>
+        {modal.type === 'edit' && (
+          <div className="package-benefit-replace-note">
+            <label className="package-benefit-replace-toggle">
+              <input type="checkbox" checked={replaceBenefits} onChange={(event) => {
+                setReplaceBenefits(event.target.checked)
+                if (event.target.checked) setForm((current) => ({ ...current, includedSportIds: [], choiceGroups: [] }))
+              }} />
+              Thay thế danh sách môn và nhóm lựa chọn của gói
+            </label>
+            <p>API chi tiết hiện chưa trả cấu hình môn đang lưu. Bật tùy chọn này sẽ thay toàn bộ cấu hình hiện tại bằng danh sách bên dưới.</p>
+          </div>
+        )}
+        {(modal.type === 'create' || replaceBenefits) && (
+          <div className="package-benefit-editor">
+            <section>
+              <div className="package-benefit-editor-heading">
+                <div><strong>Môn học được bao gồm</strong><small>Hội viên không cần chọn lại khi đăng ký.</small></div>
+              </div>
+              {subjectsError && <p className="auth-error" role="alert">{subjectsError}</p>}
+              <div className="package-sport-picker">
+                {subjects.map((subject) => (
+                  <label key={subject.id}>
+                    <input type="checkbox" checked={form.includedSportIds.includes(subject.id)}
+                      onChange={() => toggleSport('includedSportIds', subject.id)} />
+                    {subject.name}
+                  </label>
+                ))}
+                {!subjectsError && !subjects.length && <small>Chưa có môn học để chọn.</small>}
+              </div>
+            </section>
+            <section>
+              <div className="package-benefit-editor-heading">
+                <div><strong>Nhóm môn hội viên tự chọn</strong><small>Mỗi nhóm có số lượng môn bắt buộc riêng.</small></div>
+                <button className="subject-button" type="button" onClick={() => setForm((current) => ({
+                  ...current, choiceGroups: [...current.choiceGroups, {
+                    groupName: '', description: '', requiredSelection: 1, sportIds: [],
+                  }],
+                }))}>Thêm nhóm</button>
+              </div>
+              {form.choiceGroups.map((group, index) => (
+                <fieldset className="package-choice-group-editor" key={`choice-${index}`}>
+                  <div className="package-choice-group-fields">
+                    <label>Tên nhóm<input required value={group.groupName} onChange={(e) => updateGroup(index, 'groupName', e.target.value)} /></label>
+                    <label>Số môn cần chọn<input type="number" min="1" max={Math.max(subjects.length, 1)} value={group.requiredSelection}
+                      onChange={(e) => updateGroup(index, 'requiredSelection', Number(e.target.value))} /></label>
+                    <button className="subject-button subject-delete" type="button" aria-label="Xóa nhóm" onClick={() => setForm((current) => ({
+                      ...current, choiceGroups: current.choiceGroups.filter((_, groupIndex) => groupIndex !== index),
+                    }))}>Xóa</button>
+                  </div>
+                  <label>Mô tả<input value={group.description || ''} onChange={(e) => updateGroup(index, 'description', e.target.value)} /></label>
+                  <div className="package-sport-picker">
+                    {subjects.map((subject) => (
+                      <label key={subject.id}>
+                        <input type="checkbox" checked={(group.sportIds || []).includes(subject.id)}
+                          onChange={() => toggleGroupSport(index, subject.id)} />
+                        {subject.name}
+                      </label>
+                    ))}
+                  </div>
+                  <small>Đã chọn {group.sportIds.length} môn · yêu cầu {group.requiredSelection}</small>
+                </fieldset>
+              ))}
+              {!form.choiceGroups.length && <p className="subject-count">Gói này không yêu cầu hội viên chọn thêm môn.</p>}
+            </section>
+          </div>
+        )}
       </fieldset>
     )
   }
@@ -554,6 +706,7 @@ export default function PackageManagement() {
                 </div>
               )}
               {detail && (
+                <>
                 <dl className="subject-detail">
                   {[
                     ['Mã gói', detail.code],
@@ -571,6 +724,16 @@ export default function PackageManagement() {
                     </div>
                   ))}
                 </dl>
+                <section className="package-benefit-detail">
+                  <h4>Môn học và nhóm lựa chọn</h4>
+                  {detail.includedSports?.length ? (
+                    <p><strong>Đã bao gồm:</strong> {detail.includedSports.map((sport) => sport.name).join(', ')}</p>
+                  ) : <p>API chi tiết chưa trả danh sách môn được bao gồm.</p>}
+                  {detail.choiceGroups?.length ? detail.choiceGroups.map((group) => (
+                    <p key={group.id}><strong>{group.name} · chọn {group.requiredSelection}:</strong> {(group.sports || []).map((sport) => sport.name).join(', ')}</p>
+                  )) : <p>API chi tiết chưa trả các nhóm môn tự chọn.</p>}
+                </section>
+                </>
               )}
               <div className="subject-modal-actions">
                 {!detailLoading && detail && (

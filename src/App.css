@@ -694,6 +694,21 @@ input {
   background: var(--surface-muted);
 }
 
+.auth-register-success {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-color: #cfe3d2;
+  color: #245f3e;
+  background: #edf6ec;
+}
+
+.auth-register-success .material-symbols-outlined {
+  flex: 0 0 auto;
+  font-size: 19px;
+}
+
 .dashboard-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);

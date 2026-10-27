@@ -29,7 +29,7 @@ export default function Login() {
   const location = useLocation()
   const navigate = useNavigate()
   const registerMessage = location.state?.registered
-    ? location.state?.message || 'Đăng ký tài khoản thành công.'
+    ? 'Tài khoản đã được tạo thành công. Vui lòng đăng nhập để tiếp tục.'
     : ''
 
   const handleGoogleLogin = () => {
@@ -51,25 +51,25 @@ export default function Login() {
       const accessToken = authData.accessToken
       const userId = authData.user.userId
       const role = authData.user.role
-      const { fullName, email, username, status } = authData.user
+      const { fullName, email, username, status, avatarUrl } = authData.user
 
       if (!accessToken || userId === undefined || !role) {
         setError('Phản hồi đăng nhập không đúng cấu trúc backend hiện tại.')
         return
       }
 
-      saveAuth({ accessToken, userId, role, fullName, email, username, status })
+      saveAuth({ accessToken, userId, role, fullName, email, username, status, avatarUrl })
       navigate(getRouteForRole(role), { replace: true })
     } catch (requestError) {
       const status = requestError?.response?.status
-      const message = requestError?.response?.data?.message
-
-      if (message) {
-        setError(message)
-      } else if (status === 401 || status === 403) {
+      if (status === 401) {
         setError('Email, tên tài khoản hoặc mật khẩu không chính xác.')
+      } else if (status === 403) {
+        setError('Tài khoản hiện không được phép đăng nhập. Vui lòng liên hệ trung tâm để được hỗ trợ.')
+      } else if (status === 400) {
+        setError('Thông tin đăng nhập chưa hợp lệ. Vui lòng kiểm tra lại.')
       } else if (requestError?.request) {
-        setError('Không thể kết nối đến backend. Vui lòng kiểm tra máy chủ hoặc cấu hình CORS.')
+        setError('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.')
       } else {
         setError('Đăng nhập thất bại. Vui lòng thử lại.')
       }
@@ -94,7 +94,12 @@ export default function Login() {
         </div>
 
         <form className="auth-form" onSubmit={handleLogin}>
-          {registerMessage ? <div className="auth-notice">{registerMessage}</div> : null}
+          {registerMessage ? (
+            <div className="auth-notice auth-register-success" role="status" aria-live="polite">
+              <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
+              <span>{registerMessage}</span>
+            </div>
+          ) : null}
 
           <label>
             Email hoặc tên tài khoản
@@ -126,7 +131,7 @@ export default function Login() {
             </span>
           </label>
 
-          {error ? <div className="auth-error">{error}</div> : null}
+          {error ? <div className="auth-error" role="alert">{error}</div> : null}
 
           <button className="submit-button" disabled={isLoading} type="submit">
             {isLoading ? 'Đang xác thực...' : 'Đăng nhập'}

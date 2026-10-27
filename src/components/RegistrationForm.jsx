@@ -1,6 +1,21 @@
 import { useState } from 'react'
 import { validateRegistration } from '../utils/registration'
 
+function registrationErrorMessage(error) {
+  const status = error?.response?.status
+  const message = String(error?.response?.data?.message || '').toLocaleLowerCase('vi')
+  if (status === 409) {
+    if (message.includes('username') || message.includes('tên tài khoản')) return 'Tên tài khoản này đã được sử dụng.'
+    if (message.includes('email')) return 'Địa chỉ email này đã được sử dụng.'
+    if (message.includes('phone') || message.includes('điện thoại')) return 'Số điện thoại này đã được sử dụng.'
+    return 'Thông tin tài khoản đã được sử dụng. Vui lòng kiểm tra lại tên tài khoản, email và số điện thoại.'
+  }
+  if (status === 400) return 'Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại các trường đã nhập.'
+  if (status === 401 || status === 403) return 'Phiên đăng nhập đã hết hạn hoặc bạn không có quyền thực hiện thao tác này.'
+  if (error?.request) return 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.'
+  return 'Đăng ký tài khoản chưa thành công. Vui lòng thử lại.'
+}
+
 export default function RegistrationForm({ submitRegistration, onSuccess, showTermsAgreement = true }) {
   const [successMessage, setSuccessMessage] = useState('')
   const [formData, setFormData] = useState({
@@ -45,8 +60,8 @@ export default function RegistrationForm({ submitRegistration, onSuccess, showTe
     setIsLoading(true)
 
     try {
-      const response = await submitRegistration(payload)
-      const message = response.data?.message || 'Đăng ký tài khoản thành công.'
+      await submitRegistration(payload)
+      const message = 'Đăng ký tài khoản thành công.'
       if (onSuccess) {
         onSuccess(message)
       } else {
@@ -57,22 +72,7 @@ export default function RegistrationForm({ submitRegistration, onSuccess, showTe
         event.target.reset()
       }
     } catch (requestError) {
-      const status = requestError?.response?.status
-      const message = requestError?.response?.data?.message
-
-      if (message) {
-        setFormError(message)
-      } else if (status === 400) {
-        setFormError('Thông tin đăng ký không hợp lệ.')
-      } else if (status === 409) {
-        setFormError('Tài khoản, email hoặc số điện thoại đã tồn tại.')
-      } else if (status === 401 || status === 403) {
-        setFormError('Phiên đăng nhập hết hạn hoặc bạn không có quyền tạo hội viên.')
-      } else if (requestError?.request) {
-        setFormError('Không thể kết nối Backend. Vui lòng kiểm tra máy chủ hoặc CORS.')
-      } else {
-        setFormError('Đăng ký thất bại. Vui lòng thử lại.')
-      }
+      setFormError(registrationErrorMessage(requestError))
     } finally {
       setIsLoading(false)
     }

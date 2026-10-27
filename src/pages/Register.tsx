@@ -4,8 +4,8 @@ import { register } from '../services/registrationService'
 
 export default function Register() {
   const navigate = useNavigate()
-  const handleSuccess = (message) => {
-    navigate('/login', { replace: true, state: { registered: true, message } })
+  const handleSuccess = () => {
+    navigate('/login', { replace: true, state: { registered: true } })
   }
   return (
     <main className="auth-page">

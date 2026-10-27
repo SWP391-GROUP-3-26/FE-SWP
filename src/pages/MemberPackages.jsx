@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import ReceptionistMemberContext from '../components/ReceptionistMemberContext'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { ROLES } from '../auth/roleConfig'
+import { getAuth } from '../auth/authStorage'
 import { getReceptionistPackages, getReceptionistSubscriptions, registerReceptionistPackage } from '../services/receptionistRegistrationService'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import basicPackageImage from '../assets/member-package-basic.jpg'
@@ -124,6 +125,7 @@ function EmptyState({ icon, title, children }) {
 
 export default function MemberPackages({ receptionist = false, memberId = null } = {}) {
   const navigate = useNavigate()
+  const [authIdentity, setAuthIdentity] = useState(() => getAuth().userId || 'anonymous')
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
@@ -143,15 +145,29 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   const validChoices = detailsReady && selectedPackage.choiceGroups.every((group) =>
     choiceGroups.find((choice) => choice.choiceGroupId === group.id)?.sportIds.length === group.requiredSelection)
 
-  const catalogRequestKey = JSON.stringify([submittedSearch, page, reloadKey])
+  const catalogRequestKey = JSON.stringify([authIdentity, submittedSearch, page, reloadKey])
+  const subscriptionRequestKey = JSON.stringify([authIdentity, reloadKey])
   const catalog = catalogResult?.key === catalogRequestKey ? catalogResult : null
-  const subscriptions = subscriptionsResult?.key === reloadKey ? subscriptionsResult : null
+  const subscriptions = subscriptionsResult?.key === subscriptionRequestKey ? subscriptionsResult : null
   const packages = catalog?.data || []
   const totalPackages = catalog?.total || 0
   const catalogLoading = !catalog
   const subscriptionsLoading = !subscriptions
   const catalogError = catalog?.error || ''
   const subscriptionsError = subscriptions?.error || ''
+
+  useEffect(() => {
+    function syncAuthIdentity(event) {
+      if (event.key && !['accessToken', 'userId'].includes(event.key)) return
+      setAuthIdentity(getAuth().userId || 'anonymous')
+      packageDetailRequest.current += 1
+      setSelectedPackage(null)
+      setRenewalTarget(null)
+      setRegistrationError('')
+    }
+    window.addEventListener('storage', syncAuthIdentity)
+    return () => window.removeEventListener('storage', syncAuthIdentity)
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -179,19 +195,20 @@ export default function MemberPackages({ receptionist = false, memberId = null }
     const loadSubscriptions = memberId ? (options) => getReceptionistSubscriptions(memberId, options) : getMyMemberPackageSubscriptions
     loadSubscriptions({ signal: controller.signal }).then((result) => {
       if (!controller.signal.aborted) {
-        setSubscriptionsResult({ key: reloadKey, data: result.data })
+        setSubscriptionsResult({ key: subscriptionRequestKey, data: result.data })
       }
     }).catch((error) => {
       if (!controller.signal.aborted) {
-        setSubscriptionsResult({ key: reloadKey, error: memberPackageApiErrorMessage(error) })
+        setSubscriptionsResult({ key: subscriptionRequestKey, error: memberPackageApiErrorMessage(error) })
       }
     })
 
     return () => controller.abort()
-  }, [reloadKey, memberId])
+  }, [subscriptionRequestKey, memberId])
 
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
   const pendingSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
+  const scheduledSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Paid')
   const hasScheduledPackage = Boolean(subscriptions?.data?.some((s) =>
     s.subscriptionStatus === 'Pending' && s.startDate > currentDate()))
 
@@ -426,6 +443,9 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             ? `/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`
             : `/member/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra thanh toán</Link>.
         </p>}
+        {scheduledSubscription && <p className="member-package-note" role="status">
+          Gói gia hạn đã được thanh toán và đang chờ ngày bắt đầu {formatDate(scheduledSubscription.startDate)}.
+        </p>}
         {activeSubscription && (
           <p className="member-package-note" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">info</span>
@@ -560,6 +580,10 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             <p className="member-package-modal-name">{selectedPackage.name}</p>
             <p className="member-package-modal-price">{priceFormatter.format(Number(selectedPackage.price || 0))}</p>
             {!detailsReady && !registrationError && <p role="status">Đang tải chi tiết gói tập…</p>}
+            {detailsReady && selectedPackage.includedSports?.length > 0 && <section className="member-package-choice-section" aria-label="Môn học được bao gồm">
+              <h4>Môn học đã bao gồm</h4>
+              <div className="member-package-sport-tags">{selectedPackage.includedSports.map((sport) => <span key={sport.id}>{sport.name}</span>)}</div>
+            </section>}
             {detailsReady && <PackageSportChoices groups={selectedPackage.choiceGroups} choices={choiceGroups}
               onChange={setChoiceGroups} disabled={registrationLoading} />}
             <label className="member-package-payment-field">

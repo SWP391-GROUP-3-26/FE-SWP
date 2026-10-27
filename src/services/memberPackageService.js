@@ -44,6 +44,30 @@ export async function getMemberPackageCatalog({
   return body
 }
 
+export async function getMemberPackage(packageId, { signal } = {}) {
+  const response = await axiosClient.get(`/api/member/packages/${encodeURIComponent(packageId)}`, authConfig(signal))
+  if (response.data?.success !== true || !response.data?.data) {
+    throw new Error(response.data?.message || 'Không thể tải chi tiết gói tập.')
+  }
+  return response.data.data
+}
+
+export async function getMemberPackageRenewalOverview({ signal } = {}) {
+  const response = await axiosClient.get('/api/member/packages/renewal', authConfig(signal))
+  if (response.data?.success !== true || !Array.isArray(response.data?.availablePackages)) {
+    throw new Error(response.data?.message || 'Thông tin gia hạn từ backend không hợp lệ.')
+  }
+  return response.data
+}
+
+export async function previewMemberPackageRenewal(payload) {
+  const response = await axiosClient.post('/api/member/packages/renewal/preview', payload, authConfig())
+  if (response.data?.success !== true || !response.data?.selectedPackage) {
+    throw new Error(response.data?.message || 'Không thể xem trước thông tin gia hạn.')
+  }
+  return response.data
+}
+
 export async function getMyMemberPackageSubscriptions({ page = 0, size = 100, signal } = {}) {
   const response = await axiosClient.get('/api/member/packages/subscriptions', {
     ...authConfig(signal),
@@ -68,6 +92,14 @@ export async function registerMemberPackage(payload) {
   )
   if (response.data?.success !== true || !response.data?.data?.paymentId || response.data.data.paymentStatus !== 'Pending') {
     throw new Error(response.data?.message || 'Đăng ký gói tập không thành công.')
+  }
+  return response.data
+}
+
+export async function renewMemberPackage(payload) {
+  const response = await axiosClient.post('/api/member/packages/renewal', payload, authConfig())
+  if (response.data?.success !== true || !response.data?.data) {
+    throw new Error(response.data?.message || 'Gia hạn gói tập không thành công.')
   }
   return response.data
 }

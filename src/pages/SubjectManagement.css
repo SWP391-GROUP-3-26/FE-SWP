@@ -38,6 +38,25 @@
 .subject-detail dt { font-size: 13px; color: var(--muted); }
 .subject-detail dd { margin: 6px 0 0; white-space: pre-wrap; }
 .subject-panel :focus-visible, .serene-modal :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.package-benefit-editor { display: grid; gap: 20px; margin-top: 8px; }
+.package-benefit-editor section { display: grid; gap: 10px; }
+.package-benefit-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.package-benefit-editor-heading > div { display: grid; gap: 4px; }
+.package-benefit-editor-heading strong, .package-benefit-detail h4 { color: var(--primary-dark); font-size: 14px; }
+.package-benefit-editor-heading small, .package-benefit-replace-note p { color: var(--muted); font-size: 12px; }
+.package-sport-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.package-sport-picker label { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: #fbfdfb; font-size: 12px; cursor: pointer; }
+.package-choice-group-editor { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; }
+.package-choice-group-fields { display: grid; grid-template-columns: minmax(0, 1fr) 150px auto; align-items: end; gap: 12px; }
+.package-choice-group-fields label, .package-choice-group-editor > label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; }
+.package-choice-group-fields input, .package-choice-group-editor > label input { min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: #fff; font: inherit; }
+.package-choice-group-editor > small { color: var(--muted); font-size: 11px; }
+.package-benefit-replace-note { padding: 12px; border: 1px solid #f0dfb7; border-radius: 10px; background: #fffaf0; }
+.package-benefit-replace-toggle { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 13px; font-weight: 700; }
+.package-benefit-replace-note p { margin: 8px 0 0; line-height: 1.5; }
+.package-benefit-detail { margin-top: 18px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: #fbfdfb; }
+.package-benefit-detail h4 { margin: 0 0 10px; }
+.package-benefit-detail p { margin: 7px 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 @media (max-width: 640px) {
   .subject-heading { align-items: stretch; flex-direction: column; }
   .subject-toolbar { flex-direction: column; }
@@ -45,4 +64,5 @@
   .subject-panel { padding: 16px; }
   .subject-notice { align-items: flex-start; flex-wrap: wrap; }
   .serene-modal { padding: 20px; }
+  .package-choice-group-fields { grid-template-columns: 1fr; }
 }

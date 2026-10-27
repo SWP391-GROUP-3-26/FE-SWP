@@ -57,13 +57,13 @@ export default function GoogleCallback() {
         }
 
         const { accessToken, user } = authData
-        const { userId, fullName, username, email, role, status: userStatus } = user
+        const { userId, fullName, username, email, role, status: userStatus, avatarUrl } = user
 
         if (!role) {
           throw new Error('Không xác định được vai trò người dùng.')
         }
 
-        saveAuth({ accessToken, userId, role, fullName, email, username, status: userStatus })
+        saveAuth({ accessToken, userId, role, fullName, email, username, status: userStatus, avatarUrl })
         setStatus({ done: true, error: '' })
         console.log('[GoogleCallback] Đăng nhập Google thành công, chuyển hướng theo role:', role)
         navigate(getRouteForRole(role), { replace: true })
