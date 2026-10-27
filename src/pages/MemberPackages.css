@@ -590,6 +590,64 @@
   margin-top: 20px;
 }
 
+.member-renewal-form {
+  display: grid;
+  gap: 16px;
+}
+
+.member-renewal-modal .member-package-note {
+  display: block;
+}
+
+.member-renewal-form .member-package-note,
+.member-renewal-form .member-package-payment-warning,
+.member-renewal-form .member-package-modal-actions {
+  margin: 0;
+}
+
+.member-renewal-sports {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d8e5db;
+  border-radius: var(--member-package-radius-small);
+}
+
+.member-renewal-sports legend {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0 5px;
+  color: #34473d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.member-renewal-sports label,
+.member-renewal-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #34473d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.member-renewal-sports input,
+.member-renewal-confirm input {
+  flex-shrink: 0;
+  margin-top: 4px;
+  accent-color: #317653;
+}
+
+.member-renewal-preview {
+  padding: 0 12px;
+  border: 1px solid #d8e5db;
+  border-radius: var(--member-package-radius-small);
+  background: #f4f9f5;
+}
+
 .member-package-cancel {
   min-height: 40px;
   padding: 0 14px;

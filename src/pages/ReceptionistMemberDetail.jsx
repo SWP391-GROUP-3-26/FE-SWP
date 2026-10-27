@@ -11,10 +11,14 @@ import './ReceptionistMembers.css'
 import './MemberActivities.css'
 import Modal from '../components/Modal'
 import ReceptionistRegistrations from '../components/ReceptionistRegistrations'
+import PackageRenewalModal from '../components/PackageRenewalModal'
+import './MemberPackages.css'
 
 export default function ReceptionistMemberDetail() {
   const { id } = useParams()
   const [cancelPackage, setCancelPackage] = useState(null)
+  const [renewalPackage, setRenewalPackage] = useState(null)
+  const [successMessage, setSuccessMessage] = useState('')
   const [params] = useSearchParams()
   const request = useCallback((signal) => getMemberById(id, signal), [id])
   const { data: member, loading, error, retry } = useMemberRequest(request)
@@ -31,6 +35,7 @@ export default function ReceptionistMemberDetail() {
           <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>Quay lại tìm học viên
         </Link>
         <h3 id="member-detail-title">Hồ sơ học viên</h3>
+        {successMessage && <p className="member-registration-success" role="status">{successMessage}</p>}
         {loading && <p role="status">Đang tải hồ sơ…</p>}
         {error && <MemberRequestError error={error} retry={retry} isDetail />}
         {member && <>
@@ -59,6 +64,8 @@ export default function ReceptionistMemberDetail() {
                     <div><dt>Số buổi trong gói</dt><dd>{pack.includedClasses ?? '—'}</dd></div>
                     <div><dt>Số buổi còn lại</dt><dd>{pack.remainingClasses ?? '—'}</dd></div>
                   </dl>
+                  <button className="member-register-button" type="button" disabled={member.status !== 'Active'}
+                    onClick={() => setRenewalPackage(pack)}>Gia hạn gói</button>
                   <button className="member-cancel-button" type="button" onClick={() => setCancelPackage(pack)}>Hủy gói</button>
                 </li>)}
               </ul>}
@@ -66,6 +73,12 @@ export default function ReceptionistMemberDetail() {
           <ReceptionistRegistrations key={id} member={member} onChanged={retry} />
         </>}
       </section>
+      {member && renewalPackage && <PackageRenewalModal key={`${id}/${renewalPackage.subscriptionId}`} memberId={id}
+        expectedSubscriptionId={renewalPackage.subscriptionId} onClose={() => setRenewalPackage(null)} onSuccess={() => {
+          setRenewalPackage(null)
+          setSuccessMessage('Gia hạn gói tập thành công.')
+          retry()
+        }} />}
       {member && cancelPackage && <Modal title="Hủy gói tập" onClose={() => setCancelPackage(null)}>
         <p>Hội viên: <strong>{member.fullName} · #{member.userId}</strong></p>
         <p>Gói: <strong>{cancelPackage.packageName} · Đăng ký #{cancelPackage.subscriptionId}</strong></p>

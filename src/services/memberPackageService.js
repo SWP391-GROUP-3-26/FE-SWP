@@ -52,13 +52,21 @@ export async function getMyMemberPackageSubscriptions({ page = 0, size = 100, si
   return validateListResponse(response.data, 'lịch sử gói tập')
 }
 
+export async function getMemberPackageDetail(packageId) {
+  const response = await axiosClient.get(`/api/member/packages/${encodeURIComponent(packageId)}`, authConfig())
+  if (response.data?.success !== true || response.data.data?.id !== Number(packageId)
+    || !Array.isArray(response.data.data?.choiceGroups)) throw new Error('Không thể tải chi tiết gói tập. Vui lòng thử lại.')
+  return response.data.data
+}
+
 export async function registerMemberPackage(payload) {
+  if (!['Card', 'E_Wallet'].includes(payload.paymentMethod)) throw new Error('Hội viên chỉ thanh toán qua VNPay hoặc QR chuyển khoản.')
   const response = await axiosClient.post(
     '/api/member/packages/register',
     payload,
     authConfig(),
   )
-  if (response.data?.success !== true || !response.data?.data) {
+  if (response.data?.success !== true || !response.data?.data?.paymentId || response.data.data.paymentStatus !== 'Pending') {
     throw new Error(response.data?.message || 'Đăng ký gói tập không thành công.')
   }
   return response.data

@@ -3,8 +3,11 @@ import { createServer } from 'vite'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
+import { fileURLToPath } from 'node:url'
+import nativeReact from './ssrDependencies.mjs'
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom',
+  resolve: { alias: { axios: fileURLToPath(new URL('../node_modules/axios/dist/esm/axios.js', import.meta.url)) } }, plugins: [nativeReact] })
 globalThis.localStorage = {
   getItem: (key) => (key === 'accessToken' ? 'member-test-token' : null),
 }
@@ -13,6 +16,7 @@ try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
   const {
     getMemberPackageCatalog,
+    getMemberPackageDetail,
     getMyMemberPackageSubscriptions,
     registerMemberPackage,
   } = await server.ssrLoadModule('/src/services/memberPackageService.js')
@@ -45,11 +49,18 @@ try {
   assert.equal(lastRequest.url, '/api/member/packages/subscriptions')
   assert.deepEqual(lastRequest.params, { page: 0, size: 100 })
 
-  body = { success: true, message: 'registered', data: { subscriptionId: 12 } }
-  assert.deepEqual(await registerMemberPackage({ packageId: 3, paymentMethod: 'Cash' }), body)
+  body = { success: true, message: 'pending', data: { subscriptionId: 12, paymentId: 100, paymentStatus: 'Pending' } }
+  assert.deepEqual(await registerMemberPackage({ packageId: 3, paymentMethod: 'Card' }), body)
   assert.equal(lastRequest.url, '/api/member/packages/register')
   assert.equal(lastRequest.method, 'post')
-  assert.deepEqual(JSON.parse(lastRequest.data), { packageId: 3, paymentMethod: 'Cash' })
+  assert.deepEqual(JSON.parse(lastRequest.data), { packageId: 3, paymentMethod: 'Card' })
+  await assert.rejects(registerMemberPackage({ packageId: 3, paymentMethod: 'Cash' }), /chỉ thanh toán/)
+
+  body = { success: true, data: { id: 3, choiceGroups: [{ id: 4, requiredSelection: 1, sports: [{ id: 9, name: 'Yoga' }] }] } }
+  assert.deepEqual(await getMemberPackageDetail(3), body.data)
+  assert.equal(lastRequest.url, '/api/member/packages/3')
+  body = { success: true, data: { id: 4, choiceGroups: [] } }
+  await assert.rejects(getMemberPackageDetail(3))
 
   for (const invalid of [
     null,
@@ -61,7 +72,7 @@ try {
     await assert.rejects(getMemberPackageCatalog())
   }
   body = { success: true, data: null }
-  await assert.rejects(registerMemberPackage({ packageId: 3, paymentMethod: 'Cash' }))
+  await assert.rejects(registerMemberPackage({ packageId: 3, paymentMethod: 'Card' }))
 
   const page = renderToStaticMarkup(createElement(
     MemoryRouter,

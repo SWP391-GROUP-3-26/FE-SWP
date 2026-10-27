@@ -11,9 +11,12 @@ import premierPackageImage from '../assets/member-package-premier.jpg'
 import standardPackageImage from '../assets/member-package-standard.jpg'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import PackageRenewalModal from '../components/PackageRenewalModal'
+import PackageSportChoices from '../components/PackageSportChoices'
 import memberMenuItems from '../components/memberMenuItems'
 import {
   getMemberPackageCatalog,
+  getMemberPackageDetail,
   getMyMemberPackageSubscriptions,
   memberPackageApiErrorMessage,
   registerMemberPackage,
@@ -28,10 +31,8 @@ const priceFormatter = new Intl.NumberFormat('vi-VN', {
 })
 
 const paymentMethods = [
-  { value: 'Cash', label: 'Tiền mặt' },
-  { value: 'Card', label: 'Thẻ' },
-  { value: 'Bank_Transfer', label: 'Chuyển khoản' },
-  { value: 'E_Wallet', label: 'Ví điện tử' },
+  { value: 'Card', label: 'Thẻ VNPay' },
+  { value: 'E_Wallet', label: 'QR chuyển khoản qua SePay' },
 ]
 
 function packageImageFor(name, durationDays) {
@@ -106,6 +107,8 @@ function subscriptionStatusLabel(status) {
 }
 
 function paymentMethodLabel(method) {
+  if (method === 'Cash') return 'Tiền mặt'
+  if (method === 'Bank_Transfer') return 'Chuyển khoản'
   return paymentMethods.find((option) => option.value === method)?.label || method || 'Chưa ghi nhận'
 }
 
@@ -128,11 +131,17 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   const [catalogResult, setCatalogResult] = useState(null)
   const [subscriptionsResult, setSubscriptionsResult] = useState(null)
   const [selectedPackage, setSelectedPackage] = useState(null)
-  const [paymentMethod, setPaymentMethod] = useState('Cash')
+  const [renewalTarget, setRenewalTarget] = useState(null)
+  const [choiceGroups, setChoiceGroups] = useState([])
+  const [paymentMethod, setPaymentMethod] = useState(memberId ? 'Cash' : 'Card')
   const [registrationLoading, setRegistrationLoading] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const submitting = useRef(false)
+  const packageDetailRequest = useRef(0)
+  const detailsReady = Array.isArray(selectedPackage?.choiceGroups)
+  const validChoices = detailsReady && selectedPackage.choiceGroups.every((group) =>
+    choiceGroups.find((choice) => choice.choiceGroupId === group.id)?.sportIds.length === group.requiredSelection)
 
   const catalogRequestKey = JSON.stringify([submittedSearch, page, reloadKey])
   const catalog = catalogResult?.key === catalogRequestKey ? catalogResult : null
@@ -182,7 +191,9 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   }, [reloadKey, memberId])
 
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
-  const pendingSubscription = memberId && subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
+  const pendingSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
+  const hasScheduledPackage = Boolean(subscriptions?.data?.some((s) =>
+    s.subscriptionStatus === 'Pending' && s.startDate > currentDate()))
 
   function submitSearch(event) {
     event.preventDefault()
@@ -196,25 +207,40 @@ export default function MemberPackages({ receptionist = false, memberId = null }
     setReloadKey((key) => key + 1)
   }
 
-  function openRegistration(packageItem) {
+  async function openRegistration(packageItem) {
+    if (activeSubscription) {
+      setRenewalTarget({ packageId: packageItem.id })
+      return
+    }
     if (receptionist) {
       navigate(`/receptionist/members/${memberId}/checkout/packages/${packageItem.id}`)
       return
     }
-    setSelectedPackage(packageItem)
-    setPaymentMethod('Cash')
+    const requestId = ++packageDetailRequest.current
+    setSelectedPackage({ ...packageItem, choiceGroups: null })
+    setChoiceGroups([])
+    setPaymentMethod(memberId ? 'Cash' : 'Card')
     setRegistrationError('')
+    try {
+      const details = await getMemberPackageDetail(packageItem.id)
+      if (requestId !== packageDetailRequest.current) return
+      setSelectedPackage(details)
+      setChoiceGroups(details.choiceGroups.map((group) => ({ choiceGroupId: group.id, sportIds: [] })))
+    } catch (error) {
+      if (requestId === packageDetailRequest.current) setRegistrationError(memberPackageApiErrorMessage(error))
+    }
   }
 
   function closeRegistration() {
     if (registrationLoading) return
+    packageDetailRequest.current += 1
     setSelectedPackage(null)
     setRegistrationError('')
   }
 
   async function submitRegistration(event) {
     event.preventDefault()
-    if (!selectedPackage || registrationLoading || submitting.current) return
+    if (!selectedPackage || !validChoices || registrationLoading || submitting.current) return
 
     submitting.current = true
     setRegistrationLoading(true)
@@ -224,7 +250,13 @@ export default function MemberPackages({ receptionist = false, memberId = null }
       const result = await register({
         packageId: selectedPackage.id,
         paymentMethod,
+        choiceGroups,
       })
+      if (!memberId) {
+        if (paymentMethod === 'Card') window.location.assign(getVnpayPaymentUrl(result.data.paymentUrl))
+        else navigate(`/member/payment-result?paymentId=${result.data.paymentId}&type=package`)
+        return
+      }
       if (memberId && paymentMethod !== 'Cash') {
         if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
           throw new Error('Chưa thể mở thanh toán. Hãy kiểm tra lịch sử trước khi thử lại.')
@@ -257,7 +289,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         <div>
           <span className="section-heading-kicker">QUYỀN LỢI HỘI VIÊN</span>
           <h2>Gói dịch vụ cá nhân</h2>
-          <p>Xem gói đang sử dụng, theo dõi lịch sử và đăng ký gói tập phù hợp.</p>
+          <p>Xem gói đang sử dụng, theo dõi lịch sử, đăng ký và gia hạn gói tập phù hợp.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">card_membership</span>
       </section>
@@ -354,6 +386,8 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                         <span>{timeline.progress}% thời hạn đã sử dụng</span>
                         {timeline.remainingDays != null && <strong>Còn {timeline.remainingDays} ngày</strong>}
                       </div>
+                      <button className="member-class-search-button" type="button" disabled={Boolean(pendingSubscription)}
+                        onClick={() => setRenewalTarget({})}>Gia hạn gói</button>
                     </aside>
                   )}
                 </article>
@@ -388,14 +422,16 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         </form>
 
         {pendingSubscription && <p className="member-package-note" role="status">
-          Hội viên có giao dịch gói đang chờ thanh toán. <Link to={`/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra hoặc hủy yêu cầu thanh toán</Link>.
+          Hội viên có giao dịch gói đang chờ thanh toán. <Link to={memberId
+            ? `/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`
+            : `/member/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra thanh toán</Link>.
         </p>}
         {activeSubscription && (
           <p className="member-package-note" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">info</span>
             <span>
               <strong>Bạn đang có gói hoạt động đến {formatDate(activeSubscription.endDate)}.</strong>
-              {' '}Hiện tại, bạn không được đăng ký gói mới khi gói này còn hiệu lực.
+              {' '}Chọn “Gia hạn gói” để xem thời hạn mới và học phí trước khi xác nhận.
             </span>
           </p>
         )}
@@ -475,11 +511,12 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                     </div>
                     <button
                       className="member-class-search-button"
-                      disabled={Boolean(activeSubscription || pendingSubscription)}
+                      disabled={Boolean(subscriptionsLoading || subscriptionsError || pendingSubscription)}
                       onClick={() => openRegistration(packageItem)}
                       type="button"
                     >
-                      Chọn gói <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                      {activeSubscription ? 'Chọn để gia hạn' : 'Chọn gói'}
+                      <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
                     </button>
                   </div>
                 </article>
@@ -503,6 +540,14 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         )}
       </section>
 
+      {renewalTarget && <PackageRenewalModal memberId={memberId} initialPackageId={renewalTarget.packageId}
+        hasScheduledPackage={hasScheduledPackage} onClose={() => setRenewalTarget(null)}
+        onSuccess={() => {
+          setSuccessMessage('Gia hạn gói tập thành công.')
+          setRenewalTarget(null)
+          setReloadKey((key) => key + 1)
+        }} />}
+
       {selectedPackage && (
         <Modal
           busy={registrationLoading}
@@ -514,6 +559,9 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             {memberId && <ReceptionistMemberContext memberId={memberId} />}
             <p className="member-package-modal-name">{selectedPackage.name}</p>
             <p className="member-package-modal-price">{priceFormatter.format(Number(selectedPackage.price || 0))}</p>
+            {!detailsReady && !registrationError && <p role="status">Đang tải chi tiết gói tập…</p>}
+            {detailsReady && <PackageSportChoices groups={selectedPackage.choiceGroups} choices={choiceGroups}
+              onChange={setChoiceGroups} disabled={registrationLoading} />}
             <label className="member-package-payment-field">
               Hình thức thanh toán
               <select
@@ -530,15 +578,15 @@ export default function MemberPackages({ receptionist = false, memberId = null }
               {memberId ? paymentMethod === 'Cash'
                 ? 'Chỉ xác nhận sau khi lễ tân đã nhận đủ tiền. Tổng tiền sẽ được kiểm tra lại trên máy chủ.'
                 : 'Gói chỉ được kích hoạt khi cổng thanh toán xác nhận giao dịch thành công.'
-                : 'Lưu ý: Backend hiện ghi nhận thanh toán là đã trả ngay khi đăng ký; cổng thanh toán chưa được tích hợp. Chỉ xác nhận khi bạn đã thanh toán theo hình thức đã chọn.'}
+                : 'Bạn sẽ được chuyển đến VNPay hoặc màn hình mã QR. Gói chỉ được kích hoạt sau khi thanh toán thành công.'}
             </p>
             {registrationError && <p className="member-package-form-error" role="alert">{registrationError}</p>}
             <div className="member-package-modal-actions">
               <button className="member-package-cancel" disabled={registrationLoading} onClick={closeRegistration} type="button">
                 Hủy
               </button>
-              <button className="member-class-search-button" disabled={registrationLoading} type="submit">
-                {registrationLoading ? 'Đang xử lý...' : memberId && paymentMethod === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
+              <button className="member-class-search-button" disabled={registrationLoading || !validChoices} type="submit">
+                {registrationLoading ? 'Đang xử lý...' : memberId && paymentMethod === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Tiếp tục thanh toán'}
               </button>
             </div>
           </form>

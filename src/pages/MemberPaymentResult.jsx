@@ -16,7 +16,6 @@ import { cancelReceptionistPayment } from '../services/receptionistRegistrationS
 const priceFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
 export default function MemberPaymentResult({ receptionist = false, memberId = null } = {}) {
-  const backPath = memberId ? `/receptionist/members/${memberId}` : '/member/classes'
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -25,8 +24,10 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
   const paymentId = params.get('paymentId')
   const validId = params.getAll('paymentId').length === 1 && isValidPaymentId(paymentId)
   const { payment, error, loading, timedOut, retry } = useMemberPayment(paymentId, validId, 15 * 60_000, memberId)
+  const isPackage = payment?.paymentType === 'Subscription' || params.get('type') === 'package'
+  const backPath = memberId ? `/receptionist/members/${memberId}` : isPackage ? '/member/packages' : '/member/classes'
   const review = payment?.paymentStatus === 'Paid' && (payment.requiresReview ||
-    !['Đang diễn ra', 'Đã hoàn thành'].includes(payment.bookingStatus))
+    !['Đang diễn ra', 'Đã hoàn thành', 'Chờ bắt đầu'].includes(payment.bookingStatus))
   const status = payment?.paymentStatus
   const errorStatus = error?.response?.status
   async function cancelPayment() {
@@ -48,7 +49,7 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
       {memberId && <ReceptionistMemberContext memberId={memberId} />}
       <section className="member-page-heading">
         <div>
-          <span className="section-heading-kicker">ĐĂNG KÝ LỚP HỌC</span>
+          <span className="section-heading-kicker">{isPackage ? 'GÓI HỘI VIÊN' : 'ĐĂNG KÝ LỚP HỌC'}</span>
           <h2>Kết quả thanh toán</h2>
           <p>Trạng thái thanh toán và đăng ký được xác nhận từ trung tâm.</p>
         </div>
@@ -64,9 +65,10 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
             {loading ? <p><span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />Đang kiểm tra thanh toán...</p>
               : status === 'Paid' ? (
                 review ? <><h3>Đã thanh toán, cần xác nhận đăng ký</h3><p>Trung tâm đã ghi nhận thanh toán nhưng chưa xác nhận đăng ký. Vui lòng liên hệ trung tâm và cung cấp mã thanh toán {paymentId} để được hỗ trợ.</p></>
-                  : <><h3>Thanh toán và đăng ký thành công</h3><p>Đăng ký đã được ghi nhận cho hội viên.</p></>
+                  : <><h3>Thanh toán và đăng ký thành công</h3><p>{payment.bookingStatus === 'Chờ bắt đầu'
+                    ? 'Gói đã được thanh toán và sẽ bắt đầu sau khi gói hiện tại hết hạn.' : 'Đăng ký đã được ghi nhận cho hội viên.'}</p></>
               ) : status === 'Failed' ? (
-                <><h3>Thanh toán không thành công</h3><p>Đăng ký chưa được xác nhận. Bạn có thể quay lại danh sách lớp để đăng ký lại.</p></>
+                <><h3>Thanh toán không thành công</h3><p>Đăng ký chưa được xác nhận. Bạn có thể quay lại danh sách {isPackage ? 'gói' : 'lớp'} để đăng ký lại.</p></>
               ) : (
                 <><h3>Đang chờ xác nhận thanh toán</h3><p>{timedOut
                   ? 'Chưa nhận được xác nhận cuối cùng. Bạn có thể kiểm tra lại; trạng thái này chưa có nghĩa là thanh toán thất bại.'
@@ -87,8 +89,8 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
           {errorStatus === 401 ? <Link className="member-register-button" to="/login" onClick={clearAuth}>Đăng nhập lại</Link>
             : validId && !loading && (timedOut || (error && ![403, 404].includes(errorStatus))) &&
               <button className="member-register-button" type="button" onClick={retry}>Kiểm tra lại</button>}
-          {!memberId && status === 'Paid' && !review && <Link className="member-register-button" to="/member/schedule">Tới lịch tập</Link>}
-          <Link className="member-cancel-button" to={backPath}>{memberId ? "Về thông tin hội viên" : "Về danh sách lớp"}</Link>
+          {!memberId && !isPackage && status === 'Paid' && !review && <Link className="member-register-button" to="/member/schedule">Tới lịch tập</Link>}
+          <Link className="member-cancel-button" to={backPath}>{memberId ? 'Về thông tin hội viên' : isPackage ? 'Về gói tập' : 'Về danh sách lớp'}</Link>
         </div>
       </section>
       {cancelOpen && <Modal title="Hủy yêu cầu thanh toán" busy={cancelling} onClose={() => !cancelling && setCancelOpen(false)}>

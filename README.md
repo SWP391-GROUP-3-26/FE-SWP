@@ -444,3 +444,10 @@ Nếu gặp lỗi, gửi cho team:
 - request/response trong Network nếu lỗi API
 
 Không gửi password, JWT token hoặc API key lên group chat/GitHub.
+## Package purchase and renewal
+
+Receptionists can open a member profile and click **Gia hạn gói**, directly above **Hủy gói** on the existing membership card. Counter renewals use cash confirmation. New counter purchases still use the package catalog and checkout page.
+
+Member package purchases and renewals offer VNPay or SePay QR. A successful order creation opens the gateway or `/member/payment-result?paymentId=...&type=package`; it does not mark the package paid in the browser. A paid future renewal displays **Chờ bắt đầu** and links back to the package page.
+
+Service checks: `node tests/memberPackageService.test.mjs` and `node tests/packageRenewal.test.mjs`. The optional `node tests/packageCheckout.browser.mjs` check uses Playwright with mocked API/gateway responses. Set `PLAYWRIGHT_MODULE` to a module specifier or file URL when Playwright is installed outside this repo; `PLAYWRIGHT_CHANNEL` defaults to `msedge`.
