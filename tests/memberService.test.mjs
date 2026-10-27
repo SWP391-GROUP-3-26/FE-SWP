@@ -3,9 +3,12 @@ import { createServer } from 'vite'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
+import { fileURLToPath } from 'node:url'
+import nativeReact from './ssrDependencies.mjs'
 
 // Adapter fixtures verify the FE contract only; these are not live API tests.
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom',
+  resolve: { alias: { axios: fileURLToPath(new URL('../node_modules/axios/dist/esm/axios.js', import.meta.url)) } }, plugins: [nativeReact] })
 const storage = new Map([['accessToken', 'test-token'], ['role', 'Receptionist']])
 globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null }
 try {
@@ -18,7 +21,7 @@ try {
   const { ROLES, getRouteForRole } = await server.ssrLoadModule('/src/auth/roleConfig.js')
   let calls = 0
   let lastRequest
-  const member = { userId: 7, fullName: 'Nguyễn  An', username: 'an', email: null, phone: null, role: 'Member', status: 'Active' }
+  const member = { userId: 7, fullName: 'Nguyễn  An', username: 'an', email: null, phone: null, role: 'Member', status: 'Active', activePackages: [], activeClasses: [] }
   let payload = { success: true, total: 41, page: 1, size: 20, data: [member] }
   client.defaults.adapter = async (config) => {
     calls++
@@ -74,7 +77,7 @@ try {
   storage.delete('accessToken')
   assert.equal(render(createElement(ProtectedRoute, { allowedRoles: [ROLES.RECEPTIONIST] }, 'protected-content')).includes('protected-content'), false)
   assert.equal(getRouteForRole(ROLES.RECEPTIONIST), '/receptionist')
-  assert.deepEqual(staffMenuItems[ROLES.RECEPTIONIST].map((item) => item.label), ['Đăng ký người dùng', 'Tong quan tiep tan', 'Thanh toan'])
+  assert.deepEqual(staffMenuItems[ROLES.RECEPTIONIST].map((item) => item.label), ['Đăng ký người dùng', 'Tổng quan tiếp tân', 'Hội viên', 'Thanh toán'])
   assert.ok(staffMenuItems[ROLES.CENTER_MANAGER].some((item) => item.children?.some((child) => child.route === '/subjects')))
   assert.ok(render(createElement(Home)).includes('Nhập từ khóa để tìm học viên.'))
   console.log('PASS: member search/detail contract, blank keywords, trim, pagination, cancellation, errors, initial render, role guard and sidebar')

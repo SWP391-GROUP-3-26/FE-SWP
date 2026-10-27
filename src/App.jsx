@@ -22,6 +22,8 @@ import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
 import ReceptionistDashboard from './pages/ReceptionistDashboard'
 import ReceptionistMemberDetail from './pages/ReceptionistMemberDetail'
+import ReceptionistMemberRegister from './pages/ReceptionistMemberRegister'
+import ReceptionistMemberSearch from './pages/ReceptionistMemberSearch'
 import ReceptionistRegistrationPage from './pages/ReceptionistRegistrationPage'
 import ReceptionistCheckout from './pages/ReceptionistCheckout'
 import Register from './pages/Register'
@@ -110,6 +112,14 @@ function App() {
               <ReceptionistDashboard />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/receptionist/members"
+          element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><ReceptionistMemberSearch /></ProtectedRoute>}
+        />
+        <Route
+          path="/receptionist/members/new"
+          element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><ReceptionistMemberRegister /></ProtectedRoute>}
         />
         <Route
           path="/receptionist/members/:id"

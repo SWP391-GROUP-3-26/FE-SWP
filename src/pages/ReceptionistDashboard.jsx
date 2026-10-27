@@ -30,11 +30,16 @@ export default function ReceptionistDashboard() {
       eyebrow="Cổng tiếp tân / Trang chủ"
       menuItems={staffMenuItems[ROLES.RECEPTIONIST]}
       role="Receptionist"
+      roleLabel="Tiếp tân"
       subtitle="Tìm học viên và mở hồ sơ ngay tại cổng tiếp tân."
       title="Trang chủ - Cổng tiếp tân"
     >
       <section className="dashboard-panel member-panel" aria-labelledby="member-search-title">
         <h3 id="member-search-title">Tìm học viên</h3>
+        <div className="member-booking-actions">
+          <Link className="member-register-button" to="/receptionist/members/new">Đăng ký thành viên</Link>
+          <Link className="member-button" to="/receptionist/members">Tìm kiếm thành viên</Link>
+        </div>
         <label htmlFor="member-search">Tên, username, email hoặc số điện thoại</label>
         <div className="input-wrap">
           <span className="material-symbols-outlined" aria-hidden="true">search</span>

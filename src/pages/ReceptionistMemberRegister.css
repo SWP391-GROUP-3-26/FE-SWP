@@ -1,0 +1,31 @@
+.member-register-panel { max-width: 1100px; width: 100%; }
+.member-register-note, .member-register-success p { margin: 0; color: var(--muted); line-height: 1.6; }
+.member-register-fields { min-width: 0; padding: 0; margin: 0; border: 0; }
+.member-register-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+.member-register-group { display: grid; align-content: start; gap: 20px; min-width: 0; }
+.member-register-group h3 { display: flex; align-items: center; gap: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.member-register-group h3 > span { color: var(--primary); }
+.member-register-field { display: grid; gap: 8px; }
+.member-register-field label { display: flex; gap: 4px; }
+.member-register-field label > span { color: #9c2f1b; }
+.member-register-hint { color: var(--muted); line-height: 1.5; font-size: 12px; }
+.member-register-password-toggle { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 4px; border: 0; background: transparent; color: var(--primary-dark); font-size: 13px; font-weight: 700; cursor: pointer; }
+.member-register-field .input-wrap:has([aria-invalid="true"]) { border-color: #9c2f1b; }
+.member-register-fields:disabled { opacity: .7; }
+.member-register-fields:disabled input, .member-register-fields:disabled button { cursor: wait; }
+.member-register-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.member-register-actions .submit-button { width: auto; padding: 12px 24px; }
+.member-register-actions .primary-link { border: 0; min-height: 48px; cursor: pointer; }
+.member-register-back { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 20px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--primary-dark); font-weight: 700; cursor: pointer; }
+.member-register-back:disabled { opacity: .6; cursor: wait; }
+.member-register-login { display: block; margin-top: 10px; padding: 0; border: 0; background: transparent; color: inherit; text-decoration: underline; font-weight: 700; cursor: pointer; }
+.member-register-success { display: grid; gap: 18px; }
+.member-register-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 0; padding: 20px; border-radius: 10px; background: var(--surface-muted); }
+.member-register-details dt { color: var(--muted); font-size: 13px; }
+.member-register-details dd { margin: 6px 0 0; font-weight: 700; white-space: pre-wrap; overflow-wrap: anywhere; }
+.member-register-panel :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .member-register-columns, .member-register-details { grid-template-columns: minmax(0, 1fr); }
+  .member-register-panel { padding: 18px; }
+  .member-register-actions > * { width: 100% !important; text-align: center; }
+}
