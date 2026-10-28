@@ -1,0 +1,83 @@
+.receptionist-eyebrow { display: block; color: #c66d42; font-size: 11px; font-weight: 800; letter-spacing: .13em; }
+.receptionist-hero { display: grid; justify-items: center; padding: clamp(32px, 6vw, 64px) 24px; border: 1px solid #e3eee6; border-radius: 17px; background: radial-gradient(ellipse at 12% 10%, rgba(199,235,214,.38), transparent 36%), linear-gradient(120deg,#f7fbf8,#fff 65%); text-align: center; box-shadow: 0 12px 38px rgba(35,65,45,.045); }
+.receptionist-hero h1 { margin: 12px 0 8px; color: #1e3026; font-size: clamp(25px,4vw,38px); letter-spacing: -.035em; }
+.receptionist-hero > p, .receptionist-page-intro > p { max-width: 650px; margin: 0; color: #718078; font-size: 14px; line-height: 1.65; }
+.receptionist-quick-search { display: flex; width: min(720px, 100%); min-height: 58px; align-items: center; gap: 12px; margin-top: 25px; padding: 6px 7px 6px 16px; border: 1px solid #e0ebe3; border-radius: 12px; background: #fff; box-shadow: 0 5px 18px rgba(34,61,44,.06); }
+.receptionist-quick-search > .material-symbols-outlined { color: #748a7b; }
+.receptionist-quick-search input { flex: 1; min-width: 0; border: 0; outline: 0; color: #273a2e; background: transparent; font: inherit; font-size: 13px; }
+.receptionist-primary-button, .receptionist-secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid #2e7955; border-radius: 8px; color: #fff; background: #2e7955; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.receptionist-primary-button:hover, .receptionist-secondary-button:hover { color: #fff; background: #245f43; }
+.receptionist-secondary-button { color: #2e7955; background: #fff; }
+.receptionist-secondary-button:hover { color: #245f43; background: #f0f7f2; }
+.receptionist-dashboard-page .member-booking-actions { margin-top: 16px; }
+.receptionist-search-status, .receptionist-dashboard-page [role="status"] { color: #6c7c71; font-size: 13px; }
+.receptionist-quick-results { width: min(900px,100%); grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); margin-top: 16px; text-align: left; }
+.receptionist-page-intro { display: grid; justify-items: start; gap: 8px; margin: 0 0 20px; }
+.receptionist-page-intro h1 { margin: 2px 0 0; color: #21352a; font-size: clamp(25px,3vw,34px); letter-spacing: -.03em; }
+.receptionist-back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 8px 11px; border: 1px solid #e2ebe4; border-radius: 8px; color: #375e47; background: #fff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.receptionist-back-link:hover { background: #f0f7f2; }
+.receptionist-back-link .material-symbols-outlined { font-size: 17px; }
+.receptionist-flow-back { margin-bottom: 12px; }
+.receptionist-register-page .member-register-panel, .receptionist-member-search-page .member-search-panel, .receptionist-member-detail-page .member-panel { max-width: none; padding: clamp(20px,3vw,32px); border: 1px solid #e3ece5; border-radius: 15px; background: #fff; box-shadow: 0 12px 34px rgba(35,65,45,.045); }
+.receptionist-register-page .member-register-note { margin-bottom: 18px; padding: 13px 15px; border-radius: 9px; background: #f2f8f4; }
+.receptionist-register-page .member-register-group { padding: 18px; border: 1px solid #e7eee8; border-radius: 12px; background: #fbfdfb; }
+.receptionist-register-page .member-register-group h3 { margin-top: 0; color: #305e43; font-size: 15px; }
+.receptionist-register-page .member-register-field { gap: 7px; }
+.receptionist-register-page .member-register-field input { min-height: 44px; border-radius: 8px; background: #f4f8f5; }
+.receptionist-register-page .member-register-hint { font-size: 11px; }
+.receptionist-register-page .member-register-success { max-width: 840px; margin: 0 auto; }
+.receptionist-register-page .member-register-success > h3 { color: #286d4b; font-size: 22px; }
+.receptionist-member-search-page .member-search-toolbar { padding: 16px; border: 1px solid #e6eee8; border-radius: 12px; background: #f6faf7; }
+.receptionist-member-search-page .member-search-query { flex: 1; }
+.receptionist-member-search-page .member-search-query .input-wrap { min-height: 44px; border: 1px solid #e3ebe5; border-radius: 8px; background: #fff; }
+.receptionist-member-search-page .member-search-table thead th { color: #557060; background: #eef5f0; font-size: 11px; letter-spacing: .035em; }
+.receptionist-member-search-page .member-search-table tbody tr:hover { background: #f7fbf8; }
+.receptionist-member-search-page .member-search-count { margin: 18px 0 12px; color: #65766b; font-size: 13px; }
+.receptionist-member-detail-page .back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; padding: 8px 11px; border-radius: 8px; background: #f2f7f3; color: #365d46; text-decoration: none; }
+.receptionist-member-detail-page #member-detail-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.receptionist-member-summary { display: flex; align-items: center; gap: 18px; padding: 20px; border: 1px solid #e6efe8; border-radius: 13px; background: linear-gradient(110deg,#f4faf6,#fff 75%); }
+.receptionist-profile-avatar { display: grid; flex: 0 0 62px; width: 62px; height: 62px; place-items: center; border: 2px solid #d6eee0; border-radius: 50%; color: #286d4b; background: #c9efdc; font-size: 34px; }
+.receptionist-member-summary h1 { margin: 5px 0; color: #20352a; font-size: clamp(21px,3vw,28px); }
+.receptionist-member-summary p { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0; color: #77847b; font-size: 12px; }
+.receptionist-status { padding: 4px 9px; border-radius: 999px; color: #865c31; background: #f5eddc; font-size: 10px; font-weight: 800; }
+.receptionist-status.is-active { color: #2e7955; background: #e0f4e8; }
+.receptionist-member-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.receptionist-member-detail-page .member-details { margin-top: 16px; gap: 0 16px; padding: 16px; border-radius: 11px; background: #f5f9f6; }
+.receptionist-member-detail-page .member-details div { display: grid; grid-template-columns: minmax(120px,.5fr) minmax(0,1fr); align-items: center; gap: 12px; padding: 11px 5px; border-color: #e4ece6; }
+.receptionist-member-detail-page .member-details dt { font-size: 11px; }
+.receptionist-member-detail-page .member-details dd { margin: 0; color: #263b2e; font-size: 12px; font-weight: 700; }
+.receptionist-member-detail-page .member-enrollments { margin-top: 24px; padding-top: 22px; }
+.receptionist-member-detail-page .member-enrollments > h3 { font-size: 18px; }
+.receptionist-member-detail-page .member-enrollment-card { border-color: #e5eee7; background: #fbfdfb; }
+.receptionist-selected-member { margin: 0 0 16px; padding: 14px 16px; border: 1px solid #dcebe0; border-radius: 11px; background: #eaf5ee; }
+.receptionist-selected-member p { margin-bottom: 0; font-size: 12px; }
+.receptionist-selected-member a { color: #2e7955; font-weight: 700; }
+.receptionist-packages-page .member-page-heading, .receptionist-classes-page .member-page-heading, .receptionist-payment-result-page .member-page-heading { margin-bottom: 18px; padding: 20px 24px; border-radius: 14px; }
+.receptionist-packages-page .member-page-heading h2, .receptionist-classes-page .member-page-heading h2, .receptionist-payment-result-page .member-page-heading h2 { font-size: clamp(22px,3vw,30px); }
+.receptionist-packages-page .member-data-section, .receptionist-classes-page .member-data-section, .receptionist-classes-page .member-class-search, .receptionist-classes-page .member-class-empty, .receptionist-payment-result-page .member-payment-result { border-radius: 14px; box-shadow: 0 9px 26px rgba(35,65,45,.04); }
+.receptionist-packages-page .member-package-grid { grid-template-columns: repeat(auto-fit,minmax(245px,1fr)); }
+.receptionist-classes-page .member-class-list-toolbar { border-radius: 12px; }
+.receptionist-checkout-page .receptionist-checkout { max-width: 1100px; }
+.receptionist-checkout-page .checkout-card { border-radius: 14px; box-shadow: 0 9px 28px rgba(35,65,45,.045); }
+.receptionist-payment-result-page .member-page-heading { margin-bottom: 18px; }
+@media (max-width: 760px) {
+  .receptionist-quick-search { align-items: stretch; flex-wrap: wrap; padding: 10px; }
+  .receptionist-quick-search input { flex-basis: calc(100% - 38px); min-height: 38px; }
+  .receptionist-primary-button { width: 100%; }
+  .receptionist-member-summary { align-items: flex-start; flex-wrap: wrap; }
+  .receptionist-member-actions { width: 100%; margin-left: 80px; }
+  .receptionist-member-detail-page .member-details div { grid-template-columns: 1fr; gap: 5px; }
+  .receptionist-member-search-page .member-search-toolbar { align-items: stretch; }
+  .receptionist-register-page .member-register-columns { grid-template-columns: 1fr; }
+}
+.receptionist-member-search-page .receptionist-search-actions { display: flex; align-items: center; gap: 6px; }
+.receptionist-member-search-page .receptionist-search-actions .subject-button { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 5px 9px; font-size: 11px; text-decoration: none; white-space: nowrap; }
+.receptionist-member-avatar { display: inline-grid; flex: 0 0 auto; width: 40px; height: 40px; overflow: hidden; place-items: center; border: 2px solid #d9eee0; border-radius: 50%; color: #2e7955; background: #dff3e7; font-size: 12px; font-weight: 800; }
+.receptionist-member-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.receptionist-member-avatar.is-small { width: 34px; height: 34px; font-size: 10px; }
+.receptionist-member-avatar.is-large { width: 72px; height: 72px; font-size: 21px; }
+.receptionist-search-person, .receptionist-result-person { display: flex; align-items: center; gap: 10px; }
+.receptionist-result-person strong { min-width: 0; flex: 1; }
+.receptionist-result-person > span:last-child { margin-left: auto; }
+.receptionist-member-actions a.member-register-button { text-decoration: none; }
+.receptionist-member-actions a.member-register-button:hover { text-decoration: none; }

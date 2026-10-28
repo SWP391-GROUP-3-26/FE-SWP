@@ -1,9 +1,8 @@
 import { useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import DashboardLayout from '../components/DashboardLayout'
+import ReceptionistLayout from '../components/ReceptionistLayout'
+import ReceptionistMemberAvatar from '../components/ReceptionistMemberAvatar'
 import MemberRequestError from '../components/MemberRequestError'
-import { staffMenuItems } from '../components/staffMenuItems'
-import { ROLES } from '../auth/roleConfig'
 import { searchMembers } from '../services/memberService'
 import useMemberRequest from '../hooks/useMemberRequest'
 import './ReceptionistMembers.css'
@@ -26,41 +25,32 @@ export default function ReceptionistDashboard() {
   }
 
   return (
-    <DashboardLayout
-      eyebrow="Cổng tiếp tân / Trang chủ"
-      menuItems={staffMenuItems[ROLES.RECEPTIONIST]}
-      role="Receptionist"
-      roleLabel="Tiếp tân"
-      subtitle="Tìm học viên và mở hồ sơ ngay tại cổng tiếp tân."
-      title="Trang chủ - Cổng tiếp tân"
-    >
-      <section className="dashboard-panel member-panel" aria-labelledby="member-search-title">
-        <h3 id="member-search-title">Tìm học viên</h3>
-        <div className="member-booking-actions">
-          <Link className="member-register-button" to="/receptionist/members/new">Đăng ký thành viên</Link>
-          <Link className="member-button" to="/receptionist/members">Tìm kiếm thành viên</Link>
-        </div>
-        <label htmlFor="member-search">Tên, username, email hoặc số điện thoại</label>
-        <div className="input-wrap">
+    <ReceptionistLayout className="receptionist-dashboard-page">
+      <section className="receptionist-hero" aria-labelledby="member-search-title">
+        <span className="receptionist-eyebrow">UNI SPORTS · DỊCH VỤ HỘI VIÊN</span>
+        <h1 id="member-search-title">Chào mừng, tiếp đón hội viên</h1>
+        <p>Tìm nhanh hồ sơ hoặc bắt đầu đăng ký thành viên mới tại quầy.</p>
+        <form className="receptionist-quick-search" onSubmit={(event) => event.preventDefault()}>
           <span className="material-symbols-outlined" aria-hidden="true">search</span>
-          <input id="member-search" type="search" value={keyword}
-            placeholder="Nhập tên, username, email hoặc số điện thoại"
-            aria-describedby="member-search-help" autoComplete="off"
+          <input aria-label="Tìm hội viên" type="search" value={keyword}
+            placeholder="Tìm theo tên, tài khoản, email hoặc số điện thoại"
             onChange={(event) => updateSearch(event.target.value)} />
+          <Link className="receptionist-primary-button" to={`/receptionist/members?keyword=${encodeURIComponent(keyword)}`}>Tra cứu hội viên <span aria-hidden="true">→</span></Link>
+        </form>
+        <div className="member-booking-actions">
+          <Link className="receptionist-secondary-button" to="/receptionist/members/new"><span className="material-symbols-outlined" aria-hidden="true">person_add</span> Đăng ký thành viên mới</Link>
         </div>
-        <p id="member-search-help" className="member-muted">Tìm theo một phần thông tin, không phân biệt chữ hoa và chữ thường.</p>
         <div role="status" aria-live="polite">
-          {!keyword.trim() && <p className="placeholder-box">Nhập từ khóa để tìm học viên.</p>}
-          {loading && <p>Đang tìm học viên…</p>}
+          {loading && <p className="receptionist-search-status">Đang tìm hội viên…</p>}
           {data && <p>{data.total === 0 ? 'Không tìm thấy học viên phù hợp.' : `Tìm thấy ${data.total} học viên.`}</p>}
         </div>
         {error && <MemberRequestError error={error} retry={retry} />}
         {data && <>
-          <ul className="member-results" aria-label="Kết quả tìm học viên">
+          <ul className="member-results receptionist-quick-results" aria-label="Kết quả tìm hội viên">
             {data.data.map((member) => (
               <li key={member.userId}>
                 <Link className="member-result" to={`/receptionist/members/${member.userId}?${params.toString()}`}>
-                  <span className="member-result-heading"><strong>{member.fullName || '—'}</strong><span>{member.status || '—'}</span></span>
+                  <span className="member-result-heading receptionist-result-person"><ReceptionistMemberAvatar member={member} size="small" /><strong>{member.fullName || '—'}</strong><span>{member.status || '—'}</span></span>
                   <span>Username: {member.username || '—'}</span>
                   <span>Email: {member.email || '—'}</span>
                   <span>Điện thoại: {member.phone || '—'}</span>
@@ -77,6 +67,6 @@ export default function ReceptionistDashboard() {
           </nav>}
         </>}
       </section>
-    </DashboardLayout>
+    </ReceptionistLayout>
   )
 }

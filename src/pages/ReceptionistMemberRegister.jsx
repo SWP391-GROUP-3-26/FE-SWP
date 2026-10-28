@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import DashboardLayout from '../components/DashboardLayout'
-import { staffMenuItems } from '../components/staffMenuItems'
+import ReceptionistLayout from '../components/ReceptionistLayout'
 import { clearAuth } from '../auth/authStorage'
-import { ROLES } from '../auth/roleConfig'
 import { createReceptionistMember, receptionistMemberError } from '../services/receptionistMemberService'
 import { validateRegister } from '../utils/registerValidation'
 import './ReceptionistMemberRegister.css'
@@ -90,14 +88,13 @@ export default function ReceptionistMemberRegister() {
   }
 
   return (
-    <DashboardLayout
-      eyebrow="Cổng tiếp tân / Đăng ký thành viên"
-      menuItems={staffMenuItems[ROLES.RECEPTIONIST]}
-      role={ROLES.RECEPTIONIST}
-      roleLabel="Tiếp tân"
-      subtitle="Tạo tài khoản cho khách tại quầy. Chức năng này chưa bao gồm đăng ký gói tập, thanh toán hoặc xếp lớp."
-      title="Đăng ký thành viên mới"
-    >
+    <ReceptionistLayout className="receptionist-register-page">
+      <header className="receptionist-page-intro">
+        <Link className="receptionist-back-link" to="/receptionist"><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại tiếp đón</Link>
+        <span className="receptionist-eyebrow">THỦ TỤC TIẾP NHẬN</span>
+        <h1>Đăng ký hội viên</h1>
+        <p>Tạo tài khoản hội viên. Sau khi hoàn tất, bạn có thể mở hồ sơ để đăng ký gói hoặc lớp theo yêu cầu.</p>
+      </header>
       <section className="dashboard-panel member-register-panel">
         {member ? (
           <div className="member-register-success">
@@ -114,8 +111,10 @@ export default function ReceptionistMemberRegister() {
               ))}
             </dl>
             <div className="member-register-actions">
+              <Link className="member-register-back" to={`/receptionist/members/${member.userId}`}>Mở hồ sơ hội viên</Link>
+              <Link className="primary-link" to={`/receptionist/members/${member.userId}/packages`}>Đăng ký gói</Link>
+              <Link className="primary-link" to={`/receptionist/members/${member.userId}/classes`}>Đăng ký lớp</Link>
               <button className="primary-link" onClick={registerNext} type="button">Đăng ký thành viên tiếp theo</button>
-              <Link className="member-register-back" to="/receptionist">Về trang tiếp tân</Link>
             </div>
           </div>
         ) : (
@@ -189,6 +188,6 @@ export default function ReceptionistMemberRegister() {
           </form>
         )}
       </section>
-    </DashboardLayout>
+    </ReceptionistLayout>
   )
 }

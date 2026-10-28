@@ -16,9 +16,8 @@ export const staffMenuItems = {
     { icon: 'history', label: 'Nhật ký hoạt động', route: '/center-manager/audit-logs' },
   ],
   [ROLES.RECEPTIONIST]: [
-    { icon: 'person_add', label: 'Đăng ký người dùng', route: '/receptionist/register-member' },
+    { icon: 'person_add', label: 'Đăng ký hội viên', route: '/receptionist/members/new' },
     { icon: 'home', label: 'Tổng quan tiếp tân', route: '/receptionist' },
     { icon: 'groups', label: 'Hội viên', route: '/receptionist/members' },
-    { icon: 'payments', label: 'Thanh toán', route: '/receptionist' },
   ],
 }

@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import DashboardLayout from '../components/DashboardLayout'
+import ReceptionistLayout from '../components/ReceptionistLayout'
+import ReceptionistMemberAvatar from '../components/ReceptionistMemberAvatar'
 import Modal from '../components/Modal'
-import { staffMenuItems } from '../components/staffMenuItems'
 import { clearAuth } from '../auth/authStorage'
-import { ROLES } from '../auth/roleConfig'
 import { getReceptionistMemberById, receptionistMemberReadError, searchReceptionistMembers } from '../services/receptionistMemberService'
 import { resolveAvatarUrl } from '../services/memberProfileService'
 import './SubjectManagement.css'
@@ -28,7 +27,8 @@ function ErrorNotice({ error, onRetry, onLogin }) {
 }
 
 export default function ReceptionistMemberSearch() {
-  const [keyword, setKeyword] = useState('')
+  const initialKeyword = new URLSearchParams(window.location.search).get('keyword')?.trim() || ''
+  const [keyword, setKeyword] = useState(initialKeyword)
   const [submittedSearch, setSubmittedSearch] = useState(null)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -42,17 +42,6 @@ export default function ReceptionistMemberSearch() {
   const profileController = useRef(null)
   const searchInput = useRef(null)
   const navigate = useNavigate()
-
-  useEffect(() => {
-    searchInput.current?.focus()
-    const previousTitle = document.title
-    document.title = 'Tìm kiếm thành viên - UniSports'
-    return () => {
-      searchController.current?.abort()
-      profileController.current?.abort()
-      document.title = previousTitle
-    }
-  }, [])
 
   function closeProfile() {
     profileController.current?.abort()
@@ -76,7 +65,7 @@ export default function ReceptionistMemberSearch() {
     searchInput.current?.focus()
   }
 
-  async function loadMembers(query, page = 0, size = PAGE_SIZE) {
+  const loadMembers = useCallback(async (query, page = 0, size = PAGE_SIZE) => {
     searchController.current?.abort()
     const controller = new AbortController()
     searchController.current = controller
@@ -95,7 +84,22 @@ export default function ReceptionistMemberSearch() {
     } finally {
       if (!controller.signal.aborted && searchController.current === controller) setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    searchInput.current?.focus()
+    const initialSearchTimer = initialKeyword
+      ? window.setTimeout(() => void loadMembers(initialKeyword), 0)
+      : null
+    const previousTitle = document.title
+    document.title = 'Danh sách hội viên - UniSports'
+    return () => {
+      if (initialSearchTimer !== null) window.clearTimeout(initialSearchTimer)
+      searchController.current?.abort()
+      profileController.current?.abort()
+      document.title = previousTitle
+    }
+  }, [initialKeyword, loadMembers])
 
   function handleSearch(event) {
     event.preventDefault()
@@ -134,14 +138,12 @@ export default function ReceptionistMemberSearch() {
   const avatar = resolveAvatarUrl(profile?.avatarUrl)
 
   return (
-    <DashboardLayout
-      eyebrow="Cổng tiếp tân / Hội viên"
-      menuItems={staffMenuItems[ROLES.RECEPTIONIST]}
-      role={ROLES.RECEPTIONIST}
-      roleLabel="Tiếp tân"
-      title="Tìm kiếm thành viên"
-      subtitle="Tìm theo một phần họ tên, tên đăng nhập, email hoặc số điện thoại, rồi chọn thành viên để xem hồ sơ."
-    >
+    <ReceptionistLayout className="receptionist-member-search-page">
+      <header className="receptionist-page-intro receptionist-search-intro">
+        <Link className="receptionist-back-link" to="/receptionist"><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại tiếp đón</Link>
+        <span className="receptionist-eyebrow">HỘI VIÊN</span><h1>Danh sách hội viên</h1>
+        <p>Tìm hồ sơ theo tên, tài khoản, email hoặc số điện thoại để xem gói tập và lớp đã đăng ký.</p>
+      </header>
       <section className="dashboard-panel member-search-panel" aria-label="Tìm kiếm thành viên">
         <form className="member-search-toolbar" onSubmit={handleSearch}>
           <div className="member-search-query">
@@ -173,9 +175,14 @@ export default function ReceptionistMemberSearch() {
                     <thead><tr>{['ID', 'Họ và tên', 'Tên đăng nhập', 'Email', 'Số điện thoại', 'Trạng thái', 'Thao tác'].map((title) => <th key={title} scope="col">{title}</th>)}</tr></thead>
                     <tbody>{result.data.map((member) => (
                       <tr key={member.userId}>
-                        {[member.userId, member.fullName, member.username, member.email, member.phone, member.status].map((value, index) => <td key={index}>{value ?? 'Chưa cập nhật'}</td>)}
-                        <td><button className="subject-button" type="button" onClick={() => loadProfile(member.userId)}
-                          aria-label={`Xem hồ sơ thành viên ${member.fullName ?? member.username ?? member.userId}`}>Xem hồ sơ</button></td>
+                        <td>{member.userId}</td>
+                        <td><div className="receptionist-search-person"><ReceptionistMemberAvatar member={member} size="small" /><strong>{member.fullName || 'Chưa cập nhật'}</strong></div></td>
+                        {[member.username, member.email, member.phone, member.status].map((value, index) => <td key={index}>{value ?? 'Chưa cập nhật'}</td>)}
+                        <td><div className="receptionist-search-actions">
+                          <Link className="subject-button subject-primary" to={`/receptionist/members/${member.userId}?keyword=${encodeURIComponent(submittedSearch.keyword)}`}>Mở hồ sơ</Link>
+                          <button className="subject-button" type="button" onClick={() => loadProfile(member.userId)}
+                            aria-label={`Xem nhanh hồ sơ thành viên ${member.fullName ?? member.username ?? member.userId}`}>Xem nhanh</button>
+                        </div></td>
                       </tr>
                     ))}</tbody>
                   </table>
@@ -213,6 +220,6 @@ export default function ReceptionistMemberSearch() {
           <div className="subject-modal-actions"><button className="subject-button" type="button" onClick={closeProfile}>Đóng</button></div>
         </Modal>
       )}
-    </DashboardLayout>
+    </ReceptionistLayout>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
+import ReceptionistLayout from '../components/ReceptionistLayout'
 import Modal from '../components/Modal'
 import RegisteredClassCard from '../components/RegisteredClassCard'
 import { formatClassDate } from '../utils/classSchedule'
@@ -39,6 +40,7 @@ function classSchedule(classItem) {
 }
 
 export default function MemberClasses({ receptionist = false, memberId = null } = {}) {
+  const PageLayout = receptionist ? ReceptionistLayout : DashboardLayout
   const navigate = useNavigate()
   const profilePath = receptionist ? `/receptionist/members/${memberId}` : '/member/schedule'
   const [classes, setClasses] = useState([])
@@ -219,7 +221,8 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   }
 
   return (
-    <DashboardLayout
+    <PageLayout
+      className={receptionist ? 'receptionist-classes-page' : undefined}
       eyebrow={receptionist ? 'Lễ tân / Đăng ký lớp cho hội viên' : 'Hội viên / Lớp học'}
       menuItems={receptionist ? staffMenuItems[ROLES.RECEPTIONIST] : memberMenuItems}
       role={receptionist ? "Receptionist" : "Hội viên"}
@@ -227,7 +230,10 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       title="Lớp học"
     >
       <div className="member-classes-page">
-      {memberId && <ReceptionistMemberContext memberId={memberId} />}
+      {memberId && <>
+        <Link className="receptionist-back-link receptionist-flow-back" to={`/receptionist/members/${memberId}`}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại hồ sơ hội viên</Link>
+        <ReceptionistMemberContext memberId={memberId} />
+      </>}
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">KHÁM PHÁ BỘ MÔN</span>
@@ -572,6 +578,6 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
         <div className="member-booking-actions"><button className="member-cancel-button" type="button" onClick={() => setDetailRegistration(null)}>Đóng</button></div>
       </Modal>}
       </div>
-    </DashboardLayout>
+    </PageLayout>
   )
 }
