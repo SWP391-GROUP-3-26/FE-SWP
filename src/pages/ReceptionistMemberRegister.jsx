@@ -91,9 +91,7 @@ export default function ReceptionistMemberRegister() {
     <ReceptionistLayout className="receptionist-register-page">
       <header className="receptionist-page-intro">
         <Link className="receptionist-back-link" to="/receptionist"><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại tiếp đón</Link>
-        <span className="receptionist-eyebrow">THỦ TỤC TIẾP NHẬN</span>
         <h1>Đăng ký hội viên</h1>
-        <p>Tạo tài khoản hội viên. Sau khi hoàn tất, bạn có thể mở hồ sơ để đăng ký gói hoặc lớp theo yêu cầu.</p>
       </header>
       <section className="dashboard-panel member-register-panel">
         {member ? (
@@ -119,7 +117,7 @@ export default function ReceptionistMemberRegister() {
           </div>
         ) : (
           <form className="auth-form member-register-form" noValidate onSubmit={handleSubmit} aria-busy={isLoading}>
-            <p className="member-register-note">Các trường có dấu <span aria-hidden="true">*</span> là bắt buộc. Tài khoản được tạo với vai trò thành viên và trạng thái hoạt động.</p>
+            <p className="member-register-note">Các trường có dấu <span aria-hidden="true">*</span> là bắt buộc.</p>
             <fieldset disabled={isLoading} className="member-register-fields">
               <legend className="visually-hidden">Thông tin đăng ký thành viên mới</legend>
               <div className="member-register-columns">

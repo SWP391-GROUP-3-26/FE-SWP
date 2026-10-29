@@ -27,9 +27,7 @@ export default function ReceptionistDashboard() {
   return (
     <ReceptionistLayout className="receptionist-dashboard-page">
       <section className="receptionist-hero" aria-labelledby="member-search-title">
-        <span className="receptionist-eyebrow">UNI SPORTS · DỊCH VỤ HỘI VIÊN</span>
         <h1 id="member-search-title">Chào mừng, tiếp đón hội viên</h1>
-        <p>Tìm nhanh hồ sơ hoặc bắt đầu đăng ký thành viên mới tại quầy.</p>
         <form className="receptionist-quick-search" onSubmit={(event) => event.preventDefault()}>
           <span className="material-symbols-outlined" aria-hidden="true">search</span>
           <input aria-label="Tìm hội viên" type="search" value={keyword}

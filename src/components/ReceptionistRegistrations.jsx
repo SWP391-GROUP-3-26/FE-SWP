@@ -35,7 +35,6 @@ export default function ReceptionistRegistrations({ member, onChanged }) {
     <div className="receptionist-registrations-heading">
       <div>
         <h3 id="member-active-classes-title">Lớp đang hoạt động</h3>
-        <p className="member-muted">Các lớp hội viên đang tham gia, không bao gồm lớp đã hủy hoặc hoàn thành.</p>
       </div>
       {data && !loading && !error && <span className="receptionist-class-count">{data.classes.length} lớp</span>}
     </div>

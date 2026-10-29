@@ -20,7 +20,6 @@ export default function ReceptionistLayout({ children, className = '' }) {
           <span className="material-symbols-outlined" aria-hidden="true">spa</span>
           <span><strong>UniSports</strong><small>Tiếp tân</small></span>
         </Link>
-        <span className="receptionist-system-badge"><i />Hệ thống tiếp tân &amp; quản lý hội viên</span>
         <div className="receptionist-user">
           <span><strong>{displayName}</strong><small>Tiếp tân</small></span>
           <span className="receptionist-user-avatar material-symbols-outlined" aria-hidden="true">person</span>
