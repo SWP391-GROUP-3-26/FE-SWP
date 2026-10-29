@@ -1,8 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import DashboardLayout from '../components/DashboardLayout'
-import { staffMenuItems } from '../components/staffMenuItems'
-import { ROLES } from '../auth/roleConfig'
+import ReceptionistLayout from '../components/ReceptionistLayout'
 import useMemberRequest from '../hooks/useMemberRequest'
 import useMemberPayment from '../hooks/useMemberPayment'
 import MemberQrPayment from '../components/MemberQrPayment'
@@ -82,8 +80,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
     finally { inFlight.current = false; setBusy(false) }
   }
 
-  return <DashboardLayout eyebrow="Lễ tân / Đăng ký dịch vụ / Thanh toán" title="Thanh toán dịch vụ"
-    role="Receptionist" menuItems={staffMenuItems[ROLES.RECEPTIONIST]} showIntro={false}>
+  return <ReceptionistLayout className="receptionist-checkout-page">
     <div className="receptionist-checkout">
       <Link className="back-link" to={backPath}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>Quay lại chọn {isClass ? 'lớp' : 'gói'}</Link>
       <header className="checkout-heading">
@@ -168,5 +165,5 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
         </section>
       </div>}
     </div>
-  </DashboardLayout>
+  </ReceptionistLayout>
 }

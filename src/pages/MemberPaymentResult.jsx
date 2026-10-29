@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
 import DashboardLayout from '../components/DashboardLayout'
+import ReceptionistLayout from '../components/ReceptionistLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberQrPayment from '../components/MemberQrPayment'
 import useMemberPayment from '../hooks/useMemberPayment'
@@ -16,6 +17,7 @@ import { cancelReceptionistPayment } from '../services/receptionistRegistrationS
 const priceFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
 
 export default function MemberPaymentResult({ receptionist = false, memberId = null } = {}) {
+  const PageLayout = receptionist ? ReceptionistLayout : DashboardLayout
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -44,7 +46,7 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
   }
 
   return (
-    <DashboardLayout eyebrow={receptionist ? 'Lễ tân / Thanh toán cho hội viên' : 'Hội viên / Thanh toán'} title="Kết quả thanh toán"
+    <PageLayout className={receptionist ? 'receptionist-payment-result-page' : undefined} eyebrow={receptionist ? 'Lễ tân / Thanh toán cho hội viên' : 'Hội viên / Thanh toán'} title="Kết quả thanh toán"
       menuItems={receptionist ? staffMenuItems[ROLES.RECEPTIONIST] : memberMenuItems} role={receptionist ? "Receptionist" : "Hội viên"} showIntro={false}>
       {memberId && <ReceptionistMemberContext memberId={memberId} />}
       <section className="member-page-heading">
@@ -103,6 +105,6 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
           <button className="member-register-button" disabled={cancelling} type="button" onClick={cancelPayment}>{cancelling ? 'Đang hủy…' : 'Xác nhận hủy yêu cầu'}</button>
         </div>
       </Modal>}
-    </DashboardLayout>
+    </PageLayout>
   )
 }

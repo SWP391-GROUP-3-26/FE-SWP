@@ -7,7 +7,7 @@ import MemberRequestError from './MemberRequestError'
 export default function ReceptionistMemberContext({ memberId }) {
   const request = useCallback((signal) => getMemberById(memberId, signal), [memberId])
   const { data, loading, error, retry } = useMemberRequest(request)
-  return <aside className="member-policy-note">
+  return <aside className="member-policy-note receptionist-selected-member">
     <div>
       {loading && <p role="status">Đang tải hội viên…</p>}
       {error && <MemberRequestError error={error} retry={retry} isDetail />}

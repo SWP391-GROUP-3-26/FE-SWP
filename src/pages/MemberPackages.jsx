@@ -11,6 +11,7 @@ import centerWorkoutImage from '../assets/center-manager-dashboard.jpg'
 import premierPackageImage from '../assets/member-package-premier.jpg'
 import standardPackageImage from '../assets/member-package-standard.jpg'
 import DashboardLayout from '../components/DashboardLayout'
+import ReceptionistLayout from '../components/ReceptionistLayout'
 import Modal from '../components/Modal'
 import PackageRenewalModal from '../components/PackageRenewalModal'
 import PackageSportChoices from '../components/PackageSportChoices'
@@ -124,6 +125,7 @@ function EmptyState({ icon, title, children }) {
 }
 
 export default function MemberPackages({ receptionist = false, memberId = null } = {}) {
+  const PageLayout = receptionist ? ReceptionistLayout : DashboardLayout
   const navigate = useNavigate()
   const [authIdentity, setAuthIdentity] = useState(() => getAuth().userId || 'anonymous')
   const [page, setPage] = useState(0)
@@ -299,14 +301,18 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   }
 
   return (
-    <DashboardLayout
+    <PageLayout
+      className={receptionist ? 'receptionist-packages-page' : undefined}
       eyebrow={receptionist ? 'Lễ tân / Đăng ký gói cho hội viên' : 'Hội viên / Gói tập'}
       menuItems={receptionist ? staffMenuItems[ROLES.RECEPTIONIST] : memberMenuItems}
       role={receptionist ? "Receptionist" : "Hội viên"}
       showIntro={false}
       title={receptionist ? 'Gói tập của hội viên' : 'Gói tập của tôi'}
     >
-      {memberId && <ReceptionistMemberContext memberId={memberId} />}
+      {memberId && <>
+        <Link className="receptionist-back-link receptionist-flow-back" to={`/receptionist/members/${memberId}`}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại hồ sơ hội viên</Link>
+        <ReceptionistMemberContext memberId={memberId} />
+      </>}
       <section className="member-page-heading">
         <div>
           <span className="section-heading-kicker">QUYỀN LỢI HỘI VIÊN</span>
@@ -635,6 +641,6 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           </form>
         </Modal>
       )}
-    </DashboardLayout>
+    </PageLayout>
   )
 }
