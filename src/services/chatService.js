@@ -82,6 +82,7 @@ export function connectChatSocket({ onMessage, onStatus }) {
   let stopped = false
   let socket
   let reconnectTimer
+  let heartbeatTimer
   let attempt = 0
   let connected = false
   let receiveBuffer = ''
@@ -114,6 +115,7 @@ export function connectChatSocket({ onMessage, onStatus }) {
         return
       }
       for (const frame of frames) {
+        if (/^\r?\n+$/.test(frame)) continue
         receiveBuffer += frame
         let end = receiveBuffer.indexOf('\u0000')
         while (end >= 0) {
@@ -123,6 +125,12 @@ export function connectChatSocket({ onMessage, onStatus }) {
             connected = true
             onStatus?.('connected')
             socket.send(encodeSockJsFrame('SUBSCRIBE\nid:chat-messages\ndestination:/user/queue/messages\nack:auto\n\n\u0000'))
+            window.clearInterval(heartbeatTimer)
+            heartbeatTimer = window.setInterval(() => {
+              if (connected && socket?.readyState === WebSocket.OPEN) {
+                socket.send(encodeSockJsFrame('\n'))
+              }
+            }, 10000)
           } else if (parsed?.command === 'MESSAGE') {
             try { onMessage?.(JSON.parse(parsed.body)) } catch { /* Ignore malformed server payloads. */ }
           } else if (parsed?.command === 'ERROR') {
@@ -137,8 +145,9 @@ export function connectChatSocket({ onMessage, onStatus }) {
     }
     socket.onclose = () => {
       connected = false
+      window.clearInterval(heartbeatTimer)
       if (stopped) return
-      onStatus?.('connecting')
+      onStatus?.('error', 'Kết nối chat bị đóng. Hệ thống đang thử kết nối lại; hãy kiểm tra địa chỉ BE và quyền truy cập WebSocket nếu tình trạng tiếp diễn.')
       const delay = Math.min(1000 * (2 ** attempt), 15000)
       attempt += 1
       reconnectTimer = window.setTimeout(connect, delay)
@@ -159,6 +168,7 @@ export function connectChatSocket({ onMessage, onStatus }) {
     disconnect() {
       stopped = true
       window.clearTimeout(reconnectTimer)
+      window.clearInterval(heartbeatTimer)
       if (socket?.readyState === WebSocket.OPEN && connected) {
         socket.send(encodeSockJsFrame('DISCONNECT\n\n\u0000'))
       }
@@ -169,7 +179,7 @@ export function connectChatSocket({ onMessage, onStatus }) {
 
 export function chatErrorMessage(error) {
   if (error.response?.status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
-  if (error.response?.status === 403) return 'Bạn chỉ có thể chat với huấn luyện viên đang phụ trách lớp của mình.'
+  if (error.response?.status === 403) return 'Bạn chỉ có thể nhắn tin với hội viên hoặc huấn luyện viên đang có lớp học hợp lệ cùng mình.'
   if (error.response?.status === 404) return 'Không tìm thấy cuộc trò chuyện hoặc API chat.'
   if (error.response?.status >= 500) return 'Máy chủ đang gặp lỗi. Vui lòng thử lại sau.'
   if (error.request) return 'Không thể kết nối máy chủ. Hãy kiểm tra Backend đang chạy.'

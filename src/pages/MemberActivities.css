@@ -482,9 +482,20 @@
 }
 
 .member-class-card-footer {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 7px 10px;
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid #edf2ee;
+}
+
+.member-class-package-note {
+  flex: 1 0 100%;
+  color: #64816d;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .member-class-card-footer strong {
@@ -1109,6 +1120,13 @@
 .member-cancel-confirm-button:hover:not(:disabled) { background: #a92322; }
 .member-cancel-confirm-button:disabled { opacity: .65; cursor: wait; }
 .member-registration-summary { padding: 12px 16px; margin-bottom: 16px; border-radius: 12px; background: var(--surface-muted); }
+.member-package-covered-notice { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 13px 14px; border: 1px solid #cbe4d1; border-radius: 11px; color: #2d6441; background: #edf7ef; }
+.member-package-covered-notice > .material-symbols-outlined { flex: 0 0 auto; font-size: 22px; }
+.member-package-covered-notice > div { min-width: 0; flex: 1; }
+.member-package-covered-notice strong { color: #285f3b; font-size: 13px; }
+.member-package-covered-notice p { margin: 3px 0 0; color: #50775b; font-size: 11px; }
+.member-package-covered-notice > b { flex: 0 0 auto; color: #23633d; font-size: 13px; }
+.member-package-unavailable-note { padding: 8px 10px; border-radius: 8px; color: #6e5b34 !important; background: #fff7e5; }
 .member-registration-session-list { padding-left: 20px; }
 .member-registration-session-list li { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 12px; }
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
+import coachMenuItems from '../components/coachMenuItems'
 import {
   chatErrorMessage,
   connectChatSocket,
@@ -51,7 +52,10 @@ function ContactAvatar({ contact, small = false }) {
   )
 }
 
-export default function MemberChat({ embedded = false, onClose }) {
+export default function MemberChat({ embedded = false, onClose, audience = 'member' }) {
+  const isCoach = audience === 'coach'
+  const contactRole = isCoach ? 'học viên' : 'huấn luyện viên'
+  const contactRoleTitle = isCoach ? 'Học viên' : 'Huấn luyện viên'
   const [contacts, setContacts] = useState([])
   const [activeContactId, setActiveContactId] = useState(null)
   const [messages, setMessages] = useState([])
@@ -238,18 +242,18 @@ export default function MemberChat({ embedded = false, onClose }) {
   const chatContent = (
     <>
       {error && <div className="chat-alert" role="alert"><span className="material-symbols-outlined">error</span>{error}</div>}
-      <section className="member-chat-panel" aria-label="Hộp thư với huấn luyện viên">
+      <section className="member-chat-panel" aria-label={`Hộp thư với ${contactRole}`}>
         <aside className="member-chat-contacts">
           <div className="member-chat-list-heading">
             <div>
               <span className="section-heading-kicker">KẾT NỐI CỦA BẠN</span>
-              <h2>Huấn luyện viên</h2>
+              <h2>{contactRoleTitle}</h2>
             </div>
             <span className="chat-contact-count">{contacts.length}</span>
           </div>
           <label className="chat-search-box">
             <span className="material-symbols-outlined" aria-hidden="true">search</span>
-            <input onChange={handleSearch} placeholder="Tìm huấn luyện viên" type="search" />
+            <input onChange={handleSearch} placeholder={`Tìm ${contactRole}`} type="search" />
           </label>
           <div className="member-chat-contact-list">
             {loadingContacts ? (
@@ -257,8 +261,10 @@ export default function MemberChat({ embedded = false, onClose }) {
             ) : contacts.length === 0 ? (
               <div className="chat-empty-state">
                 <span className="material-symbols-outlined">forum</span>
-                <strong>Chưa có huấn luyện viên</strong>
-                <span>Danh sách sẽ hiển thị khi bạn có lớp đã đăng ký với huấn luyện viên.</span>
+                <strong>{isCoach ? 'Chưa có học viên' : 'Chưa có huấn luyện viên'}</strong>
+                <span>{isCoach
+                  ? 'Danh sách sẽ hiển thị khi có học viên đăng ký lớp do bạn phụ trách.'
+                  : 'Danh sách sẽ hiển thị khi bạn có lớp đã đăng ký với huấn luyện viên.'}</span>
               </div>
             ) : contacts.map((contact) => (
               <button
@@ -270,8 +276,8 @@ export default function MemberChat({ embedded = false, onClose }) {
               >
                 <ContactAvatar contact={contact} />
                 <span className="chat-contact-copy">
-                  <span className="chat-contact-name">{contact.fullName || 'Huấn luyện viên'}</span>
-                  <span className="chat-contact-class">{contact.className || contact.subjectName || 'Lớp đang theo học'}</span>
+                  <span className="chat-contact-name">{contact.fullName || contactRoleTitle}</span>
+                  <span className="chat-contact-class">{contact.className || contact.subjectName || (isCoach ? 'Lớp phụ trách' : 'Lớp đang theo học')}</span>
                   <span className="chat-contact-preview">{contact.lastMessage || 'Bắt đầu trò chuyện'}</span>
                 </span>
                 <span className="chat-contact-meta">
@@ -293,8 +299,8 @@ export default function MemberChat({ embedded = false, onClose }) {
               <header className="chat-conversation-header">
                 <ContactAvatar contact={activeContact} />
                 <div>
-                  <h2>{activeContact.fullName || 'Huấn luyện viên'}</h2>
-                  <p>{activeContact.subjectName || 'Huấn luyện viên'}{activeContact.className ? ` · ${activeContact.className}` : ''}</p>
+                  <h2>{activeContact.fullName || contactRoleTitle}</h2>
+                  <p>{activeContact.subjectName || contactRoleTitle}{activeContact.className ? ` · ${activeContact.className}` : ''}</p>
                 </div>
                 <span className="material-symbols-outlined chat-header-icon" title="Trao đổi riêng tư">lock</span>
               </header>
@@ -309,7 +315,7 @@ export default function MemberChat({ embedded = false, onClose }) {
                   <div className="chat-first-message">
                     <span className="material-symbols-outlined">waving_hand</span>
                     <strong>Bắt đầu cuộc trò chuyện</strong>
-                    <span>Gửi lời nhắn cho huấn luyện viên của bạn nhé.</span>
+                    <span>{isCoach ? 'Gửi lời nhắn cho học viên của bạn nhé.' : 'Gửi lời nhắn cho huấn luyện viên của bạn nhé.'}</span>
                   </div>
                 )}
                 {visibleMessages.map((message, index) => {
@@ -325,7 +331,7 @@ export default function MemberChat({ embedded = false, onClose }) {
                           {message.content && <p>{message.content}</p>}
                           {message.mediaUrl && (
                             <a className="chat-image-link" href={resolveChatMediaUrl(message.mediaUrl)} target="_blank" rel="noreferrer">
-                              <img alt="Ảnh trao đổi với huấn luyện viên" loading="lazy" src={resolveChatMediaUrl(message.mediaUrl)} />
+                              <img alt={`Ảnh trao đổi với ${contactRole}`} loading="lazy" src={resolveChatMediaUrl(message.mediaUrl)} />
                             </a>
                           )}
                           <time>{timeFormatter.format(new Date(message.createdAt))}</time>
@@ -357,7 +363,7 @@ export default function MemberChat({ embedded = false, onClose }) {
                   aria-label="Nhập tin nhắn"
                   maxLength={4000}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Nhập tin nhắn cho huấn luyện viên..."
+                  placeholder={`Nhập tin nhắn cho ${contactRole}...`}
                   value={draft}
                 />
                 <button className="chat-send-button" disabled={!draft.trim() || sending || socketState !== 'connected'} type="submit">
@@ -370,8 +376,12 @@ export default function MemberChat({ embedded = false, onClose }) {
           ) : (
             <div className="chat-no-selection">
               <span className="material-symbols-outlined">forum</span>
-              <h2>Trò chuyện cùng huấn luyện viên</h2>
-              <p>{loadingContacts ? 'Đang tải danh sách huấn luyện viên...' : 'Khi bạn có đăng ký lớp phù hợp, huấn luyện viên phụ trách sẽ xuất hiện tại đây.'}</p>
+              <h2>{isCoach ? 'Trò chuyện cùng học viên' : 'Trò chuyện cùng huấn luyện viên'}</h2>
+              <p>{loadingContacts
+                ? `Đang tải danh sách ${contactRole}...`
+                : isCoach
+                  ? 'Học viên đang theo học các lớp bạn phụ trách sẽ xuất hiện tại đây.'
+                  : 'Khi bạn có đăng ký lớp phù hợp, huấn luyện viên phụ trách sẽ xuất hiện tại đây.'}</p>
             </div>
           )}
         </div>
@@ -381,9 +391,9 @@ export default function MemberChat({ embedded = false, onClose }) {
 
   if (embedded) {
     return (
-      <section aria-label="Chat với huấn luyện viên" className="member-chat-widget">
+      <section aria-label={`Chat với ${contactRole}`} className="member-chat-widget">
         <header className="member-chat-widget-title">
-          <span><span className="material-symbols-outlined">forum</span> Trao đổi với huấn luyện viên</span>
+          <span><span className="material-symbols-outlined">forum</span> Trao đổi với {contactRole}</span>
           <button aria-label="Đóng hộp chat" onClick={onClose} type="button">
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -395,12 +405,12 @@ export default function MemberChat({ embedded = false, onClose }) {
 
   return (
     <DashboardLayout
-      eyebrow="Hội viên / Trao đổi với huấn luyện viên"
-      menuItems={memberMenuItems}
-      role="Hội viên"
+      eyebrow={isCoach ? 'Huấn luyện viên / Trao đổi với học viên' : 'Hội viên / Trao đổi với huấn luyện viên'}
+      menuItems={isCoach ? coachMenuItems : memberMenuItems}
+      role={isCoach ? 'Huấn luyện viên' : 'Hội viên'}
       showChatLauncher={false}
-      title="Trao đổi với huấn luyện viên"
-      subtitle="Hỏi đáp về lịch tập, kỹ thuật và quá trình luyện tập của bạn."
+      title={isCoach ? 'Trao đổi với học viên' : 'Trao đổi với huấn luyện viên'}
+      subtitle={isCoach ? 'Nhắn tin, gửi ảnh và trao đổi với học viên trong lớp bạn phụ trách.' : 'Hỏi đáp về lịch tập, kỹ thuật và quá trình luyện tập của bạn.'}
     >
       {chatContent}
     </DashboardLayout>

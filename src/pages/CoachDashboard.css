@@ -1,0 +1,99 @@
+.coach-dashboard { display: grid; gap: 18px; width: min(100%, 1450px); margin: 0 auto; }
+
+.coach-home-welcome {
+  position: relative;
+  display: flex;
+  min-height: 142px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  overflow: hidden;
+  padding: 27px 32px;
+  border: 1px solid #dcebe0;
+  border-radius: 16px;
+  background: linear-gradient(112deg, #e9f4ed 0%, #f9fbf8 56%, #fff 100%);
+}
+
+.coach-home-welcome-copy { position: relative; z-index: 1; }
+.coach-home-welcome h2 { margin: 8px 0 5px; color: #20362a; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.035em; }
+.coach-home-welcome p { margin: 0; color: #718278; font-size: 13px; }
+.coach-home-welcome p > span { padding: 0 4px; color: #d16c3e; }
+.coach-home-action { position: relative; z-index: 1; display: inline-flex; min-height: 42px; align-items: center; gap: 9px; padding: 0 15px; border: 1px solid #d5e5d9; border-radius: 9px; color: #286342; background: rgba(255,255,255,.82); font-size: 12px; font-weight: 750; text-decoration: none; white-space: nowrap; transition: background .16s ease, transform .16s ease; }
+.coach-home-action:hover { transform: translateY(-1px); color: #1f5235; background: #fff; }
+.coach-home-action .material-symbols-outlined { font-size: 17px; }
+.coach-home-decoration { position: absolute; right: 24%; bottom: -30px; color: rgba(47, 125, 89, .07); font-size: 150px; pointer-events: none; }
+
+.coach-home-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.coach-home-stat { position: relative; display: flex; min-width: 0; min-height: 104px; align-items: center; gap: 14px; overflow: hidden; padding: 17px; border: 1px solid #e4ece5; border-radius: 13px; background: #fff; box-shadow: 0 5px 18px rgba(28, 55, 38, .035); }
+.coach-home-stat > .material-symbols-outlined { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: #edf6ef; color: #377953; font-size: 22px; }
+.coach-home-stat > div { display: grid; min-width: 0; gap: 5px; }
+.coach-home-stat small { overflow: hidden; color: #78867d; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.coach-home-stat strong { color: #263c2e; font-size: 25px; line-height: 1; }
+.coach-home-stat-mark { position: absolute; right: -17px; bottom: -24px; width: 62px; height: 62px; border: 10px solid rgba(47, 125, 89, .06); border-radius: 50%; }
+.coach-home-stat-orange > .material-symbols-outlined { color: #b56836; background: #fbf1e9; }
+.coach-home-stat-blue > .material-symbols-outlined { color: #557b9d; background: #eef4f8; }
+.coach-home-stat-violet > .material-symbols-outlined { color: #75669b; background: #f2eff8; }
+
+.coach-home-schedule { overflow: hidden; padding: 0; }
+.coach-home-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 23px 17px; border-bottom: 1px solid #edf1ed; }
+.coach-home-section-heading h3 { margin: 4px 0 0; color: #26392e; font-size: 18px; }
+.coach-home-class-count { padding: 7px 10px; border-radius: 20px; color: #4d765b; background: #eef6ef; font-size: 10px; font-weight: 750; white-space: nowrap; }
+.coach-home-class-list { display: grid; }
+.coach-home-class-row { display: grid; grid-template-columns: 42px minmax(180px, 1.15fr) minmax(240px, 1.15fr) 80px 38px; align-items: center; gap: 15px; min-height: 88px; padding: 15px 22px; border-bottom: 1px solid #edf1ed; transition: background .15s ease; }
+.coach-home-class-row:last-child { border-bottom: 0; }
+.coach-home-class-row:hover { background: #fbfdfb; }
+.coach-home-class-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; color: #367850; background: #edf6ef; font-size: 21px; }
+.coach-home-class-main { min-width: 0; }
+.coach-home-class-title { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.coach-home-class-title h4 { overflow: hidden; margin: 0; color: #2a3d31; font-size: 13px; font-weight: 760; text-overflow: ellipsis; white-space: nowrap; }
+.coach-home-class-main p { margin: 6px 0 0; color: #849188; font-size: 10px; }
+.coach-home-class-main p span { padding: 0 3px; color: #d16c3e; }
+.coach-home-status { padding: 4px 7px; border-radius: 20px; color: #32704b; background: #eaf5ed; font-size: 9px; font-weight: 750; white-space: nowrap; }
+.coach-home-status.status-open { color: #9a6428; background: #fff4e4; }
+.coach-home-class-meta { display: grid; gap: 7px; }
+.coach-home-class-meta > span { display: flex; min-width: 0; align-items: center; gap: 6px; overflow: hidden; color: #66766c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.coach-home-class-meta .material-symbols-outlined { color: #8b9a90; font-size: 15px; }
+.coach-home-student-count { display: grid; justify-items: center; gap: 3px; }
+.coach-home-student-count strong { color: #324c3b; font-size: 17px; }
+.coach-home-student-count small { color: #87948b; font-size: 9px; }
+.coach-home-detail-link { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid #e2ebe4; border-radius: 9px; color: #417655; background: #fff; text-decoration: none; }
+.coach-home-detail-link:hover { border-color: #b7d4bf; background: #f2f8f3; }
+.coach-home-detail-link .material-symbols-outlined { font-size: 18px; }
+
+.coach-home-feedback { display: flex; min-height: 115px; align-items: center; justify-content: center; gap: 10px; color: #748278; font-size: 12px; }
+.coach-home-feedback.is-error { justify-content: space-between; margin: 16px; padding: 14px; border: 1px solid #efd5d0; border-radius: 10px; color: #91493f; background: #fff8f6; }
+.coach-home-feedback button { padding: 8px 12px; border: 1px solid #e7c7c0; border-radius: 8px; color: #874239; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.coach-home-spinner { width: 16px; height: 16px; border: 2px solid #dce9df; border-top-color: #38805a; border-radius: 50%; animation: coach-home-spin .8s linear infinite; }
+@keyframes coach-home-spin { to { transform: rotate(360deg); } }
+.coach-home-empty { display: flex; min-height: 150px; align-items: center; gap: 15px; padding: 22px 26px; }
+.coach-home-empty > .material-symbols-outlined { display: grid; flex: 0 0 44px; width: 44px; height: 44px; place-items: center; border-radius: 13px; color: #43805b; background: #edf6ef; font-size: 22px; }
+.coach-home-empty > div { flex: 1; }
+.coach-home-empty strong { color: #3a4d41; font-size: 12px; }
+.coach-home-empty p { margin: 5px 0 0; color: #839087; font-size: 11px; }
+.coach-home-empty > a { padding: 9px 12px; border-radius: 8px; color: #fff; background: #2f7d59; font-size: 10px; font-weight: 750; text-decoration: none; white-space: nowrap; }
+
+@media (max-width: 1100px) {
+  .coach-home-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .coach-home-class-row { grid-template-columns: 40px minmax(160px, 1fr) minmax(180px, 1fr) 66px 34px; gap: 11px; padding-right: 16px; padding-left: 16px; }
+}
+
+@media (max-width: 760px) {
+  .coach-dashboard { gap: 13px; }
+  .coach-home-welcome { min-height: unset; align-items: flex-start; flex-direction: column; padding: 21px; }
+  .coach-home-action { align-self: flex-start; }
+  .coach-home-decoration { right: 0; font-size: 110px; }
+  .coach-home-stat { min-height: 87px; gap: 10px; padding: 12px; }
+  .coach-home-stat > .material-symbols-outlined { flex-basis: 36px; width: 36px; height: 36px; font-size: 19px; }
+  .coach-home-stat small { font-size: 9px; }
+  .coach-home-stat strong { font-size: 21px; }
+  .coach-home-class-row { grid-template-columns: 38px minmax(0, 1fr) 35px; gap: 10px; padding: 14px; }
+  .coach-home-class-meta { grid-column: 2; }
+  .coach-home-student-count { grid-column: 1; grid-row: 2; }
+  .coach-home-detail-link { grid-column: 3; grid-row: 1 / span 2; }
+  .coach-home-section-heading { padding: 17px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-home-action, .coach-home-class-row { transition: none; }
+  .coach-home-spinner { animation-duration: 2s; }
+}
