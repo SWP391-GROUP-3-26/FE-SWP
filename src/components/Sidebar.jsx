@@ -13,7 +13,6 @@ export default function Sidebar({ role, menuItems }) {
   const roleLabels = {
     'Center Manager': 'Quản lý trung tâm',
     Coach: 'Huấn luyện viên',
-    Receptionist: 'Tiếp tân',
   }
   const roleLabel = roleLabels[role] || role
 

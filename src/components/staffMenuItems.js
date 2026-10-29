@@ -17,8 +17,7 @@ export const staffMenuItems = {
   ],
   [ROLES.RECEPTIONIST]: [
     { icon: 'person_add', label: 'Đăng ký người dùng', route: '/receptionist/register-member' },
-    { icon: 'home', label: 'Tổng quan tiếp tân', route: '/receptionist' },
-    { icon: 'groups', label: 'Hội viên', route: '/receptionist/members' },
-    { icon: 'payments', label: 'Thanh toán', route: '/receptionist' },
+    { icon: 'home', label: 'Tong quan tiep tan', route: '/receptionist' },
+    { icon: 'payments', label: 'Thanh toan', route: '/receptionist' },
   ],
 }
