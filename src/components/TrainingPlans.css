@@ -1,0 +1,58 @@
+.training-page, .training-overview, .training-panel { color: #203c37; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; overflow-wrap: anywhere; }
+.training-overview { margin: 24px 0; padding: 26px; background: #f5f8f4; border: 1px solid #dde7df; border-radius: 22px; }
+.training-section-header, .training-row, .training-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.training-section-header { margin-bottom: 22px; }
+.training-section-header h2 { font-size: 1.5rem; margin: 5px 0 10px; }
+.training-section-header p, .training-card p { color: #60756c; }
+.training-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.training-card, .training-panel, .training-exercise { padding: 24px; border: 1px solid #dce5df; border-radius: 18px; background: #fff; min-width: 0; }
+.training-card h3 { margin: 18px 0 12px; font-size: 1.15rem; overflow-wrap: anywhere; }
+.training-card p { margin: 8px 0; overflow-wrap: anywhere; }
+.training-goal { white-space: pre-wrap; }
+.training-status, .training-new { display: inline-block; font-size: .78rem; font-weight: 700; padding: 5px 10px; border-radius: 20px; }
+.training-status-draft { color: #5d6470; background: #edf0f4; }
+.training-status-assigned { color: #246450; background: #e4f3e9; }
+.training-status-completed { color: #305f9b; background: #e9f0fc; }
+.training-status-cancelled { color: #914d44; background: #fbeeea; }
+.training-new { color: #8a4c00; background: #fff0c7; }
+.training-scope { display: inline-block; margin: 0 8px; padding: 5px 10px; border-radius: 20px; color: #365f82; background: #edf3fa; font-size: .78rem; font-weight: 700; }
+.training-recipient-list { display: grid; gap: 14px; }
+.training-recipient { padding: 18px; border: 1px solid #dce5df; border-radius: 12px; }
+.training-recipient summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; cursor: pointer; list-style: disclosure-closed; }
+.training-recipient summary::before { content: '+'; color: #36745c; font-weight: 800; }
+.training-recipient[open] summary::before { content: '−'; }
+.training-recipient[open] summary { margin-bottom: 20px; }
+.training-recipient summary span { font-size: .85rem; color: #60756c; }
+.training-recipient .training-review { margin-top: 20px; }
+.training-class-plans { display: grid; gap: 14px; margin-bottom: 20px; }
+.training-progress { display: grid; gap: 8px; font-size: .85rem; margin: 20px 0; }
+.training-progress progress { width: 100%; height: 8px; accent-color: #36745c; }
+.training-link { color: #28654e; font-weight: 700; text-decoration: none; }
+.training-link:hover { text-decoration: underline; }
+.training-page label { display: grid; gap: 7px; font-size: .9rem; font-weight: 600; }
+.training-page input:not([type=checkbox]), .training-page select, .training-page textarea { width: 100%; min-width: 0; padding: 11px 13px; border: 1px solid #ccd9d0; border-radius: 10px; background: #fff; color: #203c37; font: inherit; }
+.training-page textarea { min-height: 88px; resize: vertical; }
+.training-page input:focus, .training-page select:focus, .training-page textarea:focus { outline: 2px solid #4c8b6d; outline-offset: 2px; }
+.training-page button, .training-overview button, .training-button { padding: 10px 17px; border-radius: 10px; border: 1px solid #cbdad0; background: #fff; color: #285540; font: inherit; cursor: pointer; text-decoration: none; }
+.training-page button.training-primary, .training-button.training-primary { background: #2f654d; color: #fff; border-color: #2f654d; }
+.training-page button:disabled { opacity: .55; cursor: not-allowed; }
+.training-error { padding: 15px; background: #fff0ed; color: #8c392d; border-radius: 12px; margin: 15px 0; }
+.training-success { padding: 14px; background: #e9f5eb; color: #286143; border-radius: 12px; margin: 15px 0; }
+.training-empty, .training-notice { padding: 20px; background: #f4f7f3; border-radius: 12px; color: #60756c; }
+.training-form, .training-exercises { display: grid; gap: 20px; }
+.training-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.training-form-grid .training-full { grid-column: 1 / -1; }
+.training-exercise { display: grid; gap: 15px; }
+.training-exercise h3 { font-size: 1.1rem; margin: 0; }
+.training-panel { margin-top: 20px; }
+.training-panel p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.training-checkbox { display: flex !important; flex-direction: row; align-items: center; gap: 9px; }
+.training-checkbox input { width: 18px; height: 18px; accent-color: #36745c; }
+.training-review { display: grid; gap: 15px; }
+.training-filters { display: flex; flex-wrap: wrap; gap: 14px; margin: 20px 0; }
+.training-filters label { flex: 1; min-width: min(100%, 180px); }
+@media (max-width: 650px) {
+  .training-form-grid { grid-template-columns: 1fr; }
+  .training-overview, .training-panel, .training-exercise, .training-card { padding: 18px; }
+  .training-section-header { align-items: stretch; }
+}

@@ -10,6 +10,9 @@ import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
 import CoachClasses from './pages/CoachClasses'
 import CoachClassDetail from './pages/CoachClassDetail'
+import CoachTrainingPlans from './pages/CoachTrainingPlans'
+import MemberTrainingPlans from './pages/MemberTrainingPlans'
+import TrainingPlanDetail from './pages/TrainingPlanDetail'
 import Landing from './pages/Landing'
 import GoogleCallback from './pages/GoogleCallback'
 import Login from './pages/Login'
@@ -38,6 +41,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/coach/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><CoachTrainingPlans /></ProtectedRoute>} />
+        <Route path="/coach/training-plans/:id" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><TrainingPlanDetail audience="coach" /></ProtectedRoute>} />
+        <Route path="/member/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberTrainingPlans /></ProtectedRoute>} />
+        <Route path="/member/training-plans/:id" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><TrainingPlanDetail /></ProtectedRoute>} />
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />

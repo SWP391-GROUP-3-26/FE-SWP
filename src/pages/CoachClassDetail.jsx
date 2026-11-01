@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
+import CoachClassTrainingPlans from '../components/CoachClassTrainingPlans'
+import CoachSessionEvaluations from '../components/CoachSessionEvaluations'
 import coachMenuItems from '../components/coachMenuItems'
 import {
   coachClassApiErrorMessage,
@@ -15,8 +17,6 @@ import './CoachClassDetail.css'
 const ATTENDANCE_OPTIONS = [
   { value: 'Present', label: 'Có mặt', icon: 'check_circle' },
   { value: 'Absent', label: 'Vắng mặt', icon: 'cancel' },
-  { value: 'Late', label: 'Đi trễ', icon: 'schedule' },
-  { value: 'Excused', label: 'Có phép', icon: 'event_busy' },
 ]
 const ATTENDANCE_LABELS = Object.fromEntries(ATTENDANCE_OPTIONS.map((option) => [option.value, option.label]))
 const STATUS_LABELS = { Active: 'Đang diễn ra', Open: 'Đang mở đăng ký', Completed: 'Đã hoàn thành', Cancelled: 'Đã hủy', Cancel: 'Đã hủy' }
@@ -48,7 +48,7 @@ function sessionCanBeMarked(session) {
 
 function makeDrafts(members = []) {
   return Object.fromEntries(members.map((member) => [member.memberId, {
-    status: member.status || '',
+    status: Object.hasOwn(ATTENDANCE_LABELS, member.status) ? member.status : '',
     note: member.note || '',
   }]))
 }
@@ -57,7 +57,7 @@ function attendanceCounts(members = []) {
   return members.reduce((counts, member) => {
     if (member.status && Object.hasOwn(counts, member.status)) counts[member.status] += 1
     return counts
-  }, { Present: 0, Absent: 0, Late: 0, Excused: 0 })
+  }, { Present: 0, Absent: 0 })
 }
 
 export default function CoachClassDetail() {
@@ -76,6 +76,8 @@ export default function CoachClassDetail() {
   const [saving, setSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [evaluationDirty, setEvaluationDirty] = useState(false)
+  const [attendanceRevision, setAttendanceRevision] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -153,7 +155,7 @@ export default function CoachClassDetail() {
   }
 
   async function saveAttendance() {
-    if (!selectedSessionId || !completeRoster || !canMark || saving) return
+    if (!selectedSessionId || !completeRoster || !canMark || saving || evaluationDirty) return
     setSaving(true)
     setAttendanceError('')
     setSaveMessage('')
@@ -166,6 +168,7 @@ export default function CoachClassDetail() {
       const saved = await saveCoachSessionAttendance(classId, selectedSessionId, records)
       setSessionData(saved)
       setDrafts(makeDrafts(saved.members))
+      setAttendanceRevision((value) => value + 1)
       setSaveMessage('Đã lưu điểm danh cho buổi học.')
     } catch (error) {
       setAttendanceError(coachClassApiErrorMessage(error))
@@ -216,13 +219,15 @@ export default function CoachClassDetail() {
             <article><span className="material-symbols-outlined" aria-hidden="true">payments</span><div><small>Học phí</small><strong>{CURRENCY.format(Number(classDetail.price || 0))}</strong></div></article>
           </section>
 
+          <CoachClassTrainingPlans key={classId} detail={classDetail} />
+
           <section className="coach-attendance-page-panel" aria-labelledby="coach-attendance-title">
             <header className="coach-attendance-page-header">
               <div><span className="section-heading-kicker">THEO DÕI BUỔI HỌC</span><h3 id="coach-attendance-title">Điểm danh học viên</h3>
                 <p>Chọn buổi học, cập nhật tình trạng từng học viên rồi lưu điểm danh.</p></div>
               <label className="coach-attendance-session-picker">Buổi học
                 <select value={selectedSessionId} onChange={(event) => {
-                  if (hasChanges && !window.confirm('Bạn có thay đổi điểm danh chưa lưu. Chuyển buổi học và bỏ các thay đổi này?')) return
+                  if ((hasChanges || evaluationDirty) && !window.confirm('Bạn có thay đổi điểm danh hoặc đánh giá chưa lưu. Chuyển buổi học và bỏ các thay đổi này?')) return
                   setSelectedSessionId(event.target.value)
                 }} disabled={sessionsLoading || sessions.length === 0}>
                   {sessions.length === 0 && <option value="">Chưa có buổi học</option>}
@@ -286,10 +291,13 @@ export default function CoachClassDetail() {
               )}
               {members.length > 0 && <footer className="coach-attendance-save-bar">
                 <span>{completeRoster ? 'Đã chọn trạng thái cho tất cả học viên.' : 'Hãy chọn trạng thái cho từng học viên trước khi lưu.'}</span>
-                <button type="button" disabled={!canMark || !completeRoster || !hasChanges || saving} onClick={() => void saveAttendance()}>
+                <button type="button" disabled={!canMark || !completeRoster || !hasChanges || saving || evaluationDirty} onClick={() => void saveAttendance()}>
                   <span className="material-symbols-outlined" aria-hidden="true">save</span>{saving ? 'Đang lưu...' : 'Lưu điểm danh'}
                 </button>
               </footer>}
+              {evaluationDirty && hasChanges && <p className="coach-attendance-page-notice">Lưu hoặc đóng bản đánh giá đang chỉnh sửa trước khi lưu điểm danh.</p>}
+              <CoachSessionEvaluations key={`${selectedSessionId}-${attendanceRevision}`} classId={classId} sessionId={selectedSessionId}
+                attendanceUnsaved={hasChanges} onDirtyChange={setEvaluationDirty} />
             </>}
           </section>
         </>}

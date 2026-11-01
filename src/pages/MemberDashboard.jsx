@@ -2,6 +2,7 @@ import DashboardLayout from '../components/DashboardLayout'
 import { Link } from 'react-router-dom'
 import { getAuth } from '../auth/authStorage'
 import memberMenuItems from '../components/memberMenuItems'
+import MemberTrainingPlanOverview from '../components/MemberTrainingPlanOverview'
 import './MemberDashboard.css'
 
 export default function MemberDashboard() {
@@ -24,6 +25,8 @@ export default function MemberDashboard() {
         </div>
         <span className="member-welcome-icon material-symbols-outlined" aria-hidden="true">spa</span>
       </section>
+
+      <MemberTrainingPlanOverview />
 
       <div className="dashboard-grid member-overview-grid">
         <article className="dashboard-card dashboard-card-accent">

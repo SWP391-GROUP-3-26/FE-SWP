@@ -408,7 +408,6 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
       eyebrow={isCoach ? 'Huấn luyện viên / Trao đổi với học viên' : 'Hội viên / Trao đổi với huấn luyện viên'}
       menuItems={isCoach ? coachMenuItems : memberMenuItems}
       role={isCoach ? 'Huấn luyện viên' : 'Hội viên'}
-      showChatLauncher={false}
       title={isCoach ? 'Trao đổi với học viên' : 'Trao đổi với huấn luyện viên'}
       subtitle={isCoach ? 'Nhắn tin, gửi ảnh và trao đổi với học viên trong lớp bạn phụ trách.' : 'Hỏi đáp về lịch tập, kỹ thuật và quá trình luyện tập của bạn.'}
     >

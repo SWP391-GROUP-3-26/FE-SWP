@@ -40,6 +40,14 @@ export async function getCoachClassDetail(classId, signal) {
   return result
 }
 
+export async function getCoachTeachingSchedule(signal) {
+  const result = await getCoachClasses({ status: 'all', signal })
+  const classes = await Promise.all(result.classes
+    .filter((item) => !['cancel', 'cancelled'].includes(item.status?.toLowerCase()))
+    .map(async (item) => ({ ...item, sessions: await getCoachClassSessions(item.classId, signal) })))
+  return { ...result, classes }
+}
+
 export async function getCoachClassSessions(classId, signal) {
   const response = await axiosClient.get(
     `/api/coach/classes/${encodeURIComponent(classId)}/sessions`,

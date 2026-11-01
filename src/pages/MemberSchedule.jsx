@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberSessionCard from '../components/MemberSessionCard'
+import WeeklyTimetable from '../components/WeeklyTimetable'
+import MemberSessionEvaluation from '../components/MemberSessionEvaluation'
+import { getMySessionEvaluations, sessionEvaluationError } from '../services/sessionEvaluationService'
 import { classApiErrorMessage, getMyClasses } from '../services/memberClassService'
-import { addCalendarDays, getMonday, isConfirmedBooking, MEMBER_TIME_SLOTS, memberWeekSchedule } from '../utils/classSchedule'
+import { addCalendarDays, getMonday, isConfirmedBooking, memberWeekSchedule } from '../utils/classSchedule'
 import './MemberActivities.css'
-
-const WEEKDAYS = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật']
 
 function formatDate(date) {
   return new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
@@ -18,7 +19,9 @@ export default function MemberSchedule() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
-  const today = new Date()
+  const [evaluationSessions, setEvaluationSessions] = useState([])
+  const [evaluationError, setEvaluationError] = useState('')
+  const [selectedEvaluation, setSelectedEvaluation] = useState(null)
   const weekEnd = addCalendarDays(weekStart, 6)
   const weekLabel = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
   const { sessions, otherSessions } = memberWeekSchedule(classes, weekStart)
@@ -27,8 +30,15 @@ export default function MemberSchedule() {
 
   useEffect(() => {
     const controller = new AbortController()
-    getMyClasses({ status: 'all', signal: controller.signal })
-      .then((items) => { if (!controller.signal.aborted) setClasses(items) })
+    Promise.allSettled([getMyClasses({ status: 'all', signal: controller.signal }), getMySessionEvaluations(controller.signal)])
+      .then(([bookings, evaluations]) => {
+        if (controller.signal.aborted) return
+        if (bookings.status === 'rejected') throw bookings.reason
+        setClasses(bookings.value); setLoadError('')
+        if (evaluations.status === 'fulfilled') {
+          setEvaluationSessions(evaluations.value.map((item) => item.sessionId)); setEvaluationError('')
+        } else { setEvaluationSessions([]); setEvaluationError(sessionEvaluationError(evaluations.reason)) }
+      })
       .catch((error) => {
         if (!controller.signal.aborted) setLoadError(classApiErrorMessage(error))
       })
@@ -41,6 +51,10 @@ export default function MemberSchedule() {
   function shiftWeek(amount) {
     setWeekStart((current) => addCalendarDays(current, amount * 7))
   }
+
+  const evaluated = new Set(evaluationSessions)
+  const renderSession = (entry) => <MemberSessionCard key={entry.key} entry={entry}
+    onViewEvaluation={evaluated.has(entry.item.sessionId) ? () => setSelectedEvaluation(entry.item.sessionId) : undefined} />
 
   return (
     <DashboardLayout
@@ -89,6 +103,10 @@ export default function MemberSchedule() {
             }}>Thử lại</button>
           </div>
         )}
+        {evaluationError && <div className="member-schedule-notice member-schedule-error" role="alert">
+          <span>Lịch tập vẫn hiển thị; chưa tải được đánh giá. {evaluationError}</span>
+          <button type="button" onClick={() => { setLoading(true); setReloadKey((key) => key + 1) }}>Thử lại</button>
+        </div>}
         {!loading && !loadError && !hasBookings && (
           <div className="member-schedule-notice" role="status">
             <span className="material-symbols-outlined" aria-hidden="true">event_busy</span>
@@ -107,48 +125,7 @@ export default function MemberSchedule() {
               <div className="member-schedule-loading" role="status">Đang tải thời khóa biểu...</div>
             )}
             {!loading && !loadError && (
-              <table className="member-calendar">
-                <thead>
-                  <tr>
-                    <th className="member-time-heading" scope="col">Slot</th>
-                    {WEEKDAYS.map((weekday, index) => {
-                      const date = addCalendarDays(weekStart, index)
-                      const isToday = date.toDateString() === today.toDateString()
-                      return (
-                        <th className={`member-day-heading-cell${isToday ? ' is-today' : ''}${index === 6 ? ' is-sunday' : ''}`}
-                          key={weekday} scope="col" aria-current={isToday ? 'date' : undefined}>
-                          <div className={`member-day-heading${isToday ? ' member-day-today' : ''}${index === 6 ? ' member-day-sunday' : ''}`}>
-                            <span>{weekday} ({String(date.getDate()).padStart(2, '0')}/{String(date.getMonth() + 1).padStart(2, '0')})</span>
-                          </div>
-                        </th>
-                      )
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {MEMBER_TIME_SLOTS.map((slot) => (
-                    <tr key={slot.id}>
-                      <th className="member-time-cell" scope="row">
-                        <strong>{slot.id}</strong>
-                      </th>
-                      {WEEKDAYS.map((weekday, dayIndex) => {
-                        const dayClasses = sessions.filter((entry) => (
-                          entry.slotId === slot.id && entry.dayIndex === dayIndex
-                        ))
-                        return (
-                          <td className="member-calendar-class-cell" key={`${slot.id}-${weekday}`}>
-                            {dayClasses.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
-
-                            {dayClasses.length === 0 && (
-                              <span className="member-calendar-empty-label" aria-hidden="true">—</span>
-                            )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <WeeklyTimetable weekStart={weekStart} sessions={sessions} renderSession={renderSession} />
             )}
         </div>
       </section>
@@ -157,10 +134,11 @@ export default function MemberSchedule() {
           <h3 id="member-other-sessions-title">Buổi học cần kiểm tra lịch</h3>
           <p>Buổi có ngày dưới đây thuộc tuần đang xem. Buổi chưa có ngày được giữ lại để bạn kiểm tra với trung tâm; hệ thống chưa thể xếp vào lịch.</p>
           <div className="member-class-grid">
-            {otherSessions.map((entry) => <MemberSessionCard key={entry.key} entry={entry} />)}
+            {otherSessions.map(renderSession)}
           </div>
         </section>
       )}
+      {selectedEvaluation != null && <MemberSessionEvaluation key={selectedEvaluation} sessionId={selectedEvaluation} onClose={() => setSelectedEvaluation(null)} />}
     </DashboardLayout>
   )
 }

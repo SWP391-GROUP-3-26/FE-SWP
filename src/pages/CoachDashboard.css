@@ -1,4 +1,10 @@
-.coach-dashboard { display: grid; gap: 18px; width: min(100%, 1450px); margin: 0 auto; }
+.coach-dashboard { display: grid; gap: 18px; min-width: 0; width: min(100%, 1450px); margin: 0 auto; }
+.coach-dashboard > section { min-width: 0; }
+.coach-calendar-session { padding: 6px 0; border-bottom: 1px solid #e2e6ec; }
+.coach-calendar-session:last-child { border-bottom: 0; }
+.coach-calendar-class-link { display: inline-flex; align-items: center; gap: 4px; color: #28734f; font-size: 10px; font-weight: 700; text-decoration: none; }
+.coach-calendar-class-link:hover { text-decoration: underline; }
+.coach-calendar-class-link .material-symbols-outlined { font-size: 13px; }
 
 .coach-home-welcome {
   position: relative;
