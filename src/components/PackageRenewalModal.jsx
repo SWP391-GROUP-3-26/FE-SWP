@@ -15,7 +15,7 @@ function dateLabel(value) {
   return value ? String(value).slice(0, 10).split('-').reverse().join('/') : 'Chưa cập nhật'
 }
 
-export default function PackageRenewalModal({ memberId, initialPackageId, expectedSubscriptionId, hasScheduledPackage, onClose, onSuccess }) {
+export default function PackageRenewalModal({ memberId, expectedSubscriptionId, hasScheduledPackage, onClose, onSuccess }) {
   const [busy, setBusy] = useState(false)
   const request = useCallback(async (signal) => {
     const overview = await getPackageRenewalOverview(memberId, signal)
@@ -39,22 +39,21 @@ export default function PackageRenewalModal({ memberId, initialPackageId, expect
     {data && !data.currentSubscription && <p role="alert">Hội viên chưa có gói đang hoạt động để gia hạn. Hãy đóng cửa sổ và tải lại danh sách gói.</p>}
     {data?.currentSubscription && !matchesSubscription && <p role="alert">Gói được chọn không còn là gói đang hoạt động. Hãy đóng cửa sổ và tải lại hồ sơ hội viên.</p>}
     {data?.pendingPayment && <p role="alert">Hội viên đang có giao dịch gói chờ thanh toán. Hãy xử lý giao dịch đó trước khi gia hạn.</p>}
-    {data?.currentSubscription && matchesSubscription && !data.pendingPayment && <RenewalForm overview={data} memberId={memberId} initialPackageId={initialPackageId}
+    {data?.currentSubscription && matchesSubscription && !data.pendingPayment && <RenewalForm overview={data} memberId={memberId}
       hasScheduledPackage={data.hasScheduledPackage} busy={busy} setBusy={setBusy} onClose={onClose} onSuccess={onSuccess} />}
   </Modal>
 }
 
-function RenewalForm({ overview, memberId, initialPackageId, hasScheduledPackage, busy, setBusy, onClose, onSuccess }) {
+function RenewalForm({ overview, memberId, hasScheduledPackage, busy, setBusy, onClose, onSuccess }) {
   const navigate = useNavigate()
-  const [packageId, setPackageId] = useState(String(initialPackageId || ''))
+  const packageId = overview.currentSubscription.packageId
+  const selectedPackage = overview.availablePackages.find((item) => String(item.id) === String(packageId))
   const [renewalStart, setRenewalStart] = useState(hasScheduledPackage ? '' : 'AFTER_CURRENT')
-  const [choiceGroups, setChoiceGroups] = useState(() => (overview.availablePackages
-    .find((item) => item.id === initialPackageId)?.choiceGroups || []).map((group) => ({ choiceGroupId: group.id, sportIds: [] })))
+  const [choiceGroups, setChoiceGroups] = useState(() => (selectedPackage?.choiceGroups || [])
+    .map((group) => ({ choiceGroupId: group.id, sportIds: [] })))
   const [paymentMethod, setPaymentMethod] = useState(memberId ? 'Cash' : 'Card')
-  const [receivedCash, setReceivedCash] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const inFlight = useRef(false)
-  const selectedPackage = overview.availablePackages.find((item) => String(item.id) === packageId)
   const groups = selectedPackage?.choiceGroups || emptyGroups
   const validSelection = Boolean(selectedPackage && renewalStart) && groups.every((group) =>
     choiceGroups.find((choice) => choice.choiceGroupId === group.id)?.sportIds.length === group.requiredSelection)
@@ -62,16 +61,22 @@ function RenewalForm({ overview, memberId, initialPackageId, hasScheduledPackage
     packageId: Number(packageId), renewalStart, choiceGroups,
   }, signal), [memberId, packageId, renewalStart, choiceGroups])
   const preview = useMemberRequest(request, validSelection, 250)
-  const canConfirm = Boolean(preview.data) && (!memberId || receivedCash)
+  const canConfirm = Boolean(preview.data)
 
   function resetConfirmation() {
-    setReceivedCash(false)
     setSubmitError('')
   }
 
   async function submit(event) {
     event.preventDefault()
     if (!canConfirm || busy || inFlight.current) return
+    if (memberId) {
+      navigate(`/receptionist/members/${memberId}/checkout/renewals/${packageId}`, {
+        state: { renewal: { subscriptionId: overview.currentSubscription.subscriptionId,
+          packageId: Number(packageId), renewalStart, choiceGroups } },
+      })
+      return
+    }
     inFlight.current = true
     setBusy(true)
     setSubmitError('')
@@ -94,17 +99,9 @@ function RenewalForm({ overview, memberId, initialPackageId, hasScheduledPackage
   return <form className="member-renewal-form" onSubmit={submit}>
     <p className="member-package-note">Gói hiện tại: <strong>{overview.currentSubscription.packageName}</strong><br />
       Hết hạn ngày {dateLabel(overview.currentSubscription.endDate)}.</p>
-    {overview.availablePackages.length === 0 && <p role="status">Chưa có gói phù hợp để gia hạn.</p>}
+    {!selectedPackage && <p role="alert">Gói hiện tại không còn mở gia hạn. Vui lòng liên hệ trung tâm để được hỗ trợ.</p>}
     <label className="member-package-payment-field">Gói gia hạn
-      <select value={selectedPackage ? packageId : ''} disabled={busy} required onChange={(event) => {
-        setPackageId(event.target.value)
-        setChoiceGroups((overview.availablePackages.find((item) => String(item.id) === event.target.value)?.choiceGroups || [])
-          .map((group) => ({ choiceGroupId: group.id, sportIds: [] })))
-        resetConfirmation()
-      }}>
-        <option value="">Chọn gói tập</option>
-        {overview.availablePackages.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-      </select>
+      <input value={overview.currentSubscription.packageName} readOnly />
     </label>
     <label className="member-package-payment-field">Thời điểm bắt đầu
       <select value={renewalStart} disabled={busy} onChange={(event) => { setRenewalStart(event.target.value); resetConfirmation() }}>
@@ -132,20 +129,18 @@ function RenewalForm({ overview, memberId, initialPackageId, hasScheduledPackage
       <div><dt>Giảm giá</dt><dd>{money.format(preview.data.discountAmount)}</dd></div>
       <div><dt>Tổng thanh toán</dt><dd>{money.format(preview.data.totalAmount)}</dd></div>
     </dl>}
-    <label className="member-package-payment-field">Hình thức thanh toán
+    {!memberId && <label className="member-package-payment-field">Hình thức thanh toán
       <select value={paymentMethod} disabled={busy} onChange={(event) => { setPaymentMethod(event.target.value); resetConfirmation() }}>
         {memberId ? <option value="Cash">Tiền mặt</option>
           : <><option value="Card">Thẻ VNPay</option><option value="E_Wallet">QR chuyển khoản qua SePay</option></>}
       </select>
-    </label>
-    {memberId ? <label className="member-renewal-confirm"><input type="checkbox" checked={receivedCash} disabled={busy || !preview.data}
-      onChange={(event) => setReceivedCash(event.target.checked)} />Tôi xác nhận đã nhận đủ tiền mặt theo tổng thanh toán ở trên.</label>
-      : <p className="member-package-payment-warning">Gói chỉ được gia hạn sau khi thanh toán thành công. Bạn sẽ được chuyển đến VNPay hoặc màn hình mã QR để thanh toán.</p>}
+    </label>}
+    {!memberId && <p className="member-package-payment-warning">Gói chỉ được gia hạn sau khi thanh toán thành công. Bạn sẽ được chuyển đến VNPay hoặc màn hình mã QR để thanh toán.</p>}
     {submitError && <p className="member-package-form-error" role="alert">{submitError}</p>}
     <div className="member-package-modal-actions">
       <button className="member-package-cancel" type="button" disabled={busy} onClick={onClose}>Đóng</button>
       <button className="member-class-search-button" type="submit" disabled={busy || !canConfirm}>
-        {busy ? 'Đang gia hạn…' : 'Xác nhận gia hạn'}
+        {busy ? 'Đang gia hạn…' : memberId ? 'Tiếp tục thanh toán' : 'Xác nhận gia hạn'}
       </button>
     </div>
   </form>

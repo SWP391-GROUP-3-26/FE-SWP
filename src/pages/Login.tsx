@@ -24,6 +24,7 @@ export default function Login() {
 
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(getInitialGoogleError)
   const location = useLocation()
@@ -122,12 +123,20 @@ export default function Login() {
               <span className="material-symbols-outlined">lock</span>
               <input
                 name="password"
+                aria-label="Mật khẩu"
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Nhập mật khẩu"
                 required
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
               />
+              <button className="icon-button" type="button"
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}>
+                <span className="material-symbols-outlined" aria-hidden="true">{showPassword ? 'visibility_off' : 'visibility'}</span>
+              </button>
             </span>
           </label>
 

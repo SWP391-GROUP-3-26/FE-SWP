@@ -21,6 +21,8 @@ import MemberDashboard from './pages/MemberDashboard'
 import MemberPackages from './pages/MemberPackages'
 import MemberPackageHistory from './pages/MemberPackageHistory'
 import MemberPaymentResult from './pages/MemberPaymentResult'
+import MemberPaymentHistory from './pages/MemberPaymentHistory'
+import StaffRefunds from './pages/StaffRefunds'
 import MemberProfile from './pages/MemberProfile'
 import MemberSchedule from './pages/MemberSchedule'
 import PackageManagement from './pages/PackageManagement'
@@ -41,6 +43,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/member/payment-history" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
+        <Route path="/member/payment-history/:id" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/receptionist/refunds" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
+        <Route path="/receptionist/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
         <Route path="/coach/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><CoachTrainingPlans /></ProtectedRoute>} />
         <Route path="/coach/training-plans/:id" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><TrainingPlanDetail audience="coach" /></ProtectedRoute>} />
         <Route path="/member/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberTrainingPlans /></ProtectedRoute>} />

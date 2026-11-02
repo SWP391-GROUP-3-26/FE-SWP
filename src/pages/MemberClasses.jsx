@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import ReceptionistLayout from '../components/ReceptionistLayout'
 import Modal from '../components/Modal'
+import CancellationRefundPreview from '../components/CancellationRefundPreview'
 import RegisteredClassCard from '../components/RegisteredClassCard'
 import { formatClassDate } from '../utils/classSchedule'
 import memberMenuItems from '../components/memberMenuItems'
@@ -50,6 +51,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   const [registrationStatus, setRegistrationStatus] = useState('all')
   const [detailRegistration, setDetailRegistration] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
+  const [cancelPreview, setCancelPreview] = useState(null)
   const [cancelError, setCancelError] = useState('')
   const [cancellingId, setCancellingId] = useState(null)
   const [search, setSearch] = useState('')
@@ -64,6 +66,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   const [modalError, setModalError] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('DIRECT')
   const [paymentChannel, setPaymentChannel] = useState('Card')
+  const needsPayment = paymentMethod === 'DIRECT' || paymentMethod === 'MIXED'
   const [successMessage, setSuccessMessage] = useState('')
   const submitting = useRef(false)
   const previewRequest = useRef(0)
@@ -103,6 +106,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   function askToCancelRegistration(item) {
     if (cancellingId != null) return
     setCancelTarget(item)
+    setCancelPreview(null)
     setCancelError('')
   }
 
@@ -113,7 +117,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   }
 
   async function confirmCancellation() {
-    if (!cancelTarget || cancellingId != null) return
+    if (!cancelTarget || !cancelPreview || cancellingId != null) return
     if (cancelTarget.bookingId == null) {
       setCancelError('Không tìm thấy thông tin đăng ký lớp để hủy.')
       return
@@ -122,7 +126,8 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
     setCancellingId(cancelTarget.bookingId)
     setCancelError('')
     try {
-      const result = await (memberId ? cancelReceptionistClass(memberId, cancelTarget.bookingId) : cancelClassRegistration(cancelTarget.bookingId))
+      const confirmation = { estimatedRefund: cancelPreview.estimatedRefund, cancelSessions: cancelPreview.cancelSessions }
+      const result = await (memberId ? cancelReceptionistClass(memberId, cancelTarget.bookingId, confirmation) : cancelClassRegistration(cancelTarget.bookingId, confirmation))
       setSuccessMessage(result.message || 'Đã hủy các buổi còn lại của đăng ký.')
       setCancelTarget(null)
       setLoading(true)
@@ -165,7 +170,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       const details = await (memberId ? getReceptionistPreview(memberId, classItem.classId) : getClassConfirmation(classItem.classId))
       if (requestId !== previewRequest.current) return
       setConfirmation(details)
-      setPaymentMethod(details.packageOption?.eligible ? 'PACKAGE' : 'DIRECT')
+      setPaymentMethod(details.packageOption?.eligible ? 'PACKAGE' : !memberId && details.packageOption?.mixedEligible ? 'MIXED' : 'DIRECT')
     } catch (error) {
       if (requestId !== previewRequest.current) return
       setModalError(classApiErrorMessage(error))
@@ -193,16 +198,18 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       const register = memberId ? (classId, payload) => registerReceptionistClass(memberId, classId, payload) : registerForClass
       const result = await register(selectedClass.classId, {
         paymentMethod,
-        ...(paymentMethod === 'DIRECT' ? { paymentChannel } : {}),
+        ...(needsPayment ? { paymentChannel } : {}),
+        ...(paymentMethod === 'MIXED' ? { packageSessions: confirmation.packageOption.packageSessions,
+          paymentAmount: confirmation.packageOption.additionalAmount } : {}),
       })
-      if (paymentMethod === 'DIRECT' && paymentChannel === 'E_Wallet') {
+      if (needsPayment && paymentChannel === 'E_Wallet') {
         if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
           throw new Error('Chưa thể mở thanh toán QR. Vui lòng kiểm tra đăng ký trước khi thử lại.')
         }
         window.location.assign(`${memberId ? `/receptionist/members/${memberId}` : "/member"}/payment-result?paymentId=${result.paymentId}`)
         return
       }
-      if (result.paymentUrl || (paymentMethod === 'DIRECT' && paymentChannel === 'Card')) {
+      if (result.paymentUrl || (needsPayment && paymentChannel === 'Card')) {
         window.location.assign(getVnpayPaymentUrl(result.paymentUrl))
         return
       }
@@ -293,7 +300,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       {successMessage && (
         <section className="member-registration-success" role="status">
           <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
-          <span>{successMessage} <Link to={profilePath}>{receptionist ? 'Về thông tin hội viên' : 'Thời khóa biểu'}</Link>.</span>
+          <span>{successMessage} <Link to={profilePath}>{receptionist ? 'Về thông tin hội viên' : 'Thời khóa biểu'}</Link>. {!receptionist && <Link to="/member/payment-history">Xem thanh toán / hoàn tiền</Link>}</span>
           <button type="button" aria-label="Đóng thông báo" onClick={() => setSuccessMessage('')}>×</button>
         </section>
       )}
@@ -333,6 +340,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               {registeredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
                 busy={cancellingId === item.bookingId} onDetail={setDetailRegistration} onCancel={askToCancelRegistration}
                 paymentBasePath={memberId ? `/receptionist/members/${memberId}` : '/member'}
+                onRefresh={() => setReloadKey((key) => key + 1)}
                 onRebook={(registration) => openRegistration({ classId: registration.classId })} />)}
             </tbody>
           </table>
@@ -397,7 +405,8 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   onClick={() => openRegistration(classItem)}
                 >
                   {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? 'Đăng ký lớp'
-                    : classItem.sessionId === null ? 'Không còn buổi học' : 'Hết chỗ'}
+                    : classItem.sessionId === null ? 'Không còn buổi học'
+                      : classItem.remainingSlots <= 0 ? 'Hết chỗ' : 'Đã đóng đăng ký'}
                 </button>
               </div>
             </article>
@@ -431,7 +440,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               <p><strong>Phòng:</strong> {confirmation.roomName || 'Chưa xác định'}</p>
               <div className="member-registration-summary">
                 <p><strong>Số buổi còn lại:</strong> {confirmation.sessionCount ?? 1}</p>
-                {confirmation.packageOption?.eligible ? (
+                {paymentMethod === 'PACKAGE' && confirmation.packageOption?.eligible ? (
                   <div className="member-package-covered-notice" role="status">
                     <span className="material-symbols-outlined" aria-hidden="true">verified</span>
                     <div>
@@ -439,6 +448,14 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                       <p>{confirmation.packageOption.subtitle || 'Không thu thêm học phí cho lớp này.'}</p>
                     </div>
                     <b>0 ₫ thêm</b>
+                  </div>
+                ) : paymentMethod === 'MIXED' ? (
+                  <div className="member-mixed-payment-summary" role="status">
+                    <p><strong>Dùng từ gói:</strong> {confirmation.packageOption.packageSessions} lượt</p>
+                    <p><strong>Số buổi trả thêm:</strong> {confirmation.packageOption.payableSessions}</p>
+                    <p><strong>Cần thanh toán:</strong> {priceFormatter.format(confirmation.packageOption.additionalAmount)}</p>
+                    <p>{confirmation.packageOption.note}</p>
+                    <p>Lượt gói dùng cho các buổi đầu theo lịch; các buổi còn lại trả tiền.</p>
                   </div>
                 ) : (
                   <>
@@ -464,6 +481,14 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               </div>}
               <fieldset className="member-payment-options" disabled={bookingLoading}>
                 <legend>Hình thức thanh toán</legend>
+                {!memberId && confirmation.packageOption?.mixedEligible && (
+                  <label>
+                    <input checked={paymentMethod === 'MIXED'} name="paymentMethod" type="radio" value="MIXED"
+                      onChange={() => setPaymentMethod('MIXED')} />
+                    Dùng {confirmation.packageOption.packageSessions} lượt gói + thanh toán {confirmation.packageOption.payableSessions} buổi thiếu
+                    {` · ${priceFormatter.format(confirmation.packageOption.additionalAmount)}`}
+                  </label>
+                )}
                 {confirmation.packageOption?.eligible && (
                   <label>
                     <input
@@ -478,7 +503,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                     {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
                   </label>
                 )}
-                {confirmation.directPaymentOption?.available && !confirmation.packageOption?.eligible && (
+                {confirmation.directPaymentOption?.available && (
                   <label>
                     <input
                       checked={paymentMethod === 'DIRECT'}
@@ -492,7 +517,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   </label>
                 )}
               </fieldset>
-              {paymentMethod === 'DIRECT' && confirmation.directPaymentOption?.available && !confirmation.packageOption?.eligible && (
+              {needsPayment && confirmation.directPaymentOption?.available && (
                 <label className="member-payment-channel">
                   Kênh thanh toán
                   <select disabled={bookingLoading} value={paymentChannel} onChange={(event) => setPaymentChannel(event.target.value)}>
@@ -502,10 +527,10 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   </select>
                 </label>
               )}
-              {paymentMethod === 'DIRECT' && paymentChannel === 'Card' && (
+              {needsPayment && paymentChannel === 'Card' && (
                 <p role="note">Bạn sẽ được chuyển tới VNPay để thanh toán bằng thẻ ATM. Đây là môi trường thanh toán thử nghiệm.</p>
               )}
-              {paymentMethod === 'DIRECT' && paymentChannel === 'E_Wallet' && (
+              {needsPayment && paymentChannel === 'E_Wallet' && (
                 <p role="note">Thanh toán bằng QR chuyển khoản qua SePay. Đăng ký chỉ được xác nhận sau khi hệ thống nhận thanh toán.</p>
               )}
               {!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available && (
@@ -521,7 +546,9 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   disabled={bookingLoading || (!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available)}
                   type="submit"
                 >
-                  {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span> : memberId && paymentMethod === 'DIRECT' && paymentChannel === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
+                  {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span> : paymentMethod === 'MIXED'
+                    ? `Thanh toán thêm ${priceFormatter.format(confirmation.packageOption.additionalAmount)}`
+                    : memberId && paymentMethod === 'DIRECT' && paymentChannel === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
                 </button>
               </div>
             </form>
@@ -550,16 +577,17 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
             <div><dt>Thời gian:</dt><dd>{[cancelTarget.schedule, cancelTarget.timeSlot].filter(Boolean).join(' · ') || 'Chưa cập nhật'}</dd></div>
             <div><dt>HLV hướng dẫn:</dt><dd>{cancelTarget.coachName || 'Chưa cập nhật'}</dd></div>
           </dl>
+          <CancellationRefundPreview key={cancelTarget.bookingId} bookingId={cancelTarget.bookingId} memberId={memberId} onReady={setCancelPreview} />
           <p className="member-cancel-policy-note">
             <span className="material-symbols-outlined" aria-hidden="true">info</span>
-            <span>Lưu ý: Các buổi tương lai sẽ được hủy và trả lượt nếu dùng gói; các buổi đã học vẫn giữ trong lịch sử. Tiền đã thu chỉ được đánh dấu cần đối soát, chưa tự động hoàn tiền.</span>
+            <span>Lưu ý: Chỉ được hủy trước giờ bắt đầu buổi đầu tiên của lớp. Khi hủy, các buổi đã đăng ký sẽ được hủy và trả lượt nếu dùng gói. Khoản tiền đủ điều kiện sẽ được tạo yêu cầu hoàn và chờ trung tâm duyệt. Bạn theo dõi và cung cấp thông tin nhận tiền trong Lịch sử thanh toán.</span>
           </p>
           {cancelError && <div className="member-class-state member-class-error" role="alert">{cancelError}</div>}
           <div className="member-booking-actions">
             <button className="member-cancel-button" disabled={cancellingId != null} onClick={closeCancelConfirmation} type="button">
               Đóng
             </button>
-            <button className="member-cancel-confirm-button" disabled={cancellingId != null} onClick={confirmCancellation} type="button">
+            <button className="member-cancel-confirm-button" disabled={cancellingId != null || !cancelPreview} onClick={confirmCancellation} type="button">
               {cancellingId != null ? 'Đang hủy...' : 'Xác nhận hủy'}
             </button>
           </div>

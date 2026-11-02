@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ReceptionistLayout from '../components/ReceptionistLayout'
 import useMemberRequest from '../hooks/useMemberRequest'
 import useMemberPayment from '../hooks/useMemberPayment'
@@ -7,6 +7,7 @@ import MemberQrPayment from '../components/MemberQrPayment'
 import { formatClassDate } from '../utils/classSchedule'
 import { getReceptionistCheckout, registerReceptionistClass, registerReceptionistPackage } from '../services/receptionistRegistrationService'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
+import { renewPackage } from '../services/packageRenewalService'
 import './ReceptionistCheckout.css'
 import './MemberActivities.css'
 
@@ -25,12 +26,16 @@ export default function ReceptionistCheckout() {
 export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }) {
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const { state } = useLocation()
+  const renewal = state?.renewal
+  const isRenewal = serviceType === 'renewals'
   const paymentId = params.get('paymentId')
   const hasPayment = params.has('paymentId')
   const validPayment = params.getAll('paymentId').length === 1 && isValidPaymentId(paymentId)
   const paymentRequest = useMemberPayment(paymentId, validPayment, 15 * 60_000, memberId)
   const payment = paymentRequest.payment
-  const request = useCallback((signal) => getReceptionistCheckout(memberId, serviceType, serviceId, { signal }), [memberId, serviceType, serviceId])
+  const request = useCallback((signal) => getReceptionistCheckout(memberId, serviceType, serviceId,
+    { signal, renewal, paymentId: validPayment ? paymentId : null }), [memberId, serviceType, serviceId, renewal, validPayment, paymentId])
   const { data, loading, error, retry } = useMemberRequest(request)
   const [method, setMethod] = useState('E_Wallet')
   const [receivedCash, setReceivedCash] = useState(false)
@@ -40,13 +45,13 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
   const inFlight = useRef(false)
   const profilePath = `/receptionist/members/${memberId}`
   const isClass = serviceType === 'classes'
-  const backPath = `${profilePath}/${isClass ? 'classes' : 'packages'}`
+  const backPath = isRenewal ? profilePath : `${profilePath}/${isClass ? 'classes' : 'packages'}`
   const member = data?.member
   const item = data?.item
   const pending = data?.subscriptions.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
   const blockReason = data && (member.status !== 'Active' ? 'Tài khoản hội viên không hoạt động.'
     : isClass ? (!item.canRegister ? item.message : '')
-      : member.activePackages.length ? 'Hội viên đang có gói còn hiệu lực. Chỉ có thể mua gói mới sau khi gói hiện tại hết hạn.'
+      : !isRenewal && member.activePackages.length ? 'Hội viên đang có gói còn hiệu lực. Chỉ có thể mua gói mới sau khi gói hiện tại hết hạn.'
         : pending ? 'Hội viên có giao dịch gói đang chờ thanh toán. Kiểm tra giao dịch trước khi đăng ký thêm.' : '')
   const usingPackage = method === 'PACKAGE'
   const canUsePackage = isClass && item?.canPayWithPackage
@@ -61,7 +66,9 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
     setBusy(true)
     setSubmitError('')
     try {
-      const registration = isClass
+      const renewalResult = isRenewal ? await renewPackage(memberId, { packageId: Number(serviceId),
+        renewalStart: data.renewal.renewalStart, choiceGroups: data.renewal.choiceGroups, paymentMethod: method }) : null
+      const registration = isRenewal ? { ...renewalResult.data, message: renewalResult.message } : isClass
         ? await registerReceptionistClass(memberId, Number(serviceId), usingPackage
           ? { paymentMethod: 'PACKAGE' } : { paymentMethod: 'DIRECT', paymentChannel: method })
         : await registerReceptionistPackage(memberId, { packageId: Number(serviceId), paymentMethod: method })
@@ -72,7 +79,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
           throw new Error('Yêu cầu đã được gửi nhưng chưa thể mở thanh toán. Hãy kiểm tra đăng ký trong hồ sơ hội viên trước khi thao tác tiếp.')
         }
         if (method === 'Card') window.location.assign(getVnpayPaymentUrl(registration.paymentUrl))
-        else navigate(`?paymentId=${registration.paymentId}`, { replace: true })
+        else navigate(`?paymentId=${registration.paymentId}`, { replace: true, ...(state ? { state } : {}) })
       } else if (!usingPackage && registration.paymentStatus !== 'Paid') {
         throw new Error('Chưa xác nhận được trạng thái thu tiền. Vui lòng kiểm tra hồ sơ hội viên.')
       }
@@ -82,16 +89,16 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
 
   return <ReceptionistLayout className="receptionist-checkout-page">
     <div className="receptionist-checkout">
-      <Link className="back-link" to={backPath}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>Quay lại chọn {isClass ? 'lớp' : 'gói'}</Link>
+      <Link className="back-link" to={backPath}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>{isRenewal ? 'Quay lại hồ sơ hội viên' : `Quay lại chọn ${isClass ? 'lớp' : 'gói'}`}</Link>
       <header className="checkout-heading">
-        <div><span className="section-heading-kicker">ĐĂNG KÝ TẠI QUẦY</span><h2>Thanh toán dịch vụ</h2><p>Kiểm tra thông tin hội viên và dịch vụ trước khi xác nhận.</p></div>
+        <div><span className="section-heading-kicker">{isRenewal ? 'GIA HẠN TẠI QUẦY' : 'ĐĂNG KÝ TẠI QUẦY'}</span><h2>{isRenewal ? 'Thanh toán gia hạn gói' : 'Thanh toán dịch vụ'}</h2><p>Kiểm tra thông tin hội viên và dịch vụ trước khi xác nhận.</p></div>
         <span className="checkout-secure"><span className="material-symbols-outlined" aria-hidden="true">verified_user</span>Giao dịch tại quầy</span>
       </header>
       {loading && <div className="checkout-card" role="status">Đang tải thông tin hội viên và dịch vụ…</div>}
       {error && <div className="checkout-notice is-error" role="alert"><p>{paymentApiErrorMessage(error)}</p><button className="checkout-secondary" type="button" onClick={retry}>Thử lại</button></div>}
       {data && <div className="checkout-grid">
         <section className="checkout-card checkout-order" aria-labelledby="checkout-order-title">
-          <div className="checkout-card-title"><span className="material-symbols-outlined" aria-hidden="true">receipt_long</span><h3 id="checkout-order-title">Thông tin đăng ký</h3></div>
+          <div className="checkout-card-title"><span className="material-symbols-outlined" aria-hidden="true">receipt_long</span><h3 id="checkout-order-title">{isRenewal ? 'Thông tin gia hạn' : 'Thông tin đăng ký'}</h3></div>
           <div className="checkout-member">
             <span className="checkout-member-icon material-symbols-outlined" aria-hidden="true">person</span>
             <div><small>HỘI VIÊN ĐĂNG KÝ</small><strong>{member.fullName}</strong><span>Mã hội viên #{member.userId}</span></div>
@@ -116,9 +123,14 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
             <dl className="checkout-facts"><div><dt>Thời hạn sử dụng</dt><dd>{item.durationDays} ngày</dd></div><div><dt>Số buổi trong gói</dt><dd>{item.includedClasses} buổi</dd></div></dl>
             {item.benefits && <div className="checkout-service-copy"><h5>Quyền lợi</h5><p>{item.benefits}</p></div>}
             {item.termConditions && <div className="checkout-service-copy"><h5>Điều kiện sử dụng</h5><p>{item.termConditions}</p></div>}
-            <p className="checkout-caption">Gói bắt đầu từ ngày đăng ký theo quy định của trung tâm. Ngày hiệu lực được xác nhận sau khi đăng ký thành công.</p>
+            {isRenewal ? <dl className="checkout-facts">
+              <div><dt>Thời điểm gia hạn</dt><dd>{data.renewal?.renewalStart === 'IMMEDIATE' ? 'Bắt đầu ngay sau khi thanh toán' : 'Sau khi gói hiện tại hết hạn'}</dd></div>
+              <div><dt>Hiệu lực gói gia hạn</dt><dd>{formatClassDate(item.renewalPreview?.newStartDate)} – {formatClassDate(item.renewalPreview?.newEndDate)}</dd></div>
+            </dl> : <p className="checkout-caption">Gói bắt đầu từ ngày đăng ký theo quy định của trung tâm. Ngày hiệu lực được xác nhận sau khi đăng ký thành công.</p>}
           </>}
-          <dl className="checkout-totals"><div><dt>{isClass ? `Học phí ${item.sessionCount} buổi × ${money.format(item.price)}` : 'Giá gói niêm yết'}</dt><dd>{money.format(data.amount)}</dd></div>{usingPackage && <div><dt>Thanh toán bằng gói hội viên</dt><dd>{item.requiredPackageClasses} buổi</dd></div>}<div className="checkout-total"><dt>Tổng cần thu</dt><dd>{money.format(total)}</dd></div></dl>
+          <dl className="checkout-totals"><div><dt>{isClass ? `Học phí ${item.sessionCount} buổi × ${money.format(item.price)}` : 'Giá gói niêm yết'}</dt><dd>{money.format(isRenewal ? item.renewalPreview?.listedPrice ?? data.amount : data.amount)}</dd></div>
+            {isRenewal && <div><dt>Giảm giá</dt><dd>{money.format(item.renewalPreview?.discountAmount || 0)}</dd></div>}
+            {usingPackage && <div><dt>Thanh toán bằng gói hội viên</dt><dd>{item.requiredPackageClasses} buổi</dd></div>}<div className="checkout-total"><dt>Tổng cần thu</dt><dd>{money.format(total)}</dd></div></dl>
         </section>
         <section className="checkout-card checkout-payment" aria-labelledby="checkout-payment-title">
           <div className="checkout-card-title"><span className="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><h3 id="checkout-payment-title">Phương thức thanh toán</h3></div>
@@ -130,7 +142,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
                 : paymentRequest.error ? <div className="checkout-notice is-error" role="alert"><p>{paymentApiErrorMessage(paymentRequest.error)}</p></div>
                   : payment && <>
                     <div className="checkout-notice" role="status"><strong>{payment.paymentStatus === 'Paid'
-                      ? payment.requiresReview || !['Đang diễn ra', 'Đã hoàn thành'].includes(payment.bookingStatus) ? 'Đã nhận thanh toán, cần đối soát đăng ký' : 'Thanh toán và đăng ký thành công'
+                      ? payment.requiresReview || !['Đang diễn ra', 'Đã hoàn thành', 'Chờ bắt đầu'].includes(payment.bookingStatus) ? 'Đã nhận thanh toán, cần đối soát đăng ký' : isRenewal ? 'Thanh toán và gia hạn thành công' : 'Thanh toán và đăng ký thành công'
                       : payment.paymentStatus === 'Failed' ? 'Thanh toán không thành công' : 'Đang chờ xác nhận thanh toán'}</strong><p>{payment.itemName} · Mã thanh toán #{payment.paymentId} · {money.format(payment.paymentAmount)}</p></div>
                     {payment.paymentStatus === 'Pending' && payment.qrPayment && <MemberQrPayment payment={payment} />}
                   </>}
@@ -138,7 +150,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
             {validPayment && <Link className="checkout-secondary checkout-payment-manage" to={`${profilePath}/payment-result?paymentId=${paymentId}`}>Xem trạng thái / Hủy yêu cầu thanh toán</Link>}
             <Link className="checkout-primary" to={profilePath}>Về hồ sơ hội viên</Link>
           </div> : result && !submitError ? <div className="checkout-complete" role="status">
-            <span className="material-symbols-outlined" aria-hidden="true">check_circle</span><h4>{result.paymentStatus === 'Pending' ? 'Đang mở cổng thanh toán' : 'Đăng ký thành công'}</h4><p>{result.message || 'Yêu cầu đã được ghi nhận.'}</p>
+            <span className="material-symbols-outlined" aria-hidden="true">check_circle</span><h4>{result.paymentStatus === 'Pending' ? 'Đang mở cổng thanh toán' : isRenewal ? 'Gia hạn thành công' : 'Đăng ký thành công'}</h4><p>{result.message || 'Yêu cầu đã được ghi nhận.'}</p>
             {result.subscriptionId && <p>Đăng ký gói #{result.subscriptionId} · {formatClassDate(result.startDate)} – {formatClassDate(result.endDate)}</p>}
             {result.paymentId && <p>Mã thanh toán #{result.paymentId}</p>}
             <Link className="checkout-primary" to={profilePath}>Về hồ sơ hội viên</Link>

@@ -49,9 +49,9 @@ export async function getMyClasses(options) {
   return (await getMyClassList(options)).classes
 }
 
-export async function cancelClassRegistration(bookingId) {
+export async function cancelClassRegistration(bookingId, confirmation) {
   const token = getAccessToken()
-  const response = await axiosClient.post(`/api/member/classes/bookings/${encodeURIComponent(bookingId)}/cancel`, {}, {
+  const response = await axiosClient.post(`/api/member/classes/bookings/${encodeURIComponent(bookingId)}/cancel`, confirmation || null, {
     timeout: 15000, headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (response.data?.success !== true) throw new Error(response.data?.message || 'Không thể hủy đăng ký lớp.')

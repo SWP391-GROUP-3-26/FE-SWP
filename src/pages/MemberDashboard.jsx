@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getAuth } from '../auth/authStorage'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberTrainingPlanOverview from '../components/MemberTrainingPlanOverview'
+import MemberRefundNotifications from '../components/MemberRefundNotifications'
 import './MemberDashboard.css'
 
 export default function MemberDashboard() {
@@ -27,6 +28,7 @@ export default function MemberDashboard() {
       </section>
 
       <MemberTrainingPlanOverview />
+      <MemberRefundNotifications />
 
       <div className="dashboard-grid member-overview-grid">
         <article className="dashboard-card dashboard-card-accent">

@@ -1,6 +1,19 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import usePaymentDeadline from '../hooks/usePaymentDeadline'
 
-export default function RegisteredClassCard({ item, busy, onDetail, onCancel, onRebook, paymentBasePath = '/member' }) {
+const money = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' })
+
+export default function RegisteredClassCard({ item, busy, onDetail, onCancel, onRebook, onRefresh, paymentBasePath = '/member' }) {
+  const pending = item.rawStatus === 'Pending' && item.paymentStatus === 'Pending'
+  const deadline = usePaymentDeadline(item.paymentExpiresAt, pending)
+  const refreshed = useRef(null)
+  useEffect(() => {
+    if (pending && item.paymentExpiresAt && deadline.expired && refreshed.current !== item.paymentId && onRefresh) {
+      refreshed.current = item.paymentId
+      onRefresh()
+    }
+  }, [pending, item.paymentExpiresAt, item.paymentId, deadline.expired, onRefresh])
   return (
     <tr className="member-registration-row">
       <td data-label="Tên lớp">
@@ -18,11 +31,16 @@ export default function RegisteredClassCard({ item, busy, onDetail, onCancel, on
           {item.status || 'Chưa xác định'}
         </span>
         {item.requiresReview && <small>Thanh toán cần đối soát, chưa tự hoàn tiền.</small>}
+        {pending && !deadline.expired && <div className="member-pending-payment-info">
+          <small>Còn thanh toán: {money.format(item.paymentAmount || 0)}</small>
+          {item.heldPackageSessions > 0 && <small>Đang giữ: {item.heldPackageSessions} lượt gói</small>}
+          <small>Còn {deadline.remaining} để thanh toán</small>
+        </div>}
       </td>
       <td data-label="Thao tác">
         <div className="member-class-row-actions">
-          {item.paymentStatus === 'Pending' && item.paymentId && <Link className="member-row-action member-row-action-primary"
-            to={`${paymentBasePath}/payment-result?paymentId=${item.paymentId}`}>Thanh toán</Link>}
+          {pending && item.canResumePayment && !deadline.expired && item.paymentId && <Link className="member-row-action member-row-action-primary"
+            to={`${paymentBasePath}/payment-result?paymentId=${item.paymentId}`}>Tiếp tục thanh toán</Link>}
           <button className="member-row-action" type="button" onClick={() => onDetail(item)}>Chi tiết</button>
           {item.canCancel && <button className="member-row-action member-row-action-danger" disabled={busy} type="button" onClick={() => onCancel(item)}>
             {busy ? 'Đang hủy...' : 'Hủy lớp'}

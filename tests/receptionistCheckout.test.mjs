@@ -36,6 +36,7 @@ const server = await createServer({
       if (id === '\0virtual:checkout-router') return `
         export const Link = globalThis.__ssrTestDependencies['react-router-dom'].Link;
         export const useParams = () => ({});
+        export const useLocation = () => ({});
         export const useNavigate = () => (...args) => ${h}.navigation.push(args);
         export const useSearchParams = () => [new URLSearchParams(${h}.query)];
       `

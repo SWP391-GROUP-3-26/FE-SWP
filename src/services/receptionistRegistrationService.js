@@ -1,6 +1,7 @@
 import axiosClient from '../api/axiosClient'
 import { getAccessToken } from '../auth/authStorage'
 import { getMemberById } from './memberService'
+import { getPackageRenewalOverview, previewPackageRenewal } from './packageRenewalService'
 
 const base = '/api/receptionist/registrations'
 
@@ -51,8 +52,8 @@ export async function getReceptionistRegistrations(memberId, { signal, status = 
     `${item.className} ${item.coachName} ${item.roomName}`.toLocaleLowerCase('vi').includes(search.toLocaleLowerCase('vi'))) }
 }
 
-export function cancelReceptionistClass(memberId, bookingId) {
-  return request(`${memberPath(memberId)}/classes/bookings/${bookingId}/cancel`, { body: {} })
+export function cancelReceptionistClass(memberId, bookingId, confirmation) {
+  return request(`${memberPath(memberId)}/classes/bookings/${bookingId}/cancel`, { body: confirmation || null })
 }
 
 export async function getReceptionistPackages({ search = '', page = 0, size = 20, signal } = {}) {
@@ -82,12 +83,13 @@ export function cancelReceptionistPayment(memberId, paymentId) {
   return request(`${memberPath(memberId)}/payments/${paymentId}/cancel`, { body: {} })
 }
 
-export async function getReceptionistCheckout(memberId, serviceType, serviceId, { signal } = {}) {
+export async function getReceptionistCheckout(memberId, serviceType, serviceId, { signal, renewal, paymentId } = {}) {
   memberPath(memberId)
-  if (!['classes', 'packages'].includes(serviceType) ||
+  if (!['classes', 'packages', 'renewals'].includes(serviceType) ||
     !/^[1-9]\d{0,9}$/.test(String(serviceId)) || Number(serviceId) > 2147483647) {
     throw new Error('Đường dẫn thanh toán không hợp lệ. Vui lòng chọn lại lớp hoặc gói.')
   }
+  if (serviceType === 'renewals') return getRenewalCheckout(memberId, serviceId, renewal, paymentId, signal)
   const [member, item, subscriptions] = await Promise.all([
     getMemberById(memberId, signal),
     serviceType === 'classes' ? getReceptionistPreview(memberId, serviceId, { signal })
@@ -104,4 +106,31 @@ export async function getReceptionistCheckout(memberId, serviceType, serviceId, 
     throw new Error('Chưa xác định được học phí. Vui lòng chọn lại dịch vụ.')
   }
   return { member, item, subscriptions: subscriptions?.data || [], amount }
+}
+
+async function getRenewalCheckout(memberId, serviceId, renewal, paymentId, signal) {
+  if (!paymentId && (!renewal || Number(renewal.packageId) !== Number(serviceId)
+    || !Number.isInteger(renewal.subscriptionId) || !['AFTER_CURRENT', 'IMMEDIATE'].includes(renewal.renewalStart)
+    || !Array.isArray(renewal.choiceGroups))) {
+    throw new Error('Thiếu thông tin gia hạn. Vui lòng quay lại hồ sơ và mở Gia hạn gói tập.')
+  }
+  const [member, history] = await Promise.all([getMemberById(memberId, signal), getReceptionistSubscriptions(memberId, { signal })])
+  if (member.userId !== Number(memberId) || !Array.isArray(history.data)) throw new Error('Thông tin hội viên hoặc lịch sử gói không hợp lệ.')
+  if (paymentId) {
+    const subscription = history.data.find(s => s.paymentId === Number(paymentId) && s.packageId === Number(serviceId))
+    if (!subscription || typeof subscription.paymentAmount !== 'number') throw new Error('Giao dịch không khớp với gói gia hạn của hội viên.')
+    return { member, subscriptions: history.data, amount: subscription.paymentAmount,
+      item: { id: subscription.packageId, name: subscription.packageName, durationDays: subscription.durationDays,
+        includedClasses: subscription.includedClasses, renewalPreview: { newStartDate: subscription.startDate, newEndDate: subscription.endDate,
+          listedPrice: subscription.packagePrice, discountAmount: subscription.discountAmount } }, renewal }
+  }
+  const overview = await getPackageRenewalOverview(memberId, signal)
+  if (overview.currentSubscription?.subscriptionId !== renewal.subscriptionId || overview.currentSubscription?.packageId !== Number(serviceId)) {
+    throw new Error('Gói hiện tại đã thay đổi. Vui lòng quay lại hồ sơ để chọn gia hạn lại.')
+  }
+  const preview = await previewPackageRenewal(memberId, { packageId: Number(serviceId), renewalStart: renewal.renewalStart,
+    choiceGroups: renewal.choiceGroups }, signal)
+  if (preview.currentSubscription.subscriptionId !== renewal.subscriptionId) throw new Error('Gói hiện tại đã thay đổi. Vui lòng mở lại gia hạn.')
+  return { member, item: { ...preview.selectedPackage, renewalPreview: preview }, subscriptions: history.data,
+    amount: preview.totalAmount, renewal }
 }

@@ -37,6 +37,7 @@ export default function ReceptionistDashboard() {
         </form>
         <div className="member-booking-actions">
           <Link className="receptionist-secondary-button" to="/receptionist/members/new"><span className="material-symbols-outlined" aria-hidden="true">person_add</span> Đăng ký thành viên mới</Link>
+          <Link className="receptionist-secondary-button" to="/receptionist/refunds">Chi trả hoàn tiền</Link>
         </div>
         <div role="status" aria-live="polite">
           {loading && <p className="receptionist-search-status">Đang tìm hội viên…</p>}

@@ -5,7 +5,8 @@ import ReceptionistLayout from '../components/ReceptionistLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberQrPayment from '../components/MemberQrPayment'
 import useMemberPayment from '../hooks/useMemberPayment'
-import { isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
+import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage, resumeMemberPayment } from '../services/memberPaymentService'
+import usePaymentDeadline from '../hooks/usePaymentDeadline'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { ROLES } from '../auth/roleConfig'
 import ReceptionistMemberContext from '../components/ReceptionistMemberContext'
@@ -21,6 +22,8 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
+  const [resuming, setResuming] = useState(false)
+  const [resumeError, setResumeError] = useState('')
   const inFlight = useRef(false)
   const [params] = useSearchParams()
   const paymentId = params.get('paymentId')
@@ -31,7 +34,21 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
   const review = payment?.paymentStatus === 'Paid' && (payment.requiresReview ||
     !['Đang diễn ra', 'Đã hoàn thành', 'Chờ bắt đầu'].includes(payment.bookingStatus))
   const status = payment?.paymentStatus
+  const deadline = usePaymentDeadline(payment?.expiresAt, status === 'Pending')
   const errorStatus = error?.response?.status
+  async function resumePayment() {
+    if (inFlight.current) return
+    inFlight.current = true
+    setResuming(true)
+    setResumeError('')
+    try {
+      const current = await resumeMemberPayment(paymentId)
+      if (current.paymentStatus === 'Pending' && current.canResumePayment && current.paymentUrl && Date.parse(current.expiresAt) > Date.now()) {
+        window.location.assign(getVnpayPaymentUrl(current.paymentUrl))
+      } else retry()
+    } catch (e) { setResumeError(paymentApiErrorMessage(e)) }
+    finally { inFlight.current = false; setResuming(false) }
+  }
   async function cancelPayment() {
     if (inFlight.current) return
     inFlight.current = true
@@ -78,15 +95,27 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
               )}
           </div>
         )}
-        {!error && status === 'Pending' && payment?.qrPayment && <MemberQrPayment payment={payment} />}
+        {!error && status === 'Pending' && !deadline.expired && payment?.qrPayment && <MemberQrPayment payment={payment} />}
+        {!error && status === 'Pending' && <p>{deadline.expired ? 'Đã hết thời gian thanh toán. Kiểm tra lại trạng thái trước khi đăng ký lại.' : `Còn ${deadline.remaining} để thanh toán. Thời hạn giữ chỗ và lượt gói không thay đổi khi quay lại.`}</p>}
+        {resumeError && <p role="alert">{resumeError}</p>}
         {payment && <dl className="member-class-details">
           {payment.memberName && <div><dt>Hội viên</dt><dd>{payment.memberName} · #{payment.memberId}</dd></div>}
           {payment.itemName && <div><dt>Lớp / Gói</dt><dd>{payment.itemName}</dd></div>}
           <div><dt>Mã thanh toán</dt><dd>{payment.paymentId}</dd></div>
           <div><dt>Số tiền</dt><dd>{priceFormatter.format(payment.paymentAmount)}</dd></div>
+          {payment.packageSessions > 0 && <>
+            <div><dt>Lượt gói {status === 'Pending' ? 'đang giữ' : status === 'Paid' && !review ? 'đã dùng' : 'đã giải phóng'}</dt><dd>{payment.packageSessions}</dd></div>
+            <div><dt>Buổi thanh toán thêm</dt><dd>{payment.payableSessions}</dd></div>
+          </>}
           <div><dt>Trạng thái đăng ký</dt><dd>{payment.bookingStatus}</dd></div>
         </dl>}
         <div className="member-payment-result-actions">
+          {!memberId && !error && status === 'Pending' && payment.canResumePayment && payment.paymentMethod === 'Card' && !deadline.expired && (
+            <button className="member-register-button" disabled={resuming} type="button" onClick={resumePayment}>
+              {resuming ? 'Đang mở thanh toán...' : 'Tiếp tục thanh toán VNPay'}
+            </button>
+          )}
+          {!error && status === 'Pending' && deadline.expired && <button className="member-register-button" type="button" onClick={retry}>Cập nhật trạng thái</button>}
           {memberId && status === 'Pending' && <button className="member-cancel-button" type="button" onClick={() => setCancelOpen(true)}>Hủy yêu cầu thanh toán</button>}
           {errorStatus === 401 ? <Link className="member-register-button" to="/login" onClick={clearAuth}>Đăng nhập lại</Link>
             : validId && !loading && (timedOut || (error && ![403, 404].includes(errorStatus))) &&

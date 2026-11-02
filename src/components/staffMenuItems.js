@@ -14,10 +14,12 @@ export const staffMenuItems = {
       ],
     },
     { icon: 'history', label: 'Nhật ký hoạt động', route: '/center-manager/audit-logs' },
+    { icon: 'currency_exchange', label: 'Hoàn tiền', route: '/center-manager/refunds' },
   ],
   [ROLES.RECEPTIONIST]: [
     { icon: 'person_add', label: 'Đăng ký hội viên', route: '/receptionist/members/new' },
     { icon: 'home', label: 'Tổng quan tiếp tân', route: '/receptionist' },
     { icon: 'groups', label: 'Hội viên', route: '/receptionist/members' },
+    { icon: 'currency_exchange', label: 'Chi trả hoàn tiền', route: '/receptionist/refunds' },
   ],
 }

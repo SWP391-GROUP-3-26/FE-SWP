@@ -1157,3 +1157,16 @@
   .member-cancel-class-summary { padding: 13px; }
   .member-cancel-class-summary > div { grid-template-columns: minmax(76px, .65fr) minmax(0, 1.35fr); gap: 8px; }
 }
+
+.member-mixed-payment-summary {
+  padding: 14px 16px;
+  border: 1px solid #b9d7c8;
+  border-radius: 10px;
+  background: #edf7f1;
+}
+
+.member-pending-payment-info small {
+  display: block;
+  margin-top: 5px;
+  color: #53685d;
+}

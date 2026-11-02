@@ -585,7 +585,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         )}
       </section>
 
-      {renewalTarget && <PackageRenewalModal memberId={memberId} initialPackageId={renewalTarget.packageId}
+      {renewalTarget && <PackageRenewalModal memberId={memberId}
         hasScheduledPackage={hasScheduledPackage} onClose={() => setRenewalTarget(null)}
         onSuccess={() => {
           setSuccessMessage('Gia hạn gói tập thành công.')

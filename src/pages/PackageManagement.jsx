@@ -341,7 +341,7 @@ export default function PackageManagement() {
   })
 
   /* ── Shared form fields ── */
-  function PackageFormFields() {
+  function renderPackageFormFields() {
     return (
       <fieldset disabled={busy}>
         <label>
@@ -380,7 +380,7 @@ export default function PackageManagement() {
           <label>
             Giá niêm yết (VNĐ) <span className="input-wrap">
               <input
-                required type="number" min="1" step="1000" name="price"
+                required type="number" min="1" step="1" name="price"
                 placeholder="VD: 6800000"
                 value={form.price}
                 onChange={(e) => setField('price', e.target.value)}
@@ -660,7 +660,7 @@ export default function PackageManagement() {
           {/* ── Create form ── */}
           {modal.type === 'create' && (
             <form className="auth-form subject-form service-form" onSubmit={handleCreate}>
-              <PackageFormFields />
+              {renderPackageFormFields()}
               <div className="subject-modal-actions">
                 <button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Huỷ bỏ</button>
                 <button className="subject-button subject-primary" disabled={busy} type="submit">
@@ -673,7 +673,7 @@ export default function PackageManagement() {
           {/* ── Edit form ── */}
           {modal.type === 'edit' && (
             <form className="auth-form subject-form service-form" onSubmit={handleUpdate}>
-              <PackageFormFields />
+              {renderPackageFormFields()}
               <div className="subject-modal-actions">
                 <button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Huỷ bỏ</button>
                 <button className="subject-button subject-primary" disabled={busy} type="submit">

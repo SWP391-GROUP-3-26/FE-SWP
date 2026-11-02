@@ -35,10 +35,13 @@ export function paymentApiErrorMessage(error) {
   return error.message || 'Không thể kiểm tra thanh toán. Vui lòng thử lại.'
 }
 
-export async function getMemberPayment(paymentId, { signal, memberId } = {}) {
+export async function getMemberPayment(paymentId, { signal, memberId, resume = false } = {}) {
   if (!isValidPaymentId(paymentId)) throw new Error('Mã thanh toán không hợp lệ.')
+  if (resume && memberId) throw new Error('Không thể tiếp tục thanh toán qua đường dẫn này.')
   const token = getAccessToken()
-  const response = await axiosClient.get(memberId ? `/api/receptionist/registrations/members/${encodeURIComponent(memberId)}/payments/${paymentId}` : `/api/member/payments/${paymentId}`, {
+  const response = await axiosClient.request({
+    method: resume ? 'POST' : 'GET',
+    url: memberId ? `/api/receptionist/registrations/members/${encodeURIComponent(memberId)}/payments/${paymentId}` : `/api/member/payments/${paymentId}${resume ? '/resume' : ''}`,
     signal,
     timeout: 15000,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -61,5 +64,10 @@ export async function getMemberPayment(paymentId, { signal, memberId } = {}) {
     }
     getSepayQrUrl(qr.qrUrl)
   }
+  if (payment.paymentUrl != null) getVnpayPaymentUrl(payment.paymentUrl)
   return payment
+}
+
+export function resumeMemberPayment(paymentId) {
+  return getMemberPayment(paymentId, { resume: true })
 }

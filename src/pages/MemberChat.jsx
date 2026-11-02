@@ -57,7 +57,7 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
   const contactRole = isCoach ? 'học viên' : 'huấn luyện viên'
   const contactRoleTitle = isCoach ? 'Học viên' : 'Huấn luyện viên'
   const [contacts, setContacts] = useState([])
-  const [activeContactId, setActiveContactId] = useState(null)
+  const [activeContact, setActiveContact] = useState(null)
   const [messages, setMessages] = useState([])
   const [messagesConversationId, setMessagesConversationId] = useState(null)
   const [draft, setDraft] = useState('')
@@ -78,10 +78,8 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
   const searchRef = useRef('')
   const searchTimer = useRef(null)
 
-  const activeContact = useMemo(
-    () => contacts.find((contact) => contact.userId === activeContactId) || null,
-    [contacts, activeContactId],
-  )
+  const activeContactId = activeContact?.userId ?? null
+  const activeConversationId = activeContact?.conversationId
   const visibleMessages = useMemo(
     () => activeContact?.conversationId === messagesConversationId ? messages : [],
     [activeContact?.conversationId, messagesConversationId, messages],
@@ -93,10 +91,11 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
   const refreshContacts = useCallback(async (query = searchRef.current) => {
     try {
       const nextContacts = await getChatContacts(query)
+      if (query !== searchRef.current) return
       setContacts(nextContacts)
-      setActiveContactId((current) => current && nextContacts.some((item) => item.userId === current)
-        ? current
-        : (nextContacts[0]?.userId ?? null))
+      setActiveContact((current) => current
+        ? nextContacts.find((item) => item.userId === current.userId) || current
+        : (nextContacts[0] ?? null))
       setError('')
     } catch (requestError) {
       setError(chatErrorMessage(requestError))
@@ -109,10 +108,11 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
     const controller = new AbortController()
     getChatContacts(search, controller.signal)
       .then((nextContacts) => {
+        if (controller.signal.aborted) return
         setContacts(nextContacts)
-        setActiveContactId((current) => current && nextContacts.some((item) => item.userId === current)
-          ? current
-          : (nextContacts[0]?.userId ?? null))
+        setActiveContact((current) => current
+          ? nextContacts.find((item) => item.userId === current.userId) || current
+          : (nextContacts[0] ?? null))
         setError('')
       })
       .catch((requestError) => {
@@ -133,6 +133,9 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
         if (selected && (message.senderId === selected.userId || message.receiverId === selected.userId)) {
           setMessages((current) => mergeMessage(current, message))
           setMessagesConversationId(message.conversationId)
+          setActiveContact((current) => current?.userId === selected.userId
+            ? { ...current, conversationId: message.conversationId }
+            : current)
           if (message.senderId === selected.userId && message.conversationId) {
             markChatRead(message.conversationId).catch(() => {})
           }
@@ -144,7 +147,7 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
   }, [refreshContacts])
 
   useEffect(() => {
-    const conversationId = activeContact?.conversationId
+    const conversationId = activeConversationId
     if (!conversationId) return undefined
 
     const controller = new AbortController()
@@ -166,7 +169,7 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
       })
       .finally(() => { if (!controller.signal.aborted) setLoadingMessages(false) })
     return () => controller.abort()
-  }, [activeContact, refreshContacts])
+  }, [activeConversationId, refreshContacts])
 
   useEffect(() => {
     const node = messageListRef.current
@@ -271,7 +274,7 @@ export default function MemberChat({ embedded = false, onClose, audience = 'memb
                 aria-current={activeContactId === contact.userId ? 'true' : undefined}
                 className={`chat-contact${activeContactId === contact.userId ? ' chat-contact-active' : ''}`}
                 key={contact.userId}
-                onClick={() => setActiveContactId(contact.userId)}
+                onClick={() => setActiveContact(contact)}
                 type="button"
               >
                 <ContactAvatar contact={contact} />
