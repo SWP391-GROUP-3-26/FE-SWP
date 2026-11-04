@@ -106,7 +106,13 @@
 .coach-class-detail-button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; border: 0; border-radius: 7px; color: #356b4c; background: #edf5ef; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: none; white-space: nowrap; }
 .coach-class-detail-button:hover { background: #e0efe4; }
 .coach-class-detail-button .material-symbols-outlined { font-size: 16px; }
-.coach-class-results-count { padding: 12px 18px; border-top: 1px solid #edf2ee; color: #7b8980; font-size: 11px; }
+.coach-class-table-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid #edf2ee; }
+.coach-class-results-count { color: #7b8980; font-size: 12px; }
+.coach-class-pagination { display: flex; align-items: center; gap: 8px; color: #64766b; font-size: 12px; }
+.coach-class-pagination button { min-height: 34px; padding: 0 12px; border: 1px solid #dfe9e1; border-radius: 8px; color: #356b4c; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.coach-class-pagination button:hover:not(:disabled) { border-color: #b8d9c3; background: #f4faf5; }
+.coach-class-pagination button:disabled { color: #aab6ae; background: #f4f7f4; cursor: not-allowed; }
+.coach-class-pagination button:focus-visible { outline: 3px solid rgba(47, 125, 89, .25); outline-offset: 2px; }
 
 .coach-class-message { display: flex; min-height: 120px; align-items: center; justify-content: center; gap: 12px; padding: 22px; color: #536b5e; font-size: 13px; }
 .coach-class-message.is-error { justify-content: space-between; color: #9c2f1b; }
@@ -158,6 +164,7 @@
   .coach-class-search { flex-wrap: wrap; }
   .coach-class-search label { flex-basis: 100%; }
   .coach-class-search > button:not(.coach-class-refresh) { flex: 1; }
+  .coach-class-table-footer { align-items: flex-start; flex-direction: column; }
   .coach-class-detail-modal { padding: 18px; }
   .coach-class-detail-facts { grid-template-columns: 1fr; }
   .coach-class-detail-facts > div:nth-last-child(-n + 2) { border-bottom: 1px solid #e8efea; }

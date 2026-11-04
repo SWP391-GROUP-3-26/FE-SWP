@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import memberMenuItems from '../components/memberMenuItems'
 import RefundDetail, { RefundStatus } from '../components/RefundDetail'
+import TablePagination from '../components/TablePagination'
 import { getPaymentHistory, getPaymentReceipt, readRefund, financeError } from '../services/refundService'
 import { money, financeDate, paymentLabel, methodLabel } from '../utils/finance'
 
@@ -60,7 +61,7 @@ function HistoryList() {
   const [reload, setReload] = useState(0)
   useEffect(() => {
     const controller = new AbortController()
-    getPaymentHistory({ page, size: 20, status: status || undefined, type: type || undefined, from: from || undefined, to: to || undefined }, controller.signal)
+    getPaymentHistory({ page, size: 10, status: status || undefined, type: type || undefined, from: from || undefined, to: to || undefined }, controller.signal)
       .then((data) => { if (!controller.signal.aborted) setState({ loading: false, data, error: '' }) })
       .catch((error) => { if (!controller.signal.aborted) setState({ loading: false, data: null, error: financeError(error) }) })
     return () => controller.abort()
@@ -82,7 +83,7 @@ function HistoryList() {
     {data && <section className="finance-panel"><div className="finance-table-wrap"><table className="finance-table"><thead><tr><th>Giao dịch / dịch vụ</th><th>Số tiền</th><th>Thanh toán</th><th>Hoàn tiền</th><th>Chi tiết</th></tr></thead>
       <tbody>{data.items.map((p) => <tr key={p.id}><td><strong>#PAY-{p.id}</strong><small>{p.itemName}</small><small>{financeDate(p.createdAt)}</small></td><td>{money(p.amount)}<small>{methodLabel(p.method)}</small></td><td>{paymentLabel(p.status)}</td><td>{p.refund ? <RefundStatus status={p.refund.status} /> : p.requiresReview ? 'Cần đối soát' : 'Chưa yêu cầu'}{p.refund?.status === 'PAID' && <small>{money(p.refundedAmount)}</small>}</td><td><Link to={`/member/payment-history/${p.id}`}>Xem chi tiết</Link></td></tr>)}</tbody></table></div>
       {!data.items.length && <p>Chưa có giao dịch phù hợp.</p>}
-      <nav className="finance-actions" aria-label="Phân trang thanh toán"><button type="button" disabled={page === 0} onClick={() => { const next = new URLSearchParams(params); next.set('page', page - 1); setParams(next) }}>Trang trước</button><span>Trang {page + 1} / {Math.max(1, Math.ceil(data.total / data.size))}</span><button type="button" disabled={(page + 1) * data.size >= data.total} onClick={() => { const next = new URLSearchParams(params); next.set('page', page + 1); setParams(next) }}>Trang sau</button></nav>
+      <TablePagination page={page} pageSize={data.size} totalItems={data.total} itemLabel="giao dịch" onPageChange={(nextPage) => { const next = new URLSearchParams(params); next.set('page', nextPage); setParams(next) }} loading={state.loading} />
     </section>}
   </>
 }

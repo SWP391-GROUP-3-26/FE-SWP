@@ -7,6 +7,9 @@ import { formatClassDate } from '../utils/classSchedule'
 import Modal from './Modal'
 import MemberRequestError from './MemberRequestError'
 import RegisteredClassCard from './RegisteredClassCard'
+import TablePagination from './TablePagination'
+
+const TABLE_PAGE_SIZE = 10
 
 export default function ReceptionistRegistrations({ member, onChanged }) {
   const request = useCallback((signal) => getReceptionistRegistrations(member.userId, { signal, status: 'ongoing' }), [member.userId])
@@ -17,6 +20,11 @@ export default function ReceptionistRegistrations({ member, onChanged }) {
   const [cancelError, setCancelError] = useState('')
   const [message, setMessage] = useState('')
   const inFlight = useRef(false)
+  const [page, setPage] = useState(0)
+  const classes = data?.classes || []
+  const totalPages = Math.max(1, Math.ceil(classes.length / TABLE_PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages - 1)
+  const visibleClasses = classes.slice(currentPage * TABLE_PAGE_SIZE, (currentPage + 1) * TABLE_PAGE_SIZE)
   async function confirm() {
     if (!target || inFlight.current) return
     inFlight.current = true
@@ -43,7 +51,7 @@ export default function ReceptionistRegistrations({ member, onChanged }) {
     {message && <p role="status">{message}</p>}
     {data && (data.classes.length ? <div className="member-class-table-wrap" role="region" aria-label="Danh sách lớp đang hoạt động" tabIndex={0}><table className="member-registrations-table" aria-label="Lớp đang hoạt động của hội viên">
       <thead><tr>{['Tên lớp', 'Mã lớp', 'Lịch tập', 'Khung giờ', 'Huấn luyện viên', 'Trạng thái', 'Thao tác'].map((text) => <th scope="col" key={text}>{text}</th>)}</tr></thead>
-      <tbody>{data.classes.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
+      <tbody>{visibleClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
         paymentBasePath={`/receptionist/members/${member.userId}`} busy={busy}
         onDetail={setDetails} onCancel={(registration) => { setCancelError(''); setTarget(registration) }}
         onRebook={() => window.location.assign(`/receptionist/members/${member.userId}/classes`)} />)}</tbody>
@@ -53,6 +61,8 @@ export default function ReceptionistRegistrations({ member, onChanged }) {
       <p className="member-muted">Đăng ký lớp phù hợp để hội viên bắt đầu tập luyện.</p>
       <Link className="member-row-action member-row-action-primary" to={`/receptionist/members/${member.userId}/classes`}>Đăng ký lớp</Link>
     </div>)}
+    {data?.classes.length > 0 && <TablePagination page={currentPage} pageSize={TABLE_PAGE_SIZE} totalItems={classes.length}
+      itemLabel="lớp học" onPageChange={setPage} loading={loading} />}
     {target && <Modal title="Hủy đăng ký lớp" busy={busy} onClose={() => !busy && setTarget(null)}>
       <p>Hội viên: <strong>{member.fullName} · #{member.userId}</strong></p>
       <p>Lớp: <strong>{target.className}</strong></p>

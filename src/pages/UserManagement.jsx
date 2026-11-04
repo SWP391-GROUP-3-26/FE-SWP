@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import {
@@ -24,7 +25,6 @@ export default function UserManagement() {
   const [selectedStatus, setSelectedStatus] = useState(EMPTY_STATUS)
   const [selectedRole, setSelectedRole] = useState(EMPTY_ROLE)
   const [page, setPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -81,13 +81,12 @@ export default function UserManagement() {
           role: selectedRole,
           status: selectedStatus,
           page,
-          size: 20,
+          size: 10,
         })
 
         if (!isMounted) return
         setUsers(response.users || [])
         setTotal(response.total || 0)
-        setTotalPages(response.totalPages || 0)
         const lastPage = Math.max((response.totalPages || 0) - 1, 0)
         if (page > lastPage) setPage(lastPage)
       } catch (err) {
@@ -225,7 +224,6 @@ export default function UserManagement() {
     }
   }
 
-  const currentPage = totalPages > 0 ? Math.min(page + 1, totalPages) : 1
   const detailInitials = (detailUser?.fullName || detailUser?.username || '?')
     .trim()
     .split(/\s+/)
@@ -373,34 +371,8 @@ export default function UserManagement() {
           </div>
         )}
 
-        {!error && (
-          <div className="service-footer user-management-footer">
-            <span>{loading ? 'Đang tải…' : total > 0 ? `Tổng ${total} người dùng` : 'Chưa có dữ liệu để hiển thị'}</span>
-            <div className="service-pagination" aria-label="Phân trang">
-              <button
-                className="subject-button"
-                disabled={loading || page === 0}
-                type="button"
-                aria-label="Trang trước"
-                onClick={() => setPage((current) => Math.max(current - 1, 0))}
-              >
-                ‹
-              </button>
-              <button className="subject-button user-page-active" disabled type="button" aria-current="page">
-                {currentPage}
-              </button>
-              <button
-                className="subject-button"
-                disabled={loading || page + 1 >= totalPages}
-                type="button"
-                aria-label="Trang sau"
-                onClick={() => setPage((current) => current + 1)}
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        )}
+        {!error && <TablePagination page={page} pageSize={10} totalItems={total} itemLabel="người dùng"
+          onPageChange={setPage} loading={loading} />}
       </section>
       {detailUser && (
         <Modal title="Chi tiết người dùng" className="user-detail-modal" busy={roleSaving} onClose={closeDetail}>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
 import memberPlant from '../assets/member-plant.svg'
 
-export default function Sidebar({ role, menuItems }) {
+export default function Sidebar({ role, menuItems, onCollapse }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeIndex = menuItems.findIndex((item) => item.route === pathname)
@@ -23,14 +23,27 @@ export default function Sidebar({ role, menuItems }) {
   }
 
   return (
-    <aside className="dashboard-sidebar">
-      <Link to="/" className="dashboard-brand">
-        <span className="brand-mark material-symbols-outlined">spa</span>
-        <span>
-          <strong>UniSports</strong>
-          <small>{roleLabel}</small>
-        </span>
-      </Link>
+    <aside className="dashboard-sidebar" id="dashboard-sidebar">
+      <div className="dashboard-sidebar-heading">
+        <Link to="/" className="dashboard-brand">
+          <span className="brand-mark material-symbols-outlined">spa</span>
+          <span className="dashboard-brand-copy">
+            <strong>UniSports</strong>
+            <small>{roleLabel}</small>
+          </span>
+        </Link>
+        <button
+          aria-controls="dashboard-sidebar"
+          aria-expanded="true"
+          aria-label="Ẩn thanh điều hướng"
+          className="sidebar-toggle-button"
+          onClick={onCollapse}
+          title="Ẩn thanh điều hướng"
+          type="button"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">left_panel_close</span>
+        </button>
+      </div>
 
       <nav className="dashboard-nav" aria-label={`Điều hướng ${roleLabel}`}>
         {menuItems.map((item, index) => {
@@ -46,7 +59,7 @@ export default function Sidebar({ role, menuItems }) {
                   type="button"
                 >
                   <span className="material-symbols-outlined">{item.icon}</span>
-                  {item.label}
+                  <span className="dashboard-nav-label">{item.label}</span>
                   <span className="material-symbols-outlined dashboard-nav-chevron" aria-hidden="true">
                     {expanded ? 'expand_less' : 'expand_more'}
                   </span>
@@ -63,7 +76,7 @@ export default function Sidebar({ role, menuItems }) {
                           to={child.route}
                         >
                           <span className="material-symbols-outlined">{child.icon}</span>
-                          {child.label}
+                          <span className="dashboard-nav-label">{child.label}</span>
                         </Link>
                       )
                     })}
@@ -81,7 +94,7 @@ export default function Sidebar({ role, menuItems }) {
                 title="Chức năng chưa được kết nối với Backend"
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
-                {item.label}
+                <span className="dashboard-nav-label">{item.label}</span>
               </span>
             )
           }
@@ -93,20 +106,20 @@ export default function Sidebar({ role, menuItems }) {
               to={item.route}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
-              {item.label}
+              <span className="dashboard-nav-label">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {(role === 'Hội viên' || role === 'Center Manager') && (
+      <div className="dashboard-sidebar-utility">
+        <button aria-label="Đăng xuất" className="logout-button" onClick={handleLogout} type="button">
+          <span className="material-symbols-outlined">logout</span>
+          <span>Đăng xuất</span>
+        </button>
         <img className="sidebar-plant-art" src={memberPlant} alt="" aria-hidden="true" />
-      )}
+      </div>
 
-      <button className="logout-button" onClick={handleLogout} type="button">
-        <span className="material-symbols-outlined">logout</span>
-        Đăng xuất
-      </button>
     </aside>
   )
 }

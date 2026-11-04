@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ReceptionistLayout from '../components/ReceptionistLayout'
+import TablePagination from '../components/TablePagination'
 import ReceptionistMemberAvatar from '../components/ReceptionistMemberAvatar'
 import Modal from '../components/Modal'
 import { clearAuth } from '../auth/authStorage'
@@ -9,7 +10,7 @@ import { resolveAvatarUrl } from '../services/memberProfileService'
 import './SubjectManagement.css'
 import './ReceptionistMemberSearch.css'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 const PROFILE_FIELDS = [
   ['userId', 'ID'], ['fullName', 'Họ và tên'], ['username', 'Tên đăng nhập'],
   ['email', 'Email'], ['phone', 'Số điện thoại'], ['dob', 'Ngày sinh'],
@@ -134,7 +135,6 @@ export default function ReceptionistMemberSearch() {
     navigate('/login')
   }
 
-  const totalPages = result ? Math.ceil(result.total / result.size) : 0
   const avatar = resolveAvatarUrl(profile?.avatarUrl)
 
   return (
@@ -188,15 +188,8 @@ export default function ReceptionistMemberSearch() {
                   </table>
                 </div>
               )}
-              {totalPages > 0 && (
-                <nav className="member-search-pagination" aria-label="Phân trang kết quả">
-                  <button className="subject-button" disabled={result.page === 0} type="button"
-                    onClick={() => loadMembers(submittedSearch.keyword, Math.min(result.page - 1, totalPages - 1), result.size)}>Trang trước</button>
-                  <span>{result.page < totalPages ? `Trang ${result.page + 1} / ${totalPages}` : 'Trang hiện tại không còn kết quả'}</span>
-                  <button className="subject-button" disabled={result.page + 1 >= totalPages} type="button"
-                    onClick={() => loadMembers(submittedSearch.keyword, result.page + 1, result.size)}>Trang sau</button>
-                </nav>
-              )}
+              <TablePagination page={result.page} pageSize={result.size} totalItems={result.total} itemLabel="hội viên"
+                onPageChange={(nextPage) => loadMembers(submittedSearch.keyword, nextPage, result.size)} />
             </>
           )}
         </div>

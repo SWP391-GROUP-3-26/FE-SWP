@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import { getSubjects } from '../services/subjectService'
@@ -81,6 +82,7 @@ export default function PackageManagement() {
   const [notice, setNotice] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [page, setPage] = useState(0)
 
   // Modal state
   const [modal, setModal] = useState(null)          // null | { type: 'create'|'edit'|'detail'|'delete', pkg? }
@@ -339,6 +341,10 @@ export default function PackageManagement() {
       .some((v) => String(v ?? '').toLocaleLowerCase('vi').includes(query))
     return matchStatus && matchSearch
   })
+  const pageSize = 10
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const currentPage = Math.min(page, totalPages - 1)
+  const visiblePackages = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
 
   /* ── Shared form fields ── */
   function renderPackageFormFields() {
@@ -541,13 +547,13 @@ export default function PackageManagement() {
                 type="search"
                 placeholder="Tìm theo tên gói, mã PKG hoặc nội dung đặc quyền..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(0) }}
               />
             </span>
           </label>
           <label className="service-filter">
             <span>Trạng thái:</span>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0) }}>
               <option value="">Tất cả</option>
               {STATUS_OPTIONS.map(({ label, value }) => (
                 <option key={value} value={value}>{label}</option>
@@ -581,7 +587,7 @@ export default function PackageManagement() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((pkg) => (
+              {visiblePackages.map((pkg) => (
                 <tr key={pkg.id}>
                   <td><code>{pkg.code}</code></td>
                   <td>
@@ -629,7 +635,7 @@ export default function PackageManagement() {
                     <p>{packages.length ? 'Không tìm thấy gói dịch vụ phù hợp.' : 'Chưa có gói dịch vụ nào.'}</p>
                     {packages.length > 0 && (
                       <button className="subject-button" type="button"
-                        onClick={() => { setSearch(''); setStatusFilter('') }}>
+                        onClick={() => { setSearch(''); setStatusFilter(''); setPage(0) }}>
                         Xoá bộ lọc
                       </button>
                     )}
@@ -640,7 +646,7 @@ export default function PackageManagement() {
           </table>
         </div>
 
-        <p className="subject-count">Hiển thị {filtered.length} / {packages.length} gói dịch vụ</p>
+        <TablePagination page={currentPage} pageSize={pageSize} totalItems={filtered.length} itemLabel="gói dịch vụ" onPageChange={setPage} loading={loading} />
       </section>
 
       {/* ── Modals ── */}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import {
@@ -197,8 +198,10 @@ export default function ClassManagement() {
     }
   }
 
-  const totalPages = Math.max(1, Math.ceil(classes.length / 5))
-  const visibleClasses = useMemo(() => classes.slice((page - 1) * 5, page * 5), [classes, page])
+  const classPageSize = 10
+  const totalPages = Math.max(1, Math.ceil(classes.length / classPageSize))
+  const currentPage = Math.min(page, totalPages)
+  const visibleClasses = useMemo(() => classes.slice((currentPage - 1) * classPageSize, currentPage * classPageSize), [classes, currentPage])
   const dayOptions = optionsLoading ? [] : options
   const selectedSlot = options.timeSlots.find((slot) => String(slot.id) === form.slotId)
   const termErrors = validateClassTerm(form)
@@ -262,13 +265,8 @@ export default function ClassManagement() {
             </tbody>
           </table>
         </div>
-        <div className="service-footer"><span>Hiển thị {classes.length ? (page - 1) * 5 + 1 : 0}–{Math.min(page * 5, classes.length)} / {classes.length} lớp học</span>
-          <div className="service-pagination">
-            <button className="subject-button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)} type="button" aria-label="Trang trước">‹</button>
-            <span>{page} / {totalPages}</span>
-            <button className="subject-button" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)} type="button" aria-label="Trang sau">›</button>
-          </div>
-        </div>
+        <TablePagination page={currentPage - 1} pageSize={classPageSize} totalItems={classes.length}
+          itemLabel="lớp học" onPageChange={(nextPage) => setPage(nextPage + 1)} loading={loading} />
       </section>
       {modal && <Modal
         title={modal === 'create' ? 'Tạo mới lớp học' : modal.type === 'delete' ? 'Xóa lớp học' : 'Chi tiết lớp học'}

@@ -3,6 +3,7 @@ export const ROLES = {
   RECEPTIONIST: 'Receptionist',
   COACH: 'Coach',
   CENTER_MANAGER: 'Center Manager',
+  ADMIN: 'Admin',
 }
 
 export const ROLE_CONFIG = {
@@ -20,6 +21,10 @@ export const ROLE_CONFIG = {
   },
   [ROLES.CENTER_MANAGER]: {
     label: 'Center Manager',
+    route: '/center-manager',
+  },
+  [ROLES.ADMIN]: {
+    label: 'Admin',
     route: '/center-manager',
   },
 }

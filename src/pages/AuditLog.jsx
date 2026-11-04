@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { ROLES } from '../auth/roleConfig'
 import { getAuditLogDetail, getAuditLogs } from '../services/auditLogService'
@@ -40,7 +41,6 @@ export default function AuditLog() {
   const [endDate, setEndDate] = useState('')
   const [page, setPage] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -59,7 +59,6 @@ export default function AuditLog() {
         setLogs(result.data)
         setFilterOptions(result.filterOptions || { categories: [], actions: [] })
         setTotalElements(Number(result.totalElements || 0))
-        setTotalPages(Number(result.totalPages || 0))
         setPageSize(Number(result.pageSize || 10))
         const lastPage = Math.max(Number(result.totalPages || 0) - 1, 0)
         if (page > lastPage) setPage(lastPage)
@@ -78,8 +77,6 @@ export default function AuditLog() {
     .filter((item) => item && !['all', 'tất cả'].includes(item.toLowerCase())), [filterOptions])
   const visibleActions = useMemo(() => (filterOptions.actions || [])
     .filter((item) => item.key && item.key !== 'ALL'), [filterOptions])
-  const firstItem = totalElements === 0 ? 0 : page * pageSize + 1
-  const lastItem = Math.min((page + 1) * pageSize, totalElements)
 
   async function openLog(log) {
     setSelectedLog(log)
@@ -208,16 +205,8 @@ export default function AuditLog() {
               </tbody>
             </table>
           </div>
-          <footer className="audit-log-footer">
-            <span>Hiển thị <strong>{firstItem}–{lastItem}</strong> trong tổng số <strong>{totalElements}</strong> nhật ký</span>
-            <div className="audit-log-pagination" aria-label="Phân trang nhật ký">
-              <button type="button" aria-label="Trang đầu" disabled={page <= 0 || loading} onClick={() => setPage(0)}>|‹</button>
-              <button type="button" aria-label="Trang trước" disabled={page <= 0 || loading} onClick={() => setPage((value) => value - 1)}>‹</button>
-              <span>Trang <strong>{totalPages === 0 ? 0 : page + 1}</strong> / {totalPages}</span>
-              <button type="button" aria-label="Trang sau" disabled={page + 1 >= totalPages || loading} onClick={() => setPage((value) => value + 1)}>›</button>
-              <button type="button" aria-label="Trang cuối" disabled={page + 1 >= totalPages || loading} onClick={() => setPage(Math.max(totalPages - 1, 0))}>›|</button>
-            </div>
-          </footer>
+          <TablePagination page={page} pageSize={pageSize} totalItems={totalElements} itemLabel="nhật ký"
+            onPageChange={setPage} loading={loading} />
         </section>
       </section>
 

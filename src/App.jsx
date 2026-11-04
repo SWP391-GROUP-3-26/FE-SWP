@@ -5,6 +5,7 @@ import './App.css'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ROLES } from './auth/roleConfig'
 import CenterManagerDashboard from './pages/CenterManagerDashboard'
+import CenterManagerFinance from './pages/CenterManagerFinance'
 import AuditLog from './pages/AuditLog'
 import ClassManagement from './pages/ClassManagement'
 import CoachDashboard from './pages/CoachDashboard'
@@ -45,8 +46,8 @@ function App() {
       <Routes>
         <Route path="/member/payment-history" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
         <Route path="/member/payment-history/:id" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
-        <Route path="/center-manager/refunds" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
-        <Route path="/center-manager/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><StaffRefunds /></ProtectedRoute>} />
         <Route path="/receptionist/refunds" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
         <Route path="/receptionist/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
         <Route path="/coach/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><CoachTrainingPlans /></ProtectedRoute>} />
@@ -194,15 +195,18 @@ function App() {
         <Route
           path="/center-manager"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <CenterManagerDashboard />
             </ProtectedRoute>
           }
         />
+        <Route path="/center-manager/finances" element={
+          <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><CenterManagerFinance /></ProtectedRoute>
+        } />
         <Route
           path="/center-manager/users"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <UserManagement />
             </ProtectedRoute>
           }
@@ -210,7 +214,7 @@ function App() {
         <Route
           path="/center-manager/audit-logs"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <AuditLog />
             </ProtectedRoute>
           }
@@ -218,7 +222,7 @@ function App() {
         <Route
           path="/center-manager/classes"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <ClassManagement />
             </ProtectedRoute>
           }
@@ -226,7 +230,7 @@ function App() {
         <Route
           path="/center-manager/packages"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <PackageManagement />
             </ProtectedRoute>
           }

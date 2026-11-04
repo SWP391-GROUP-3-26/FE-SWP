@@ -20,9 +20,24 @@ export default function DashboardLayout({
   children,
 }) {
   const [auth, setAuth] = useState(getAuth)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(`unisports:sidebar-collapsed:${role}`) === 'true'
+    } catch {
+      return false
+    }
+  })
   const [failedAvatarSrc, setFailedAvatarSrc] = useState('')
   const [profileSyncError, setProfileSyncError] = useState('')
   const avatarSrc = resolveAvatarUrl(profile?.avatarUrl || auth.avatarUrl)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(`unisports:sidebar-collapsed:${role}`, String(sidebarCollapsed))
+    } catch {
+      // Keep the control usable when browser storage is unavailable.
+    }
+  }, [role, sidebarCollapsed])
 
   useEffect(() => {
     if (getRole() !== 'Member') return undefined
@@ -54,13 +69,28 @@ export default function DashboardLayout({
   const showAvatar = avatarSrc && avatarSrc !== failedAvatarSrc
 
   return (
-    <div className={`dashboard-shell ${className}`.trim()}>
-      <Sidebar role={role} menuItems={menuItems} />
+    <div className={`dashboard-shell${sidebarCollapsed ? ' dashboard-shell-sidebar-collapsed' : ''} ${className}`.trim()}>
+      <Sidebar onCollapse={() => setSidebarCollapsed(true)} role={role} menuItems={menuItems} />
 
       <div className="dashboard-main">
+        {sidebarCollapsed && (
+          <button
+            aria-controls="dashboard-sidebar"
+            aria-expanded="false"
+            aria-label="Mở rộng thanh điều hướng"
+            className="sidebar-reopen-button"
+            onClick={() => setSidebarCollapsed(false)}
+            title="Mở rộng thanh điều hướng"
+            type="button"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">left_panel_open</span>
+          </button>
+        )}
         <header className="dashboard-topbar">
           <div>
-            <span className="breadcrumb">{eyebrow}</span>
+            {eyebrow && !['Hội viên', 'Member'].includes(role) && (
+              <span className="breadcrumb">{eyebrow}</span>
+            )}
             <h1 className="dashboard-page-title">{title}</h1>
           </div>
           <div className="topbar-user">

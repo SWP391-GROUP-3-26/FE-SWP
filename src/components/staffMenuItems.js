@@ -3,6 +3,7 @@ import { ROLES } from '../auth/roleConfig'
 export const staffMenuItems = {
   [ROLES.CENTER_MANAGER]: [
     { icon: 'dashboard', label: 'Tổng quan trung tâm', route: '/center-manager' },
+    { icon: 'monitoring', label: 'Báo cáo tài chính', route: '/center-manager/finances' },
     { icon: 'groups', label: 'Quản lý người dùng', route: '/center-manager/users' },
     {
       icon: 'widgets',

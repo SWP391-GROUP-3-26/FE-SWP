@@ -5,6 +5,7 @@ import ReceptionistLayout from '../components/ReceptionistLayout'
 import Modal from '../components/Modal'
 import CancellationRefundPreview from '../components/CancellationRefundPreview'
 import RegisteredClassCard from '../components/RegisteredClassCard'
+import TablePagination from '../components/TablePagination'
 import { formatClassDate } from '../utils/classSchedule'
 import memberMenuItems from '../components/memberMenuItems'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
@@ -28,6 +29,7 @@ const priceFormatter = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
   maximumFractionDigits: 0,
 })
+const TABLE_PAGE_SIZE = 10
 
 function classSchedule(classItem) {
   const days = classItem.daysOfWeek
@@ -47,8 +49,9 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   const [classes, setClasses] = useState([])
   const [activeTab, setActiveTab] = useState(receptionist ? 'available' : 'registered')
   const [registeredClasses, setRegisteredClasses] = useState([])
+  const [registeredPage, setRegisteredPage] = useState(0)
   const [counts, setCounts] = useState({})
-  const [registrationStatus, setRegistrationStatus] = useState('all')
+  const [registrationStatus, setRegistrationStatus] = useState(receptionist ? 'all' : 'ongoing')
   const [detailRegistration, setDetailRegistration] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
   const [cancelPreview, setCancelPreview] = useState(null)
@@ -97,6 +100,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   function changeTab(tab) {
     if (tab === activeTab) return
     setActiveTab(tab)
+    setRegisteredPage(0)
     setLoading(true)
     setLoadError('')
     setSearch('')
@@ -141,6 +145,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
     setLoading(true)
     setLoadError('')
     setSuccessMessage('')
+    setRegisteredPage(0)
     if (search === submittedSearch) {
       setReloadKey((key) => key + 1)
     } else {
@@ -227,6 +232,10 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
     }
   }
 
+  const registeredTotalPages = Math.max(1, Math.ceil(registeredClasses.length / TABLE_PAGE_SIZE))
+  const currentRegisteredPage = Math.min(registeredPage, registeredTotalPages - 1)
+  const visibleRegisteredClasses = registeredClasses.slice(currentRegisteredPage * TABLE_PAGE_SIZE, (currentRegisteredPage + 1) * TABLE_PAGE_SIZE)
+
   return (
     <PageLayout
       className={receptionist ? 'receptionist-classes-page' : undefined}
@@ -260,15 +269,16 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
         {activeTab === 'registered' && (
           <div className="member-registration-filter" role="group" aria-label="Lọc lớp theo trạng thái">
             {[
-              { value: 'all', label: 'Tất cả', count: counts.all },
               { value: 'ongoing', label: 'Đang học', count: counts.ongoing },
               { value: 'completed', label: 'Hoàn thành', count: counts.completed },
               { value: 'cancelled', label: 'Đã hủy', count: counts.cancelled },
               { value: 'Pending', label: 'Chờ thanh toán' },
+              { value: 'all', label: 'Tất cả', count: counts.all },
             ].map((filter) => (
               <button key={filter.value} type="button" aria-pressed={registrationStatus === filter.value}
                 onClick={() => {
                   setRegistrationStatus(filter.value)
+                  setRegisteredPage(0)
                   setLoading(true)
                   setLoadError('')
                 }}>
@@ -337,7 +347,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               </tr>
             </thead>
             <tbody>
-              {registeredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
+              {visibleRegisteredClasses.map((item) => <RegisteredClassCard key={item.registrationId ?? item.bookingId} item={item}
                 busy={cancellingId === item.bookingId} onDetail={setDetailRegistration} onCancel={askToCancelRegistration}
                 paymentBasePath={memberId ? `/receptionist/members/${memberId}` : '/member'}
                 onRefresh={() => setReloadKey((key) => key + 1)}
@@ -345,6 +355,8 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
             </tbody>
           </table>
         </div>}
+        {registeredClasses.length > 0 && <TablePagination page={currentRegisteredPage} pageSize={TABLE_PAGE_SIZE}
+          totalItems={registeredClasses.length} itemLabel="lớp học" onPageChange={setRegisteredPage} loading={loading} />}
       </section>}
 
       {activeTab === 'available' && !loadError && !loading && classes.length === 0 && (

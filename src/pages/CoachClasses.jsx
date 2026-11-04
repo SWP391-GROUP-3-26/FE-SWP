@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import coachMenuItems from '../components/coachMenuItems'
+import TablePagination from '../components/TablePagination'
 import {
   getCoachClasses,
   coachClassApiErrorMessage,
@@ -9,11 +10,12 @@ import {
 import './CoachClasses.css'
 
 const filters = [
-  { value: 'all', label: 'Tất cả' },
   { value: 'active', label: 'Đang hoạt động' },
   { value: 'completed', label: 'Đã hoàn thành' },
   { value: 'cancelled', label: 'Đã hủy' },
+  { value: 'all', label: 'Tất cả' },
 ]
+const PAGE_SIZE = 10
 
 function formatDate(value) {
   if (!value) return 'Chưa cập nhật'
@@ -44,9 +46,10 @@ export default function CoachClasses() {
   const [classes, setClasses] = useState([])
   const [counts, setCounts] = useState(null)
   const [coachName, setCoachName] = useState('')
-  const [status, setStatus] = useState('all')
+  const [status, setStatus] = useState('active')
   const [search, setSearch] = useState('')
   const [submittedSearch, setSubmittedSearch] = useState('')
+  const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -58,6 +61,7 @@ export default function CoachClasses() {
     getCoachClasses({ search: submittedSearch, status, signal: controller.signal })
       .then((result) => {
         if (controller.signal.aborted) return
+        setPage(0)
         setClasses(result.classes)
         setCounts(result.counts)
         setCoachName(result.coachName || '')
@@ -76,6 +80,9 @@ export default function CoachClasses() {
     setSubmittedSearch(search.trim())
     if (search.trim() === submittedSearch) setReloadKey((key) => key + 1)
   }
+
+  const firstVisibleClass = page * PAGE_SIZE
+  const visibleClasses = classes.slice(firstVisibleClass, firstVisibleClass + PAGE_SIZE)
 
   return (
     <DashboardLayout
@@ -142,7 +149,7 @@ export default function CoachClasses() {
                 <th scope="col">Lớp học</th><th scope="col">Môn học</th><th scope="col">Lịch học</th>
                 <th scope="col">Thời hạn</th><th scope="col">Học viên</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th>
               </tr></thead>
-              <tbody>{classes.map((item) => (
+              <tbody>{visibleClasses.map((item) => (
                 <tr key={item.classId}>
                   <td><div className="coach-class-name"><strong>{item.name || 'Lớp học'}</strong><span>{item.classCode || `Lớp #${item.classId}`}</span></div></td>
                   <td><div className="coach-class-subject"><strong>{item.subjectName || 'Chưa phân môn'}</strong>{item.subjectCategory && <span>{item.subjectCategory}</span>}</div></td>
@@ -158,7 +165,8 @@ export default function CoachClasses() {
             </table>
           </div>
         )}
-        {!loading && !loadError && <div className="coach-class-results-count">Hiển thị {classes.length} lớp</div>}
+        {!loading && !loadError && classes.length > 0 && <TablePagination page={page} pageSize={PAGE_SIZE}
+          totalItems={classes.length} itemLabel="lớp học" onPageChange={setPage} loading={loading} />}
       </section>
 
     </DashboardLayout>

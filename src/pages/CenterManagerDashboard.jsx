@@ -1,4 +1,6 @@
 import DashboardLayout from '../components/DashboardLayout'
+import { Link } from 'react-router-dom'
+import CenterManagerFinance from './CenterManagerFinance'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { ROLES } from '../auth/roleConfig'
 
@@ -24,18 +26,18 @@ export default function CenterManagerDashboard() {
           <h3>Nhân sự</h3>
           <p>Khu vực tổng hợp nhân sự và lịch trực.</p>
         </article>
-        <article className="dashboard-card">
+        <Link className="dashboard-card manager-finance-shortcut" to="/center-manager/finances">
           <span className="material-symbols-outlined">paid</span>
           <h3>Doanh thu</h3>
-          <p>Báo cáo doanh thu sẽ hiển thị khi API được cung cấp.</p>
-        </article>
+          <p>Xem báo cáo doanh thu theo tháng.</p>
+        </Link>
       </div>
       <section className="dashboard-panel">
         <div className="panel-heading">
-          <h3>Khu vực nội dung</h3>
-          <span>Giao diện</span>
+          <h3>Báo cáo tài chính</h3>
+          <Link to="/center-manager/finances">Mở toàn trang</Link>
         </div>
-        <div className="placeholder-box">Chức năng quản trị sẽ được cập nhật tại đây.</div>
+        <CenterManagerFinance embedded />
       </section>
     </DashboardLayout>
   )

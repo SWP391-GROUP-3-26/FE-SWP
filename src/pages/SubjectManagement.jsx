@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import { SUBJECT_CATEGORIES } from '../constants/subjectCategories'
@@ -21,6 +22,7 @@ export default function SubjectManagement() {
   const [notice, setNotice] = useState('')
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [page, setPage] = useState(0)
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({ name: '', category: '', description: '' })
   const [modalError, setModalError] = useState('')
@@ -135,6 +137,10 @@ export default function SubjectManagement() {
     (!category || subject.category === category) &&
     [subject.id, subject.code, subject.name, subject.category, subject.description]
       .some((value) => String(value ?? '').toLocaleLowerCase('vi').includes(query)))
+  const pageSize = 10
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const currentPage = Math.min(page, totalPages - 1)
+  const visibleSubjects = filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
@@ -154,11 +160,11 @@ export default function SubjectManagement() {
         <div className="subject-toolbar">
           <label className="subject-search"><span className="visually-hidden">Tìm kiếm môn học</span>
             <span className="input-wrap"><span className="material-symbols-outlined" aria-hidden="true">search</span>
-              <input type="search" placeholder="Tìm tên, mã hoặc mô tả môn học..." value={search} onChange={(event) => setSearch(event.target.value)} />
+              <input type="search" placeholder="Tìm tên, mã hoặc mô tả môn học..." value={search} onChange={(event) => { setSearch(event.target.value); setPage(0) }} />
             </span>
           </label>
           <label className="subject-filter"><span className="visually-hidden">Lọc danh mục</span>
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
+            <select value={category} onChange={(event) => { setCategory(event.target.value); setPage(0) }}>
               <option value="">Tất cả danh mục</option>
               {category && !categories.includes(category) && <option value={category}>{category}</option>}
               {categories.map((value) => <option key={value} value={value}>{value}</option>)}
@@ -173,7 +179,7 @@ export default function SubjectManagement() {
           <table className="subject-table">
             <thead><tr>{['ID', 'Mã môn học', 'Tên môn học', 'Danh mục', 'Mô tả', 'Thao tác'].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
             <tbody>
-              {filtered.map((subject) => <tr key={subject.id}>
+              {visibleSubjects.map((subject) => <tr key={subject.id}>
                 <td>{subject.id}</td><td><code>{subject.code || '—'}</code></td>
                 <th scope="row">{subject.name}</th><td><span className="subject-category">{subject.category || '—'}</span></td>
                 <td className="subject-description">{subject.description || '—'}</td>
@@ -187,12 +193,12 @@ export default function SubjectManagement() {
               {!loading && !listError && filtered.length === 0 && <tr><td colSpan={6} className="subject-empty">
                 <span className="material-symbols-outlined" aria-hidden="true">menu_book</span>
                 <p>{subjects.length ? 'Không tìm thấy môn học phù hợp.' : 'Chưa có môn học nào.'}</p>
-                {subjects.length > 0 && <button className="subject-button" type="button" onClick={() => { setSearch(''); setCategory('') }}>Xóa bộ lọc</button>}
+                {subjects.length > 0 && <button className="subject-button" type="button" onClick={() => { setSearch(''); setCategory(''); setPage(0) }}>Xóa bộ lọc</button>}
               </td></tr>}
             </tbody>
           </table>
         </div>
-        <p className="subject-count">Hiển thị {filtered.length} / {subjects.length} môn học</p>
+        <TablePagination page={currentPage} pageSize={pageSize} totalItems={filtered.length} itemLabel="môn học" onPageChange={setPage} loading={loading} />
       </section>
       {modal && <Modal title={modal.type === 'create' ? 'Thêm môn học' : modal.type === 'delete' ? 'Xóa môn học' : 'Chi tiết môn học'} busy={busy} onClose={closeModal}>
         {modalError && <div className="auth-error subject-modal-error" role="alert">{modalError}</div>}

@@ -2,14 +2,15 @@ export default function MemberSessionCard({ entry, onViewEvaluation }) {
   const { item, date, startTime, endTime, reasons } = entry
   const status = item.sessionStatus || item.status || item.rawStatus
   const statusLabels = {
-    Scheduled: 'Đã lên lịch',
     Booked: 'Đã xác nhận',
     Confirmed: 'Đã xác nhận',
     Completed: 'Đã hoàn thành',
     Cancelled: 'Đã hủy',
     Pending: 'Chờ xác nhận',
   }
-  const displayStatus = statusLabels[status] || status
+  const displayStatus = String(status || '').toLowerCase() === 'scheduled'
+    ? ''
+    : statusLabels[status] || status
   const attendance = {
     Present: { label: 'Có mặt', icon: 'check_circle', className: 'is-present' },
     Absent: { label: 'Vắng mặt', icon: 'cancel', className: 'is-absent' },
