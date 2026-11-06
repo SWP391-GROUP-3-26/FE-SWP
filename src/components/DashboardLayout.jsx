@@ -12,7 +12,6 @@ export default function DashboardLayout({
   roleLabel = role,
   eyebrow,
   title,
-  subtitle,
   menuItems,
   profile,
   showIntro = true,
@@ -130,7 +129,6 @@ export default function DashboardLayout({
               <div>
                 <span className="section-heading-kicker">{roleLabel}</span>
                 <h2>{title}</h2>
-                <p>{subtitle}</p>
               </div>
             </section>
           )}

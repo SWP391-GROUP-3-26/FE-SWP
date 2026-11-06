@@ -124,7 +124,6 @@ export default function AuditLog() {
           <div>
             <span className="section-heading-kicker">LỊCH SỬ HOẠT ĐỘNG</span>
             <h2>Nhật ký hoạt động</h2>
-            <p>Theo dõi các thay đổi được ghi nhận trong hệ thống.</p>
           </div>
           <span className="audit-log-heading-icon material-symbols-outlined" aria-hidden="true">history</span>
         </header>

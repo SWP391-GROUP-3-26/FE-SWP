@@ -224,7 +224,7 @@ export default function CoachClassDetail() {
           <section className="coach-attendance-page-panel" aria-labelledby="coach-attendance-title">
             <header className="coach-attendance-page-header">
               <div><span className="section-heading-kicker">THEO DÕI BUỔI HỌC</span><h3 id="coach-attendance-title">Điểm danh học viên</h3>
-                <p>Chọn buổi học, cập nhật tình trạng từng học viên rồi lưu điểm danh.</p></div>
+                </div>
               <label className="coach-attendance-session-picker">Buổi học
                 <select value={selectedSessionId} onChange={(event) => {
                   if ((hasChanges || evaluationDirty) && !window.confirm('Bạn có thay đổi điểm danh hoặc đánh giá chưa lưu. Chuyển buổi học và bỏ các thay đổi này?')) return

@@ -70,7 +70,6 @@ export default function MemberPaymentResult({ receptionist = false, memberId = n
         <div>
           <span className="section-heading-kicker">{isPackage ? 'GÓI HỘI VIÊN' : 'ĐĂNG KÝ LỚP HỌC'}</span>
           <h2>Kết quả thanh toán</h2>
-          <p>Trạng thái thanh toán và đăng ký được xác nhận từ trung tâm.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">payments</span>
       </section>

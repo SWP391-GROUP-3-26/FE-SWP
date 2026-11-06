@@ -209,8 +209,7 @@ export default function ClassManagement() {
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
-      eyebrow="Dịch vụ & đào tạo / Quản lý dịch vụ" title="Danh mục lớp học"
-      subtitle="Tìm kiếm, theo dõi và tạo lớp học dựa trên dữ liệu lớp, môn học, huấn luyện viên và phòng tập từ hệ thống.">
+      eyebrow="Dịch vụ & đào tạo / Quản lý dịch vụ" title="Danh mục lớp học">
       {notice && <div className="auth-notice service-notice" role="status">
         <span>{notice}</span>
         <button className="icon-button" aria-label="Đóng thông báo" onClick={() => setNotice('')} type="button">×</button>

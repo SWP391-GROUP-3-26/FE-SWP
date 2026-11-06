@@ -49,7 +49,6 @@ export default function CoachWeeklySchedule({ classes, loading, error, onRetry }
     </div>
     {!loading && !error && otherSessions.length > 0 && <section className="member-data-section member-schedule-other" aria-label="Buổi dạy cần kiểm tra lịch">
       <h3>Buổi dạy cần kiểm tra lịch</h3>
-      <p>Các buổi ngoài slot hoặc thiếu ngày được hiển thị riêng để bạn kiểm tra với trung tâm.</p>
       <div className="member-class-grid">{otherSessions.map(renderSession)}</div>
     </section>}
   </section>

@@ -317,7 +317,6 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         <div>
           <span className="section-heading-kicker">QUYỀN LỢI HỘI VIÊN</span>
           <h2>Gói dịch vụ cá nhân</h2>
-          <p>Xem gói đang sử dụng, theo dõi lịch sử, đăng ký và gia hạn gói tập phù hợp.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">card_membership</span>
       </section>

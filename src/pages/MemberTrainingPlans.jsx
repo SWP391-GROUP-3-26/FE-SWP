@@ -17,7 +17,7 @@ export default function MemberTrainingPlans() {
   }, [reload])
   const plans = state.plans.filter((plan) => !status || plan.status === status)
   return <DashboardLayout role="Hội viên" menuItems={memberMenuItems} eyebrow="Hội viên / Kế hoạch tập" title="Kế hoạch tập luyện" showIntro={false}>
-    <main className="training-page"><header className="training-section-header"><div><h2>Kế hoạch dành cho bạn</h2><p>Xem bài tập, ghi nhận kết quả và đọc nhận xét của coach.</p></div>
+    <main className="training-page"><header className="training-section-header"><div><h2>Kế hoạch dành cho bạn</h2></div>
       <label>Trạng thái<select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Tất cả</option><option value="ASSIGNED">Đã giao</option><option value="COMPLETED">Hoàn thành</option><option value="CANCELLED">Đã hủy</option></select></label>
     </header>
       {state.loading && <p role="status">Đang tải kế hoạch...</p>}

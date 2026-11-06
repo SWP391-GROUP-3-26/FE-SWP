@@ -43,7 +43,7 @@ function RefundContent({ audience, id }) {
   const currentPage = Math.min(page, totalPages - 1)
   const visibleItems = items.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
   return <>
-    {id ? <Link to={`/${audience}/refunds`}>← Danh sách hoàn tiền</Link> : <header className="finance-header"><div><h2>{manager ? 'Duyệt yêu cầu hoàn tiền' : 'Hoàn tiền tại quầy'}</h2><p>{manager ? 'Kiểm tra khoản thực thu, các buổi đã hủy và số tiền đề nghị.' : 'Chọn đơn đã duyệt và nhập đúng mã hoàn tiền member cung cấp để xác nhận trả tiền mặt tại quầy.'}</p></div></header>}
+    {id ? <Link to={`/${audience}/refunds`}>← Danh sách hoàn tiền</Link> : <header className="finance-header"><div><h2>{manager ? 'Duyệt yêu cầu hoàn tiền' : 'Hoàn tiền tại quầy'}</h2></div></header>}
     {state.loading && <p role="status">Đang tải yêu cầu hoàn tiền...</p>}
     {state.error && <div className="finance-error" role="alert">{state.error} <button type="button" disabled={busy} onClick={() => setReload((n) => n + 1)}>Tải lại</button></div>}
     {message && <div className="finance-success" role="status">{message}</div>}
@@ -52,7 +52,7 @@ function RefundContent({ audience, id }) {
       <section className="finance-panel"><div className="finance-table-wrap"><table className="finance-table"><thead><tr><th>Yêu cầu</th><th>Học viên / dịch vụ</th><th>Tiền dự kiến / duyệt</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead><tbody>{visibleItems.map((r) => <tr key={r.id}><td>#HT-{r.id}<small>#PAY-{r.paymentId} · {financeDate(r.createdAt)}</small></td><td>{r.memberName}<small>{r.itemName}</small></td><td>{money(r.estimatedAmount)}<small>Duyệt: {money(r.approvedAmount)}</small></td><td><RefundStatus status={r.status} /></td><td><Link to={`/${audience}/refunds/${r.id}`}>Xem yêu cầu</Link></td></tr>)}</tbody></table></div>{!items.length && <p>Chưa có yêu cầu phù hợp.</p>}
         <TablePagination page={currentPage} pageSize={pageSize} totalItems={items.length} itemLabel="yêu cầu" onPageChange={setPage} loading={state.loading} />
       </section>
-      {manager && state.data.legacyPayments.length > 0 && <section className="finance-panel"><h2>Khoản cũ cần kiểm tra hoàn tiền</h2><p>Các khoản đã thu và có buổi bị hủy nhưng chưa có yêu cầu hoàn tiền. Khi mở yêu cầu, hệ thống dựng lại số buổi từ lịch sử để bạn kiểm tra.</p>
+      {manager && state.data.legacyPayments.length > 0 && <section className="finance-panel"><h2>Khoản cũ cần kiểm tra hoàn tiền</h2>
         {state.data.legacyPayments.map((p) => <div className="finance-row" key={p.paymentId}><div><strong>#PAY-{p.paymentId} · {p.memberName}</strong><p>{p.itemName} · Đã thu {money(p.amount)}</p></div><button type="button" disabled={busy} onClick={() => void action(() => createLegacyRefund(p.paymentId), 'Đã tạo yêu cầu từ khoản cần đối soát.')}>Mở yêu cầu hoàn tiền</button></div>)}
       </section>}
     </>)}

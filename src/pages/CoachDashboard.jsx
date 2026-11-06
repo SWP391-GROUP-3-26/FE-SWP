@@ -16,12 +16,6 @@ function StatCard({ icon, label, value, tone }) {
   )
 }
 
-function dateLabel() {
-  return new Intl.DateTimeFormat('vi-VN', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  }).format(new Date())
-}
-
 export default function CoachDashboard() {
   const [classes, setClasses] = useState([])
   const [counts, setCounts] = useState(null)
@@ -69,7 +63,6 @@ export default function CoachDashboard() {
           <div className="coach-home-welcome-copy">
             <span className="section-heading-kicker">TỔNG QUAN HÔM NAY</span>
             <h2>{coachName ? `Xin chào, ${coachName}` : 'Chào mừng trở lại'}</h2>
-            <p>{dateLabel()} <span aria-hidden="true">·</span> Đây là lịch dạy và tình hình các lớp bạn phụ trách.</p>
           </div>
           <Link className="coach-home-action" to="/coach/classes">
             Xem danh sách lớp <span className="material-symbols-outlined" aria-hidden="true">arrow_forward</span>

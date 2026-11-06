@@ -91,7 +91,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
     <div className="receptionist-checkout">
       <Link className="back-link" to={backPath}><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>{isRenewal ? 'Quay lại hồ sơ hội viên' : `Quay lại chọn ${isClass ? 'lớp' : 'gói'}`}</Link>
       <header className="checkout-heading">
-        <div><span className="section-heading-kicker">{isRenewal ? 'GIA HẠN TẠI QUẦY' : 'ĐĂNG KÝ TẠI QUẦY'}</span><h2>{isRenewal ? 'Thanh toán gia hạn gói' : 'Thanh toán dịch vụ'}</h2><p>Kiểm tra thông tin hội viên và dịch vụ trước khi xác nhận.</p></div>
+        <div><span className="section-heading-kicker">{isRenewal ? 'GIA HẠN TẠI QUẦY' : 'ĐĂNG KÝ TẠI QUẦY'}</span><h2>{isRenewal ? 'Thanh toán gia hạn gói' : 'Thanh toán dịch vụ'}</h2></div>
         <span className="checkout-secure"><span className="material-symbols-outlined" aria-hidden="true">verified_user</span>Giao dịch tại quầy</span>
       </header>
       {loading && <div className="checkout-card" role="status">Đang tải thông tin hội viên và dịch vụ…</div>}
@@ -134,7 +134,6 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
         </section>
         <section className="checkout-card checkout-payment" aria-labelledby="checkout-payment-title">
           <div className="checkout-card-title"><span className="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><h3 id="checkout-payment-title">Phương thức thanh toán</h3></div>
-          <p className="checkout-caption">Chọn phương thức phù hợp với hội viên.</p>
           {blockReason && !hasPayment && <div className="checkout-notice" role="alert"><p>{blockReason}</p>{pending?.paymentId && <Link to={`${profilePath}/payment-result?paymentId=${pending.paymentId}`}>Kiểm tra giao dịch đang chờ</Link>}</div>}
           {hasPayment ? <div className="checkout-live-payment">
             {!validPayment ? <p role="alert">Mã thanh toán không hợp lệ. Vui lòng mở lại từ hồ sơ hội viên.</p>

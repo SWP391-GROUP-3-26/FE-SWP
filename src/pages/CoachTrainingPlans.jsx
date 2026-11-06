@@ -62,7 +62,7 @@ function PlanEditor({ initial, classes, classId, memberId, scope }) {
     finally { setBusy(false) }
   }
   return <form className="training-form" onSubmit={save}>
-    <header className="training-section-header"><div><h2>{initial ? 'Chỉnh sửa kế hoạch' : 'Tạo kế hoạch tập luyện'}</h2><p>Giao bài cho cá nhân hoặc cả lớp và theo dõi kết quả riêng của từng học viên.</p></div><Link className="training-link" to="/coach/training-plans">Quay lại danh sách</Link></header>
+    <header className="training-section-header"><div><h2>{initial ? 'Chỉnh sửa kế hoạch' : 'Tạo kế hoạch tập luyện'}</h2></div><Link className="training-link" to="/coach/training-plans">Quay lại danh sách</Link></header>
     {error && <div className="training-error" role="alert">{error} {initial && <Link to={`/coach/training-plans/${initial.id}`}>Mở lại kế hoạch</Link>}</div>}
     <fieldset className="training-panel training-form-grid" disabled={busy || (initial && !initial.editable)}>
       <legend>Thông tin kế hoạch</legend>
@@ -124,7 +124,7 @@ function CoachTrainingPlanContent() {
   const plans = state.plans.filter((p) => (!classFilter || String(p.classId) === classFilter) && (!statusFilter || p.status === statusFilter)
     && `${p.title} ${p.memberName}`.toLocaleLowerCase('vi').includes(search.trim().toLocaleLowerCase('vi')))
   return <>
-    <header className="training-section-header"><div><span className="section-heading-kicker">TRAINING PLANS</span><h2>Kế hoạch tập luyện</h2><p>Quản lý kế hoạch cá nhân và cả lớp, theo dõi kết quả của từng học viên.</p></div><Link className="training-button training-primary" to={`/coach/training-plans?new=1${classFilter ? `&classId=${classFilter}` : ''}`}>+ Tạo kế hoạch</Link></header>
+    <header className="training-section-header"><div><span className="section-heading-kicker">TRAINING PLANS</span><h2>Kế hoạch tập luyện</h2></div><Link className="training-button training-primary" to={`/coach/training-plans?new=1${classFilter ? `&classId=${classFilter}` : ''}`}>+ Tạo kế hoạch</Link></header>
     <div className="training-filters">
       <label>Lớp học<select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}><option value="">Tất cả lớp</option>{state.classes.map((c) => <option key={c.classId} value={c.classId}>{c.name}</option>)}</select></label>
       <label>Trạng thái<select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}><option value="">Tất cả</option><option value="DRAFT">Bản nháp</option><option value="ASSIGNED">Đã giao</option><option value="COMPLETED">Hoàn thành</option><option value="CANCELLED">Đã hủy</option></select></label>

@@ -254,7 +254,6 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
         <div>
           <span className="section-heading-kicker">KHÁM PHÁ BỘ MÔN</span>
           <h2>{receptionist ? 'Lớp học của hội viên' : 'Lớp học của tôi'}</h2>
-          <p>Theo dõi lịch tập, trạng thái và thông tin các lớp bạn đã đăng ký.</p>
         </div>
         <button className="member-register-button member-class-heading-action" type="button"
           onClick={() => changeTab(activeTab === 'registered' ? 'available' : 'registered')}>

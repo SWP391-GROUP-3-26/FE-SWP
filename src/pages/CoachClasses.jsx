@@ -97,7 +97,6 @@ export default function CoachClasses() {
         <div>
           <span className="section-heading-kicker">LỚP ĐANG PHỤ TRÁCH</span>
           <h2>{coachName ? `Xin chào, ${coachName}` : 'Các lớp bạn phụ trách'}</h2>
-          <p>Theo dõi lịch học, số lượng học viên và tình trạng từng lớp.</p>
         </div>
         <span className="material-symbols-outlined" aria-hidden="true">groups</span>
       </section>

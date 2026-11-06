@@ -125,7 +125,6 @@ export default function MemberPackageHistory() {
         <div>
           <span className="section-heading-kicker">THẺ HỘI VIÊN</span>
           <h2>Lịch sử đăng ký gói</h2>
-          <p>Theo dõi các gói đã đăng ký, trạng thái thanh toán và những gói đã hủy.</p>
         </div>
         <Link className="member-package-history-back" to="/member/packages">
           <span className="material-symbols-outlined" aria-hidden="true">arrow_back</span>

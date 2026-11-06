@@ -234,11 +234,10 @@ export default function UserManagement() {
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []} className="user-management-theme"
       eyebrow="Hệ thống phân quyền & kiểm soát tài khoản"
-      title="Quản lý người dùng"
-      subtitle="Quản lý tài khoản tiếp tân, huấn luyện viên và hội viên trong trung tâm.">
+      title="Quản lý người dùng">
       <section className="dashboard-panel service-panel user-management-panel">
         <div className="panel-heading service-heading">
-          <div><h3>Tài khoản hệ thống</h3><p>Tiếp tân · Huấn luyện viên · Member</p></div>
+          <div><h3>Tài khoản hệ thống</h3></div>
         </div>
 
         <div className="user-management-toolbar">

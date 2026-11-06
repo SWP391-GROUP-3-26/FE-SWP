@@ -514,7 +514,6 @@ export default function PackageManagement() {
       menuItems={staffMenuItems[role] || []}
       eyebrow="Dịch vụ / Quản lý gói tập"
       title="Danh sách gói dịch vụ"
-      subtitle="Theo dõi danh mục gói tập, thời hạn, giá niêm yết và trạng thái kinh doanh."
     >
       {/* Success notice */}
       {notice && (

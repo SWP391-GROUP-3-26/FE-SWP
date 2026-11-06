@@ -72,7 +72,7 @@ function HistoryList() {
     setParams(next)
   }
   const data = state.data
-  return <><header className="finance-header"><div><h2>Các khoản thanh toán của bạn</h2><p>Xem tiền đã đóng, thông tin dịch vụ và tiến trình hoàn tiền.</p></div></header>
+  return <><header className="finance-header"><div><h2>Các khoản thanh toán của bạn</h2></div></header>
     <div className="finance-filters">
       <label>Trạng thái<select aria-label="Lọc trạng thái thanh toán" value={status} onChange={(e) => filter('status', e.target.value)}><option value="">Tất cả</option><option value="Pending">Chờ thanh toán</option><option value="Paid">Thành công</option><option value="Failed">Thất bại</option></select></label>
       <label>Dịch vụ<select aria-label="Lọc dịch vụ" value={type} onChange={(e) => filter('type', e.target.value)}><option value="">Tất cả</option><option value="Class_Booking">Lớp học</option><option value="Subscription">Gói tập</option></select></label>

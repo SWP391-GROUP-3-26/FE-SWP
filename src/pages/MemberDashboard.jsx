@@ -22,7 +22,6 @@ export default function MemberDashboard() {
         <div className="member-welcome-copy">
           <span className="section-heading-kicker">UNISPORTS · WELLNESS CLUB</span>
           <h2>Chào mừng trở lại, {memberName}!</h2>
-          <p>Mỗi buổi tập là một bước tiến gần hơn đến phiên bản khỏe mạnh hơn của bạn.</p>
         </div>
         <span className="member-welcome-icon material-symbols-outlined" aria-hidden="true">spa</span>
       </section>

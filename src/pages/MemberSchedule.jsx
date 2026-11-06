@@ -68,7 +68,6 @@ export default function MemberSchedule() {
         <div>
           <span className="section-heading-kicker">KẾ HOẠCH CỦA BẠN</span>
           <h2>Lịch luyện tập</h2>
-          <p>Thời khóa biểu được đồng bộ từ các lớp bạn đã đăng ký thành công.</p>
         </div>
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">calendar_month</span>
       </section>
@@ -132,7 +131,6 @@ export default function MemberSchedule() {
       {!loading && !loadError && otherSessions.length > 0 && (
         <section className="member-data-section member-schedule-other" aria-labelledby="member-other-sessions-title">
           <h3 id="member-other-sessions-title">Buổi học cần kiểm tra lịch</h3>
-          <p>Buổi có ngày dưới đây thuộc tuần đang xem. Buổi chưa có ngày được giữ lại để bạn kiểm tra với trung tâm; hệ thống chưa thể xếp vào lịch.</p>
           <div className="member-class-grid">
             {otherSessions.map(renderSession)}
           </div>

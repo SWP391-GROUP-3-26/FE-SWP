@@ -144,8 +144,7 @@ export default function SubjectManagement() {
 
   return (
     <DashboardLayout role={role} menuItems={staffMenuItems[role] || []}
-      eyebrow="UniSports / Môn học" title="Quản lý môn học"
-      subtitle="Quản lý danh mục môn học, thông tin và nội dung các bộ môn tại trung tâm.">
+      eyebrow="UniSports / Môn học" title="Quản lý môn học">
       {notice && <div className="auth-notice subject-notice" role="status">
         <span>{notice}</span>
         <button className="icon-button" aria-label="Đóng thông báo" onClick={() => setNotice('')} type="button">×</button>

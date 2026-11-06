@@ -53,7 +53,7 @@ export default function CoachSessionEvaluations({ classId, sessionId, attendance
     changeDirty(false); setSelected((current) => current === memberId ? null : memberId)
   }
   return <section className="session-evaluations" aria-labelledby="coach-session-evaluation-title">
-    <header><h3 id="coach-session-evaluation-title">Kết quả & đánh giá sau buổi học</h3><p>Ghi nhận kết quả thực tế, so sánh các buổi trước và nhận xét tiến độ từng học viên.</p></header>
+    <header><h3 id="coach-session-evaluation-title">Kết quả & đánh giá sau buổi học</h3></header>
     {state.loading && <p role="status">Đang tải đánh giá...</p>}
     {state.error && <div className="session-evaluation-error" role="alert">{state.error}<button type="button" disabled={busy} onClick={() => {
       if (dirty && !window.confirm('Tải lại và bỏ thay đổi đánh giá chưa lưu?')) return

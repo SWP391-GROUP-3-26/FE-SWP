@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
+import { getRouteForRole, ROLES } from '../auth/roleConfig'
 import memberPlant from '../assets/member-plant.svg'
 
 export default function Sidebar({ role, menuItems, onCollapse }) {
@@ -16,6 +17,7 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
     Receptionist: 'Tiếp tân',
   }
   const roleLabel = roleLabels[role] || role
+  const dashboardRoute = getRouteForRole(role === 'Hội viên' ? ROLES.MEMBER : role)
 
   const handleLogout = () => {
     clearAuth()
@@ -25,7 +27,12 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
   return (
     <aside className="dashboard-sidebar" id="dashboard-sidebar">
       <div className="dashboard-sidebar-heading">
-        <Link to="/" className="dashboard-brand">
+        <Link
+          to={dashboardRoute}
+          className="dashboard-brand"
+          aria-label={`UniSports — về trang chính ${roleLabel}`}
+          title={`Về trang chính ${roleLabel}`}
+        >
           <span className="brand-mark material-symbols-outlined">spa</span>
           <span className="dashboard-brand-copy">
             <strong>UniSports</strong>

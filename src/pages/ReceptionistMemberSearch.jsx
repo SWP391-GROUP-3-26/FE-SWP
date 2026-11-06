@@ -142,7 +142,6 @@ export default function ReceptionistMemberSearch() {
       <header className="receptionist-page-intro receptionist-search-intro">
         <Link className="receptionist-back-link" to="/receptionist"><span className="material-symbols-outlined" aria-hidden="true">arrow_back</span> Quay lại tiếp đón</Link>
         <span className="receptionist-eyebrow">HỘI VIÊN</span><h1>Danh sách hội viên</h1>
-        <p>Tìm hồ sơ theo tên, tài khoản, email hoặc số điện thoại để xem gói tập và lớp đã đăng ký.</p>
       </header>
       <section className="dashboard-panel member-search-panel" aria-label="Tìm kiếm thành viên">
         <form className="member-search-toolbar" onSubmit={handleSearch}>

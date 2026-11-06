@@ -42,18 +42,16 @@ function RevenueColumnChart({ rows }) {
   const maximum = Math.max(...values, 1) * 1.12
   const ticks = Array.from({ length: 5 }, (_, index) => maximum * (4 - index) / 4)
   const slotWidth = plotWidth / Math.max(rows.length, 1)
-  const columnWidth = Math.min(48, slotWidth * 0.56)
+  const columnWidth = Math.min(64, slotWidth * 0.78)
   const points = rows.map((row, index) => ({
     row,
     value: Number(row.revenue || 0),
     x: padding.left + index * slotWidth + slotWidth / 2,
     y: height - padding.bottom - (Number(row.revenue || 0) / maximum) * plotHeight,
   }))
-  const trendPath = points.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
-
   return (
     <div className="center-manager-revenue-chart-scroll">
-      <svg className="center-manager-revenue-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Biểu đồ doanh thu theo tháng gồm cột doanh thu và đường xu hướng">
+      <svg className="center-manager-revenue-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Biểu đồ cột doanh thu theo tháng">
         <title>Doanh thu theo tháng</title>
         {ticks.map((tick, index) => {
           const y = padding.top + index * plotHeight / 4
@@ -72,39 +70,35 @@ function RevenueColumnChart({ rows }) {
           const tooltipWidth = 190
           const tooltipX = Math.max(4, Math.min(width - tooltipWidth - 4, centerX - tooltipWidth / 2))
           const tooltipY = Math.max(4, y - 54)
-          return <g key={row.month} className="center-manager-chart-mark">
-            <rect
-              x={x}
-              y={height - padding.bottom - barHeight}
-              width={columnWidth}
-              height={Math.max(barHeight, 2)}
-              rx="5"
-              className="center-manager-chart-column"
-              tabIndex="0"
-              role="img"
-              aria-label={`${monthLabel(row.month)}: ${currency.format(value)}, ${Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch đã thanh toán`}
-            >
-              <title>{`${monthLabel(row.month)}: ${currency.format(value)} · ${Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch`}</title>
-            </rect>
-            <g className="center-manager-chart-tooltip" aria-hidden="true">
-              <rect x={tooltipX} y={tooltipY} width={tooltipWidth} height="46" rx="7" className="center-manager-chart-tooltip-box" />
-              <text x={tooltipX + 12} y={tooltipY + 18} className="center-manager-chart-tooltip-title">{monthLabel(row.month)}</text>
-              <text x={tooltipX + 12} y={tooltipY + 36} className="center-manager-chart-tooltip-value">{currency.format(value)} · {Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch</text>
-            </g>
+          return <g key={row.month} className={`center-manager-chart-mark${value > 0 ? ' has-revenue' : ''}`}>
+            {value > 0 && <>
+              <rect
+                x={x}
+                y={height - padding.bottom - barHeight}
+                width={columnWidth}
+                height={Math.max(barHeight, 2)}
+                rx="5"
+                className="center-manager-chart-column"
+                tabIndex="0"
+                role="img"
+                aria-label={`${monthLabel(row.month)}: ${currency.format(value)}, ${Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch đã thanh toán`}
+              >
+                <title>{`${monthLabel(row.month)}: ${currency.format(value)} · ${Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch`}</title>
+              </rect>
+              <g className="center-manager-chart-tooltip" aria-hidden="true">
+                <rect x={tooltipX} y={tooltipY} width={tooltipWidth} height="46" rx="7" className="center-manager-chart-tooltip-box" />
+                <text x={tooltipX + 12} y={tooltipY + 18} className="center-manager-chart-tooltip-title">{monthLabel(row.month)}</text>
+                <text x={tooltipX + 12} y={tooltipY + 36} className="center-manager-chart-tooltip-value">{currency.format(value)} · {Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch</text>
+              </g>
+            </>}
             <text x={centerX} y={height - 29} textAnchor="middle" className="center-manager-chart-axis-label">
               {month ? `T${Number(month)}` : row.month}
             </text>
-            <text x={centerX} y={height - 12} textAnchor="middle" className="center-manager-chart-count-label">
+            {value > 0 && <text x={centerX} y={height - 12} textAnchor="middle" className="center-manager-chart-count-label">
               {Number(row.paidPaymentCount || 0).toLocaleString('vi-VN')} GD
-            </text>
+            </text>}
           </g>
         })}
-        <path d={trendPath} className="center-manager-chart-trend-line" />
-        {points.map((point) => (
-          <circle key={`${point.row.month}-trend`} cx={point.x} cy={point.y} r="4.5" className="center-manager-chart-trend-point">
-            <title>{`${monthLabel(point.row.month)}: ${currency.format(point.value)} · ${Number(point.row.paidPaymentCount || 0).toLocaleString('vi-VN')} giao dịch đã thanh toán`}</title>
-          </circle>
-        ))}
       </svg>
     </div>
   )
@@ -132,10 +126,10 @@ export default function CenterManagerFinance({ embedded = false }) {
     return () => controller.abort()
   }, [months, reload, requestKey])
 
-  const totalRevenue = result.rows.reduce((total, row) => total + Number(row.revenue || 0), 0)
-  const paidPaymentCount = result.rows.reduce((total, row) => total + Number(row.paidPaymentCount || 0), 0)
-  const averagePayment = paidPaymentCount ? totalRevenue / paidPaymentCount : 0
-  const tableRows = [...result.rows].reverse()
+  const receivedRows = result.rows.filter((row) => Number(row.revenue || 0) > 0)
+  const totalRevenue = receivedRows.reduce((total, row) => total + Number(row.revenue || 0), 0)
+  const paidPaymentCount = receivedRows.reduce((total, row) => total + Number(row.paidPaymentCount || 0), 0)
+  const tableRows = [...receivedRows].reverse()
   const tablePageSize = 10
   const tableTotalPages = Math.max(1, Math.ceil(tableRows.length / tablePageSize))
   const currentTablePage = Math.min(tablePage, tableTotalPages - 1)
@@ -147,7 +141,6 @@ export default function CenterManagerFinance({ embedded = false }) {
         <div>
           <span className="section-heading-kicker">DOANH THU GHI NHẬN</span>
           <h2>Doanh thu theo tháng</h2>
-          <p>Tổng hợp các giao dịch đã thanh toán, dựa trên ngày ghi nhận thanh toán.</p>
         </div>
         <span className="center-manager-finance-heading-icon material-symbols-outlined" aria-hidden="true">account_balance</span>
       </header>}
@@ -161,19 +154,14 @@ export default function CenterManagerFinance({ embedded = false }) {
           <span className="material-symbols-outlined" aria-hidden="true">receipt_long</span>
           <div><small>Giao dịch đã thanh toán</small><strong>{loading ? '—' : paidPaymentCount.toLocaleString('vi-VN')}</strong></div>
         </article>
-        <article>
-          <span className="material-symbols-outlined" aria-hidden="true">price_check</span>
-          <div><small>Giá trị trung bình giao dịch</small><strong>{loading ? '—' : currency.format(averagePayment)}</strong></div>
-        </article>
       </section>}
 
       <section className="center-manager-finance-panel" aria-labelledby={embedded ? 'center-manager-finance-embedded-title' : 'center-manager-finance-table-title'}>
         <div className="center-manager-finance-toolbar">
           <div>
             <h3 id={embedded ? 'center-manager-finance-embedded-title' : 'center-manager-finance-table-title'}>
-              {embedded ? 'Xu hướng doanh thu' : 'Chi tiết doanh thu'}
+              {embedded ? 'Doanh thu đã ghi nhận' : 'Chi tiết doanh thu'}
             </h3>
-            <p>{embedded ? 'Cột thể hiện doanh thu từng tháng; đường nối cho thấy xu hướng tăng giảm.' : 'Mỗi dòng tương ứng một tháng trong kỳ báo cáo.'}</p>
           </div>
           <div className="center-manager-finance-actions">
             <label>
@@ -194,7 +182,7 @@ export default function CenterManagerFinance({ embedded = false }) {
           <button type="button" onClick={() => setReload((value) => value + 1)}>Thử lại</button>
         </div>}
 
-        {embedded && !loading && !result.error && tableRows.length > 0 && <RevenueColumnChart rows={[...result.rows].sort((a, b) => Number(String(a.month || '').slice(5, 7)) - Number(String(b.month || '').slice(5, 7)))} />}
+        {embedded && !loading && !result.error && tableRows.length > 0 && <RevenueColumnChart rows={[...result.rows].sort((a, b) => String(a.month || '').localeCompare(String(b.month || '')))} />}
         {embedded && !loading && !result.error && tableRows.length === 0 && (
           <p className="center-manager-finance-chart-empty" role="status">Chưa có dữ liệu doanh thu trong kỳ này.</p>
         )}

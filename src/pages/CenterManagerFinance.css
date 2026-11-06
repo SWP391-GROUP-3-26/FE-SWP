@@ -6,7 +6,7 @@
 .center-manager-finance-heading h2 { margin: 6px 0 5px; color: #1f3128; font-size: clamp(22px, 2.2vw, 28px); letter-spacing: -.035em; }
 .center-manager-finance-heading p { margin: 0; color: #748279; font-size: 13px; }
 .center-manager-finance-heading-icon { display: grid; flex: 0 0 48px; width: 48px; height: 48px; place-items: center; border-radius: 14px; color: #39795d; background: #e3f0e7; font-size: 25px; }
-.center-manager-finance-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.center-manager-finance-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .center-manager-finance-summary article { display: flex; align-items: center; gap: 13px; min-width: 0; padding: 16px; border: 1px solid #e3ebe4; border-radius: 12px; background: #fff; }
 .center-manager-finance-summary article > .material-symbols-outlined { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border-radius: 11px; color: #32765a; background: #e8f3eb; font-size: 21px; }
 .center-manager-finance-summary article > div { display: grid; min-width: 0; gap: 4px; }
@@ -47,8 +47,6 @@
 .center-manager-chart-tooltip-box { fill: #20372b; stroke: #fff; stroke-width: 1; filter: drop-shadow(0 3px 8px rgb(24 45 32 / 18%)); }
 .center-manager-chart-tooltip-title { fill: #cfe3d4; font-family: inherit; font-size: 10px; }
 .center-manager-chart-tooltip-value { fill: #fff; font-family: inherit; font-size: 11px; font-weight: 700; }
-.center-manager-chart-trend-line { fill: none; stroke: #d77b4d; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-.center-manager-chart-trend-point { fill: #fff; stroke: #d77b4d; stroke-width: 2.5; }
 .center-manager-finance-note { margin: 0; padding: 12px 16px; border-top: 1px solid #edf2ee; color: #748279; background: #fafcfa; font-size: 11px; line-height: 1.5; }
 .center-manager-finance-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 14px 16px; padding: 11px 13px; border-radius: 8px; color: #963c31; background: #fff1ef; font-size: 12px; }
 .center-manager-finance-error button { border: 0; color: inherit; background: transparent; font: inherit; font-weight: 800; cursor: pointer; }
