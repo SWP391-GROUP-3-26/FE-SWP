@@ -27,13 +27,14 @@ function classStatusLabel(status) {
 function ClassStatusChart({ rows }) {
   const total = rows.reduce((sum, row) => sum + Number(row.count || 0), 0)
   const segments = useMemo(() => {
-    let offset = 0
-    return rows.map((row, index) => {
+    return rows.reduce((result, row, index) => {
       const count = Number(row.count || 0)
+      const offset = result.length
+        ? result[result.length - 1].offset + (total ? result[result.length - 1].count / total * 100 : 0)
+        : 0
       const segment = { ...row, count, offset, color: statusColors[index % statusColors.length] }
-      offset += total ? count / total * 100 : 0
-      return segment
-    })
+      return [...result, segment]
+    }, [])
   }, [rows, total])
 
   if (!total) return <p className="manager-chart-empty">Chưa có dữ liệu lớp học.</p>

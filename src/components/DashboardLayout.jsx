@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getAuth, getRole, updateAuthProfile } from '../auth/authStorage'
 import {
   getMyProfile,
@@ -28,6 +29,7 @@ export default function DashboardLayout({
   })
   const [failedAvatarSrc, setFailedAvatarSrc] = useState('')
   const [profileSyncError, setProfileSyncError] = useState('')
+  const isMember = getRole() === 'Member'
   const avatarSrc = resolveAvatarUrl(profile?.avatarUrl || auth.avatarUrl)
 
   useEffect(() => {
@@ -107,19 +109,25 @@ export default function DashboardLayout({
                 </small>
               )}
             </div>
-            <span className="user-avatar">
-              {showAvatar ? (
-                <img
-                  key={avatarSrc}
-                  alt=""
-                  onError={() => setFailedAvatarSrc(avatarSrc)}
-                  referrerPolicy="no-referrer"
-                  src={avatarSrc}
-                />
-              ) : (
-                <span className="material-symbols-outlined" aria-hidden="true">person</span>
-              )}
-            </span>
+            {isMember ? (
+              <Link aria-label="Mở hồ sơ hội viên" className="user-avatar" title="Hồ sơ cá nhân" to="/member/profile">
+                {showAvatar ? (
+                  <img key={avatarSrc} alt="" onError={() => setFailedAvatarSrc(avatarSrc)}
+                    referrerPolicy="no-referrer" src={avatarSrc} />
+                ) : (
+                  <span className="material-symbols-outlined" aria-hidden="true">person</span>
+                )}
+              </Link>
+            ) : (
+              <span className="user-avatar">
+                {showAvatar ? (
+                  <img key={avatarSrc} alt="" onError={() => setFailedAvatarSrc(avatarSrc)}
+                    referrerPolicy="no-referrer" src={avatarSrc} />
+                ) : (
+                  <span className="material-symbols-outlined" aria-hidden="true">person</span>
+                )}
+              </span>
+            )}
           </div>
         </header>
 

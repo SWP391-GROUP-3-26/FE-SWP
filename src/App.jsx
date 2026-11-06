@@ -4,45 +4,46 @@ import './App.css'
 
 import ProtectedRoute from './components/ProtectedRoute'
 import { ROLES } from './auth/roleConfig'
-import CenterManagerDashboard from './pages/CenterManagerDashboard'
-import CenterManagerFinance from './pages/CenterManagerFinance'
-import AuditLog from './pages/AuditLog'
-import ClassManagement from './pages/ClassManagement'
-import CoachDashboard from './pages/CoachDashboard'
-import CoachClasses from './pages/CoachClasses'
-import CoachClassDetail from './pages/CoachClassDetail'
-import CoachTrainingPlans from './pages/CoachTrainingPlans'
-import MemberTrainingPlans from './pages/MemberTrainingPlans'
-import TrainingPlanDetail from './pages/TrainingPlanDetail'
-import Landing from './pages/Landing'
-import GoogleCallback from './pages/GoogleCallback'
-import Login from './pages/Login'
-import MemberClasses from './pages/MemberClasses'
-import MemberDashboard from './pages/MemberDashboard'
-import MemberPackages from './pages/MemberPackages'
-import MemberPackageHistory from './pages/MemberPackageHistory'
-import MemberPaymentResult from './pages/MemberPaymentResult'
-import MemberPaymentHistory from './pages/MemberPaymentHistory'
-import StaffRefunds from './pages/StaffRefunds'
-import MemberProfile from './pages/MemberProfile'
-import MemberSchedule from './pages/MemberSchedule'
-import PackageManagement from './pages/PackageManagement'
-import ReceptionistDashboard from './pages/ReceptionistDashboard'
-import ReceptionistMemberDetail from './pages/ReceptionistMemberDetail'
-import ReceptionistMemberRegister from './pages/ReceptionistMemberRegister'
-import ReceptionistMemberSearch from './pages/ReceptionistMemberSearch'
-import ReceptionistRegistrationPage from './pages/ReceptionistRegistrationPage'
-import ReceptionistCheckout from './pages/ReceptionistCheckout'
-import Register from './pages/Register'
-import ReceptionistRegisterMember from './pages/ReceptionistRegisterMember'
-import SubjectManagement from './pages/SubjectManagement'
-import UserManagement from './pages/UserManagement'
+const CenterManagerDashboard = lazy(() => import('./pages/CenterManagerDashboard'))
+const CenterManagerFinance = lazy(() => import('./pages/CenterManagerFinance'))
+const AuditLog = lazy(() => import('./pages/AuditLog'))
+const ClassManagement = lazy(() => import('./pages/ClassManagement'))
+const CoachDashboard = lazy(() => import('./pages/CoachDashboard'))
+const CoachClasses = lazy(() => import('./pages/CoachClasses'))
+const CoachClassDetail = lazy(() => import('./pages/CoachClassDetail'))
+const CoachTrainingPlans = lazy(() => import('./pages/CoachTrainingPlans'))
+const MemberTrainingPlans = lazy(() => import('./pages/MemberTrainingPlans'))
+const TrainingPlanDetail = lazy(() => import('./pages/TrainingPlanDetail'))
+const Landing = lazy(() => import('./pages/Landing'))
+const GoogleCallback = lazy(() => import('./pages/GoogleCallback'))
+const Login = lazy(() => import('./pages/Login'))
+const MemberClasses = lazy(() => import('./pages/MemberClasses'))
+const MemberDashboard = lazy(() => import('./pages/MemberDashboard'))
+const MemberPackages = lazy(() => import('./pages/MemberPackages'))
+const MemberPackageHistory = lazy(() => import('./pages/MemberPackageHistory'))
+const MemberPaymentResult = lazy(() => import('./pages/MemberPaymentResult'))
+const MemberPaymentHistory = lazy(() => import('./pages/MemberPaymentHistory'))
+const StaffRefunds = lazy(() => import('./pages/StaffRefunds'))
+const MemberProfile = lazy(() => import('./pages/MemberProfile'))
+const MemberSchedule = lazy(() => import('./pages/MemberSchedule'))
+const PackageManagement = lazy(() => import('./pages/PackageManagement'))
+const ReceptionistDashboard = lazy(() => import('./pages/ReceptionistDashboard'))
+const ReceptionistMemberDetail = lazy(() => import('./pages/ReceptionistMemberDetail'))
+const ReceptionistMemberRegister = lazy(() => import('./pages/ReceptionistMemberRegister'))
+const ReceptionistMemberSearch = lazy(() => import('./pages/ReceptionistMemberSearch'))
+const ReceptionistRegistrationPage = lazy(() => import('./pages/ReceptionistRegistrationPage'))
+const ReceptionistCheckout = lazy(() => import('./pages/ReceptionistCheckout'))
+const Register = lazy(() => import('./pages/Register'))
+const ReceptionistRegisterMember = lazy(() => import('./pages/ReceptionistRegisterMember'))
+const SubjectManagement = lazy(() => import('./pages/SubjectManagement'))
+const UserManagement = lazy(() => import('./pages/UserManagement'))
 
 const MemberChat = lazy(() => import('./pages/MemberChat'))
 
 function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="app-route-loading" role="status">Đang tải trang…</div>}>
       <Routes>
         <Route path="/member/payment-history" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
         <Route path="/member/payment-history/:id" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
@@ -242,6 +243,7 @@ function App() {
         } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

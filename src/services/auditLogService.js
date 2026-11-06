@@ -37,7 +37,7 @@ export async function getAuditLogs({ category, action, search, startDate, endDat
     return response.data
   } catch (error) {
     if (!error.response && !error.request) throw error
-    throw new Error(errorMessage(error))
+    throw new Error(errorMessage(error), { cause: error })
   }
 }
 
@@ -50,6 +50,6 @@ export async function getAuditLogDetail(id, signal) {
     return response.data.log
   } catch (error) {
     if (!error.response && !error.request) throw error
-    throw new Error(errorMessage(error))
+    throw new Error(errorMessage(error), { cause: error })
   }
 }

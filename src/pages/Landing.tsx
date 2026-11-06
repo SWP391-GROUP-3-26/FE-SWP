@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import type { MouseEvent } from 'react'
+import { useEffect, useRef } from 'react'
 
 const programs = [
   {
@@ -6,7 +8,6 @@ const programs = [
     tag: 'Tâm trí & thư giãn',
     image:
       'https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?auto=format&fit=crop&w=900&q=80',
-    meta: '60 phút / ca',
     description:
       'Không gian tập luyện yên tĩnh với các lớp yoga, thiền và hồi phục cơ thể sau giờ làm việc.',
   },
@@ -15,7 +16,6 @@ const programs = [
     tag: 'Tạo dáng & cột sống',
     image:
       'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80',
-    meta: '1:1 hoặc nhóm nhỏ',
     description:
       'Bài tập giúp căn chỉnh tư thế, tăng độ dẻo dai và cải thiện sức mạnh vùng cơ lõi.',
   },
@@ -24,13 +24,53 @@ const programs = [
     tag: 'Sức bền & bứt phá',
     image:
       'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=900&q=80',
-    meta: 'Đốt 700+ calo',
     description:
       'Khu tập luyện cường độ cao với bài tập chức năng, boxing và các thiết bị hiện đại.',
   },
 ]
 
 export default function Landing() {
+  const scrollFrameRef = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (scrollFrameRef.current !== null) window.cancelAnimationFrame(scrollFrameRef.current)
+  }, [])
+
+  const scrollToPrograms = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    const target = document.getElementById('programs')
+    if (!target) return
+
+    if (scrollFrameRef.current !== null) window.cancelAnimationFrame(scrollFrameRef.current)
+
+    const targetTop = Math.max(
+      0,
+      window.scrollY + target.getBoundingClientRect().top - Number.parseFloat(getComputedStyle(target).scrollMarginTop || '0'),
+    )
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.scrollTo(0, targetTop)
+      return
+    }
+
+    const startTop = window.scrollY
+    const distance = targetTop - startTop
+    const duration = 5000
+    let startTime: number | null = null
+
+    const animateScroll = (time: number) => {
+      startTime ??= time
+      const progress = Math.min((time - startTime) / duration, 1)
+      const easedProgress = progress < 0.5
+        ? 4 * progress ** 3
+        : 1 - ((-2 * progress + 2) ** 3) / 2
+      window.scrollTo(0, startTop + distance * easedProgress)
+      if (progress < 1) scrollFrameRef.current = window.requestAnimationFrame(animateScroll)
+      else scrollFrameRef.current = null
+    }
+
+    scrollFrameRef.current = window.requestAnimationFrame(animateScroll)
+  }
+
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -42,14 +82,6 @@ export default function Landing() {
           </span>
         </Link>
 
-        <nav className="header-actions" aria-label="Main navigation">
-          <Link to="/login" className="ghost-link">
-            Member Login
-          </Link>
-          <Link to="/register" className="primary-link">
-            Đăng ký
-          </Link>
-        </nav>
       </header>
 
       <main>
@@ -73,23 +105,23 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="hero-panel" aria-label="UniSports highlights">
-            <div>
-              <strong>100%</strong>
-              <span>HLV có chứng chỉ quốc tế</span>
-            </div>
-            <div>
-              <strong>7 ngày</strong>
-              <span>Lịch tập linh hoạt trong tuần</span>
-            </div>
-            <div>
-              <strong>05:30</strong>
-              <span>Mở cửa từ sáng sớm đến tối</span>
-            </div>
-          </div>
+          <nav className="hero-panel" aria-label="Truy cập và tìm hiểu UniSports">
+            <Link to="/login" className="hero-panel-action">
+              <strong>Đăng nhập</strong>
+              <span>Truy cập tài khoản UniSports</span>
+            </Link>
+            <Link to="/register" className="hero-panel-action">
+              <strong>Đăng ký</strong>
+              <span>Tạo tài khoản hội viên mới</span>
+            </Link>
+            <a href="#programs" className="hero-panel-action hero-panel-scroll-link" onClick={scrollToPrograms}>
+              <strong>Tìm hiểu thêm về trung tâm</strong>
+              <span>Khám phá các bộ môn và không gian tập luyện</span>
+            </a>
+          </nav>
         </section>
 
-        <section className="program-section">
+        <section className="program-section" id="programs">
           <div className="section-heading">
             <span>Chương trình tiêu biểu</span>
             <h2>Không gian bộ môn chuyên sâu</h2>
@@ -103,10 +135,6 @@ export default function Landing() {
                   <span className="program-tag">{program.tag}</span>
                   <h3>{program.title}</h3>
                   <p>{program.description}</p>
-                  <div className="program-footer">
-                    <span>{program.meta}</span>
-                    <button type="button">Xem lịch tập</button>
-                  </div>
                 </div>
               </article>
             ))}

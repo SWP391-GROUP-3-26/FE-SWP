@@ -1,9 +1,9 @@
 import DashboardLayout from '../components/DashboardLayout'
-import { Link } from 'react-router-dom'
 import { getAuth } from '../auth/authStorage'
 import memberMenuItems from '../components/memberMenuItems'
 import MemberTrainingPlanOverview from '../components/MemberTrainingPlanOverview'
 import MemberRefundNotifications from '../components/MemberRefundNotifications'
+import MemberUpcomingSchedule from '../components/MemberUpcomingSchedule'
 import './MemberDashboard.css'
 
 export default function MemberDashboard() {
@@ -28,33 +28,7 @@ export default function MemberDashboard() {
 
       <MemberTrainingPlanOverview />
       <MemberRefundNotifications />
-
-      <div className="dashboard-grid member-overview-grid">
-        <article className="dashboard-card dashboard-card-accent">
-          <span className="material-symbols-outlined">calendar_month</span>
-          <h3>Lịch tập</h3>
-          <p>Xem các buổi học đã xác nhận theo từng tuần.</p>
-          <Link className="member-profile-link" to="/member/schedule">Xem lịch tập</Link>
-        </article>
-        <article className="dashboard-card">
-          <span className="material-symbols-outlined">card_membership</span>
-          <h3>Gói tập</h3>
-          <p>Theo dõi gói đang dùng, thời hạn và các gói đang mở bán.</p>
-          <Link className="member-profile-link" to="/member/packages">Xem gói tập</Link>
-        </article>
-        <article className="dashboard-card">
-          <span className="material-symbols-outlined">sports_gymnastics</span>
-          <h3>Lớp học</h3>
-          <p>Tìm lớp phù hợp hoặc xem lại các lớp đã đăng ký.</p>
-          <Link className="member-profile-link" to="/member/classes">Xem lớp học</Link>
-        </article>
-        <article className="dashboard-card">
-          <span className="material-symbols-outlined">person</span>
-          <h3>Hồ sơ</h3>
-          <p>Cập nhật thông tin liên hệ và ảnh đại diện của bạn.</p>
-          <Link className="member-profile-link" to="/member/profile">Xem hồ sơ</Link>
-        </article>
-      </div>
+      <MemberUpcomingSchedule />
     </DashboardLayout>
   )
 }
