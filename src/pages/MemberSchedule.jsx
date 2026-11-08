@@ -72,7 +72,7 @@ export default function MemberSchedule() {
         <span className="member-page-heading-icon material-symbols-outlined" aria-hidden="true">calendar_month</span>
       </section>
 
-      <section className="member-schedule-panel" aria-label="Thời khóa biểu hàng tuần">
+      <section className="member-schedule-panel member-personal-schedule" aria-label="Thời khóa biểu hàng tuần">
         <div className="member-schedule-toolbar">
           <div className="member-week-controls">
             <button type="button" aria-label="Tuần trước" onClick={() => shiftWeek(-1)}>
@@ -83,9 +83,6 @@ export default function MemberSchedule() {
               <span className="material-symbols-outlined" aria-hidden="true">chevron_right</span>
             </button>
           </div>
-          <button className="member-today-button" type="button" onClick={() => setWeekStart(getMonday(new Date()))}>
-            Hôm nay
-          </button>
           <span className={`member-sync-status${loadError ? ' member-sync-error' : ''}`}>
             <span aria-hidden="true" />
             {loading ? 'Đang đồng bộ' : loadError ? 'Chưa đồng bộ' : `${weekSessionCount} buổi trong tuần`}

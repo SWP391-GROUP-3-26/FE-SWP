@@ -34,6 +34,7 @@ export async function getPackageById(id, signal) {
   if (!result?.data || typeof result.data !== 'object' || Array.isArray(result.data)) {
     throw new Error('Thông tin gói dịch vụ từ máy chủ không hợp lệ.')
   }
+  if (Number(result.data.id) !== Number(id)) throw new Error('Chi tiết trả về không khớp gói đã chọn. Vui lòng tải lại.')
   return result.data
 }
 

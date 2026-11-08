@@ -831,6 +831,15 @@
 .member-calendar .member-day-heading-cell.is-sunday { color: #29384a; }
 .member-calendar .member-day-heading-cell.is-today.is-sunday { color: #087c74; }
 .member-calendar .member-day-heading-cell > .member-day-heading { display: block; padding: 0; color: inherit; font-size: inherit; font-weight: inherit; }
+.member-personal-schedule .member-calendar .member-day-heading-cell.is-today {
+  color: #fff;
+  background: #276b4d;
+  font-weight: 800;
+}
+.member-personal-schedule .member-day-heading-cell.is-today .member-day-heading > span {
+  color: inherit;
+  font-weight: inherit;
+}
 .member-calendar tbody tr { height: 92px; }
 .member-calendar .member-time-cell { display: table-cell; width: 56px; height: 100%; padding: 8px 4px; color: #43536b; background: #fafbfc; text-align: center; vertical-align: middle; }
 .member-calendar .member-time-cell strong { color: inherit; font-size: 12px; font-weight: 600; }

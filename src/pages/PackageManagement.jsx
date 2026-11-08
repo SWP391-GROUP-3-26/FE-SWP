@@ -5,6 +5,7 @@ import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import { getSubjects } from '../services/subjectService'
+import { hasPackageSportConfiguration, toPackageEditForm } from '../utils/packageEditForm'
 import {
   createPackage,
   deletePackage,
@@ -94,6 +95,8 @@ export default function PackageManagement() {
   const [subjects, setSubjects] = useState([])
   const [subjectsError, setSubjectsError] = useState('')
   const [replaceBenefits, setReplaceBenefits] = useState(false)
+  const [sportConfigurationAvailable, setSportConfigurationAvailable] = useState(false)
+  const [editLoaded, setEditLoaded] = useState(false)
 
   const listController  = useRef(null)
   const detailController = useRef(null)
@@ -140,35 +143,43 @@ export default function PackageManagement() {
   /* ── Modal helpers ── */
   function closeModal() {
     detailController.current?.abort()
+    setDetailLoading(false)
+    setEditLoaded(false)
     setModal(null)
     setModalError('')
     setDetail(null)
   }
 
   function openCreate() {
+    detailController.current?.abort()
+    setDetailLoading(false)
     setForm(EMPTY_FORM)
     setReplaceBenefits(true)
     setModalError('')
     setModal({ type: 'create' })
   }
 
-  function openEdit(pkg) {
-    setForm({
-      name: pkg.name ?? '',
-      description: pkg.description ?? '',
-      durationMonths: pkg.durationMonths ?? 1,
-      price: pkg.price != null ? String(pkg.price) : '',
-      status: pkg.status ?? 'Active',
-      includedClasses: pkg.includedClasses != null ? String(pkg.includedClasses) : '',
-      benefits: pkg.benefits ?? '',
-      discount: pkg.discount ?? 0,
-      termConditions: pkg.termConditions ?? '',
-      includedSportIds: [],
-      choiceGroups: [],
-    })
+  async function openEdit(pkg) {
+    detailController.current?.abort()
+    const controller = new AbortController()
+    detailController.current = controller
+    setEditLoaded(false)
+    setSportConfigurationAvailable(false)
+    setDetailLoading(true)
     setReplaceBenefits(false)
     setModalError('')
     setModal({ type: 'edit', pkg })
+    try {
+      const result = await getPackageById(pkg.id, controller.signal)
+      if (controller.signal.aborted) return
+      setForm(toPackageEditForm(result))
+      setSportConfigurationAvailable(hasPackageSportConfiguration(result))
+      setEditLoaded(true)
+    } catch (error) {
+      if (!controller.signal.aborted) setModalError(errorMessage(error))
+    } finally {
+      if (!controller.signal.aborted) setDetailLoading(false)
+    }
   }
 
   function openDetail(pkg) {
@@ -280,7 +291,11 @@ export default function PackageManagement() {
   /* ── Update ── */
   async function handleUpdate(event) {
     event.preventDefault()
-    if (busy) return
+    if (busy || detailLoading || !editLoaded) return
+    if (replaceBenefits && !sportConfigurationAvailable) {
+      setModalError('Chưa tải được cấu hình môn hiện tại. Vui lòng tải lại chi tiết trước khi sửa môn.')
+      return
+    }
     const price = parseFloat(form.price)
     if (!form.name.trim()) { setModalError('Vui lòng nhập tên gói dịch vụ.'); return }
     if (isNaN(price) || price <= 0) { setModalError('Vui lòng nhập giá niêm yết hợp lệ (lớn hơn 0).'); return }
@@ -408,12 +423,6 @@ export default function PackageManagement() {
           </span>
         </label>
         <label>
-          Chiết khấu (%) <span className="input-wrap">
-            <input type="number" min="0" max="100" step="0.1" value={form.discount}
-              onChange={(e) => setField('discount', e.target.value)} />
-          </span>
-        </label>
-        <label>
           Số buổi học bao gồm <span className="input-wrap">
             <input
               type="number" min="0" name="includedClasses"
@@ -440,17 +449,17 @@ export default function PackageManagement() {
         {modal.type === 'edit' && (
           <div className="package-benefit-replace-note">
             <label className="package-benefit-replace-toggle">
-              <input type="checkbox" checked={replaceBenefits} onChange={(event) => {
-                setReplaceBenefits(event.target.checked)
-                if (event.target.checked) setForm((current) => ({ ...current, includedSportIds: [], choiceGroups: [] }))
-              }} />
-              Thay thế danh sách môn và nhóm lựa chọn của gói
+              <input type="checkbox" checked={replaceBenefits} disabled={!sportConfigurationAvailable}
+                onChange={(event) => setReplaceBenefits(event.target.checked)} />
+              Chỉnh sửa môn học và nhóm tự chọn
             </label>
-            <p>API chi tiết hiện chưa trả cấu hình môn đang lưu. Bật tùy chọn này sẽ thay toàn bộ cấu hình hiện tại bằng danh sách bên dưới.</p>
+            <p>{sportConfigurationAvailable
+              ? 'Các môn đã lưu được hiển thị bên dưới. Bật chỉnh sửa để thay đổi; bỏ chọn để giữ nguyên cấu hình đã lưu.'
+              : 'Chưa thể hiển thị cấu hình môn hiện tại. Bạn vẫn có thể sửa thông tin chung; môn học và nhóm tự chọn đã lưu sẽ được giữ nguyên.'}</p>
           </div>
         )}
-        {(modal.type === 'create' || replaceBenefits) && (
-          <div className="package-benefit-editor">
+        {(modal.type === 'create' || sportConfigurationAvailable) && (
+          <fieldset className="package-benefit-editor" disabled={modal.type === 'edit' && !replaceBenefits}>
             <section>
               <div className="package-benefit-editor-heading">
                 <div><strong>Môn học được bao gồm</strong><small>Hội viên không cần chọn lại khi đăng ký.</small></div>
@@ -501,7 +510,7 @@ export default function PackageManagement() {
               ))}
               {!form.choiceGroups.length && <p className="subject-count">Gói này không yêu cầu hội viên chọn thêm môn.</p>}
             </section>
-          </div>
+          </fieldset>
         )}
       </fieldset>
     )
@@ -678,10 +687,13 @@ export default function PackageManagement() {
           {/* ── Edit form ── */}
           {modal.type === 'edit' && (
             <form className="auth-form subject-form service-form" onSubmit={handleUpdate}>
-              {renderPackageFormFields()}
+              {detailLoading && <p role="status">Đang tải thông tin gói đã lưu…</p>}
+              {!detailLoading && !editLoaded && <button className="subject-button" type="button"
+                onClick={() => openEdit(modal.pkg)}>Tải lại chi tiết</button>}
+              {editLoaded && renderPackageFormFields()}
               <div className="subject-modal-actions">
                 <button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Huỷ bỏ</button>
-                <button className="subject-button subject-primary" disabled={busy} type="submit">
+                <button className="subject-button subject-primary" disabled={busy || detailLoading || !editLoaded} type="submit">
                   {busy ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
               </div>

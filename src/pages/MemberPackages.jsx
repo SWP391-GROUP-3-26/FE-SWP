@@ -58,6 +58,15 @@ function packageDurationLabel(packageItem) {
     : `${packageItem.durationDays} ngày`
 }
 
+function packageDetailDurationLabel(packageItem) {
+  const days = Number(packageItem.durationDays)
+  const months = Number(packageItem.durationMonths)
+  if (Number.isFinite(days) && days > 0) {
+    return Number.isFinite(months) && months > 0 ? `${months} tháng (${days} ngày)` : `${days} ngày`
+  }
+  return 'Chưa cập nhật'
+}
+
 function formatDate(value) {
   if (!value) return 'Chưa cập nhật'
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value).slice(0, 10))
@@ -98,7 +107,8 @@ function isCurrentlyActive(subscription) {
     && subscription.endDate >= today
 }
 
-function subscriptionStatusLabel(status) {
+function subscriptionStatusLabel(status, paymentStatus) {
+  if (String(status).toLowerCase() === 'pending' && String(paymentStatus).toLowerCase() === 'paid') return 'Sắp gia hạn'
   const labels = {
     active: 'Đang hoạt động',
     pending: 'Chờ xử lý',
@@ -354,6 +364,46 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           </div>
         </div>
 
+        {(activeSubscription || scheduledSubscription) && (
+          <section className="member-package-validity" aria-labelledby="member-package-validity-title">
+            <div className="member-package-validity-heading">
+              <h4 id="member-package-validity-title">Thời hạn gói tập</h4>
+              {scheduledSubscription && (
+                <a href={`#member-subscription-${scheduledSubscription.subscriptionId}`}>
+                  Xem gói gia hạn
+                  <span className="material-symbols-outlined" aria-hidden="true">arrow_downward</span>
+                </a>
+              )}
+            </div>
+            {activeSubscription && (
+              <div className="member-package-validity-row">
+                <span className="member-package-validity-dot" aria-hidden="true" />
+                <div className="member-package-validity-copy">
+                  <strong>Gói hiện tại <span>· Đang hoạt động</span></strong>
+                  <span>{activeSubscription.packageName}</span>
+                </div>
+                <div className="member-package-validity-date">
+                  <span>Ngày hết hạn</span>
+                  <time dateTime={activeSubscription.endDate}>{formatDate(activeSubscription.endDate)}</time>
+                </div>
+              </div>
+            )}
+            {scheduledSubscription && (
+              <div className="member-package-validity-row">
+                <span className="member-package-validity-icon material-symbols-outlined" aria-hidden="true">event_available</span>
+                <div className="member-package-validity-copy">
+                  <strong>Gói gia hạn <span>· Đã thanh toán</span></strong>
+                  <span>{scheduledSubscription.packageName}</span>
+                </div>
+                <div className="member-package-validity-date">
+                  <span>Ngày bắt đầu</span>
+                  <time dateTime={scheduledSubscription.startDate}>{formatDate(scheduledSubscription.startDate)}</time>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
         {subscriptionsError && (
           <div className="member-package-state is-error" role="alert">
             <span>{subscriptionsError}</span>
@@ -381,7 +431,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
               const showTimeline = isCurrentlyActive(subscription)
               const timeline = showTimeline ? subscriptionTimeline(subscription) : null
               return (
-                <article className={`member-subscription-card${showTimeline ? ' has-timeline' : ''}`} key={subscription.subscriptionId}>
+                <article className={`member-subscription-card${showTimeline ? ' has-timeline' : ''}`} id={`member-subscription-${subscription.subscriptionId}`} key={subscription.subscriptionId}>
                   <div className="member-package-image member-subscription-image">
                     <img src={image} alt={`Hình minh họa gói ${subscription.packageName}`} loading="lazy" />
                     <span>{durationLabel}</span>
@@ -390,7 +440,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                     <div className="member-subscription-heading">
                       <span className="member-package-code">MÃ ĐĂNG KÝ #{subscription.subscriptionId}</span>
                       <span className={`member-package-status status-${String(subscription.subscriptionStatus || '').toLowerCase()}`}>
-                        {subscriptionStatusLabel(subscription.subscriptionStatus)}
+                        {subscriptionStatusLabel(subscription.subscriptionStatus, subscription.paymentStatus)}
                       </span>
                     </div>
                     <h4>{subscription.packageName}</h4>
@@ -467,19 +517,6 @@ export default function MemberPackages({ receptionist = false, memberId = null }
             ? `/receptionist/members/${memberId}/payment-result?paymentId=${pendingSubscription.paymentId}`
             : `/member/payment-result?paymentId=${pendingSubscription.paymentId}`}>Kiểm tra thanh toán</Link>.
         </p>}
-        {scheduledSubscription && <p className="member-package-note" role="status">
-          Gói gia hạn đã được thanh toán và đang chờ ngày bắt đầu {formatDate(scheduledSubscription.startDate)}.
-        </p>}
-        {activeSubscription && (
-          <p className="member-package-note" role="status">
-            <span className="material-symbols-outlined" aria-hidden="true">info</span>
-            <span>
-              <strong>Bạn đang có gói hoạt động đến {formatDate(activeSubscription.endDate)}.</strong>
-              {' '}Chọn “Gia hạn gói” để xem thời hạn mới và học phí trước khi xác nhận.
-            </span>
-          </p>
-        )}
-
         {catalogError && (
           <div className="member-package-state is-error" role="alert">
             <span>{catalogError}</span>
@@ -595,25 +632,61 @@ export default function MemberPackages({ receptionist = false, memberId = null }
       {selectedPackage && (
         <Modal
           busy={registrationLoading}
-          className="member-package-modal"
+          className="member-package-modal member-package-registration-modal"
           onClose={closeRegistration}
           title="Xác nhận đăng ký gói"
         >
           <form onSubmit={submitRegistration}>
             {memberId && <ReceptionistMemberContext memberId={memberId} />}
             <p className="member-package-modal-name">{selectedPackage.name}</p>
-            <p className="member-package-modal-price">{priceFormatter.format(Number(selectedPackage.price || 0))}</p>
             {!detailsReady && !registrationError && <p role="status">Đang tải chi tiết gói tập…</p>}
-            {detailsReady && selectedPackage.includedSports?.length > 0 && <section className="member-package-choice-section" aria-label="Môn học được bao gồm">
-              <h4>Môn học đã bao gồm</h4>
-              <div className="member-package-sport-tags">{selectedPackage.includedSports.map((sport) => <span key={sport.id}>{sport.name}</span>)}</div>
-            </section>}
-            {detailsReady && <PackageSportChoices groups={selectedPackage.choiceGroups} choices={choiceGroups}
-              onChange={setChoiceGroups} disabled={registrationLoading} />}
+            {detailsReady && <>
+              {selectedPackage.description && <p className="member-package-registration-description">{selectedPackage.description}</p>}
+              <dl className="member-package-registration-facts">
+                <div>
+                  <dt>Thời hạn sử dụng</dt>
+                  <dd>{packageDetailDurationLabel(selectedPackage)}</dd>
+                </div>
+                <div>
+                  <dt>Số buổi tập</dt>
+                  <dd>{selectedPackage.includedClasses != null ? `${selectedPackage.includedClasses} buổi` : 'Chưa cập nhật'}</dd>
+                </div>
+                <div>
+                  <dt>Giá niêm yết</dt>
+                  <dd className="member-package-registration-price">{selectedPackage.price != null && Number.isFinite(Number(selectedPackage.price))
+                    ? priceFormatter.format(Number(selectedPackage.price)) : 'Chưa cập nhật'}</dd>
+                </div>
+                {Number(selectedPackage.discount) > 0 && <div>
+                  <dt>Ưu đãi của gói</dt>
+                  <dd>{selectedPackage.discount}%</dd>
+                </div>}
+              </dl>
+              <section className="member-package-registration-section" aria-label="Quyền lợi của gói">
+                <h4>Quyền lợi</h4>
+                <p>{selectedPackage.benefits?.trim() || 'Chưa có thông tin quyền lợi.'}</p>
+              </section>
+              <section className="member-package-registration-section" aria-label="Điều kiện sử dụng gói">
+                <h4>Điều kiện sử dụng</h4>
+                <p>{selectedPackage.termConditions?.trim() || 'Chưa có thông tin điều kiện sử dụng.'}</p>
+              </section>
+              <section className="member-package-choice-section" aria-label="Môn học đi kèm">
+                <h4>Môn học đi kèm</h4>
+                {Array.isArray(selectedPackage.includedSports) && selectedPackage.includedSports.length > 0
+                  ? <div className="member-package-sport-tags">{selectedPackage.includedSports.map((sport) => <span key={sport.id}>{sport.name}</span>)}</div>
+                  : <p>Chưa có thông tin môn học đi kèm.</p>}
+              </section>
+              <section className="member-package-registration-section" aria-label="Môn học tự chọn">
+                <h4>Môn học tự chọn</h4>
+                {selectedPackage.choiceGroups.length > 0
+                  ? <PackageSportChoices groups={selectedPackage.choiceGroups} choices={choiceGroups}
+                    onChange={setChoiceGroups} disabled={registrationLoading} />
+                  : <p>Gói này không có nhóm môn tự chọn.</p>}
+              </section>
+            </>}
             <label className="member-package-payment-field">
               Hình thức thanh toán
               <select
-                disabled={registrationLoading}
+                disabled={registrationLoading || !detailsReady}
                 onChange={(event) => setPaymentMethod(event.target.value)}
                 value={paymentMethod}
               >

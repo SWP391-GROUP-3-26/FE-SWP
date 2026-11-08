@@ -38,7 +38,7 @@
 .subject-detail dt { font-size: 13px; color: var(--muted); }
 .subject-detail dd { margin: 6px 0 0; white-space: pre-wrap; }
 .subject-panel :focus-visible, .serene-modal :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
-.package-benefit-editor { display: grid; gap: 20px; margin-top: 8px; }
+.package-benefit-editor { display: grid; min-width: 0; gap: 20px; margin: 8px 0 0; padding: 0; border: 0; }
 .package-benefit-editor section { display: grid; gap: 10px; }
 .package-benefit-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .package-benefit-editor-heading > div { display: grid; gap: 4px; }

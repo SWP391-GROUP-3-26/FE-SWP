@@ -1,48 +1,3 @@
-.member-package-heading-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.member-package-history-link,
-.member-package-history-back {
-  display: inline-flex;
-  min-height: 40px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 14px;
-  border: 1px solid #cfe0d3;
-  border-radius: 10px;
-  color: #246343;
-  background: #f3f8f4;
-  font-size: 12px;
-  font-weight: 750;
-  text-decoration: none;
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
-}
-
-.member-package-history-link:hover,
-.member-package-history-back:hover {
-  transform: translateY(-1px);
-  border-color: #91b69c;
-  color: #1f563a;
-  background: #eaf4ec;
-}
-
-.member-package-history-link:focus-visible,
-.member-package-history-back:focus-visible {
-  outline: 3px solid rgba(39, 99, 68, .3);
-  outline-offset: 2px;
-}
-
-.member-package-history-link .material-symbols-outlined,
-.member-package-history-back .material-symbols-outlined {
-  font-size: 17px;
-}
-
 .member-package-history-intro {
   justify-content: space-between;
   align-items: center;
@@ -117,7 +72,6 @@
 }
 
 @media (max-width: 640px) {
-  .member-package-heading-actions,
   .member-package-history-intro {
     align-items: flex-start;
     flex-direction: column;

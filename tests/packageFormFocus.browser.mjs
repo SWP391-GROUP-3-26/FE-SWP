@@ -17,7 +17,10 @@ try {
     const path = new URL(route.request().url()).pathname
     const headers = { 'access-control-allow-origin': 'http://127.0.0.1:5180', 'access-control-allow-headers': 'authorization,content-type' }
     if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers })
-    const data = path === '/api/packages' ? [{ id: 1, name: 'Test Package', description: '', price: 100000, durationMonths: 1, status: 'Active', includedClasses: 10 }]
+    const savedPackage = { id: 1, name: 'Test Package', description: '', price: 100000, durationMonths: 1,
+      status: 'Active', includedClasses: 10, includedSports: [{ id: 1, name: 'Yoga' }], choiceGroups: [] }
+    const data = path === '/api/packages' ? [savedPackage]
+      : path === '/api/packages/1' ? savedPackage
       : path === '/api/subjects' ? [{ id: 1, name: 'Yoga', status: 'Active' }] : []
     return route.fulfill({ headers, json: { success: true, data } })
   })

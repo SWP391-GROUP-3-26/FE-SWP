@@ -44,7 +44,8 @@ function formatDate(value) {
   return match ? `${match[3]}/${match[2]}/${match[1]}` : value
 }
 
-function subscriptionStatusLabel(status) {
+function subscriptionStatusLabel(status, paymentStatus) {
+  if (String(status).toLowerCase() === 'pending' && String(paymentStatus).toLowerCase() === 'paid') return 'Sắp gia hạn'
   const labels = {
     active: 'Đang hoạt động',
     pending: 'Chờ xử lý',
@@ -174,7 +175,7 @@ export default function MemberPackageHistory() {
                       <div className="member-subscription-heading">
                         <span className="member-package-code">MÃ ĐĂNG KÝ #{subscription.subscriptionId}</span>
                         <span className={`member-package-status status-${statusKey}`}>
-                          {subscriptionStatusLabel(subscription.subscriptionStatus)}
+                          {subscriptionStatusLabel(subscription.subscriptionStatus, subscription.paymentStatus)}
                         </span>
                       </div>
                       <h4>{subscription.packageName}</h4>

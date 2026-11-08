@@ -723,13 +723,22 @@ input {
 .dashboard-sidebar {
   position: sticky;
   top: 0;
+  align-self: start;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 24px 20px;
   border-right: 1px solid #e4eee6;
   background: #edf6ef;
   transition: padding 220ms ease;
+}
+
+.dashboard-sidebar > * {
+  flex-shrink: 0;
 }
 
 .dashboard-brand {
@@ -885,6 +894,9 @@ input {
 }
 
 .dashboard-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -892,8 +904,12 @@ input {
   min-height: 86px;
   padding: 16px 28px;
   border-bottom: 1px solid #e4eee6;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(16px);
+}
+
+.dashboard-shell-sidebar-collapsed .dashboard-topbar {
+  padding-left: 72px;
 }
 
 .dashboard-sidebar-heading {
@@ -1284,7 +1300,10 @@ a.user-avatar:focus-visible {
 
   .dashboard-sidebar {
     position: static;
+    height: auto;
     min-height: auto;
+    overflow-y: visible;
+    overscroll-behavior-y: auto;
   }
 
   .dashboard-nav {

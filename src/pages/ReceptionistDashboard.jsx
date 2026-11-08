@@ -35,9 +35,9 @@ export default function ReceptionistDashboard() {
             onChange={(event) => updateSearch(event.target.value)} />
           <Link className="receptionist-primary-button" to={`/receptionist/members?keyword=${encodeURIComponent(keyword)}`}>Tra cứu hội viên <span aria-hidden="true">→</span></Link>
         </form>
-        <div className="member-booking-actions">
+        <div className="receptionist-dashboard-actions">
           <Link className="receptionist-secondary-button" to="/receptionist/members/new"><span className="material-symbols-outlined" aria-hidden="true">person_add</span> Đăng ký thành viên mới</Link>
-          <Link className="receptionist-secondary-button" to="/receptionist/refunds">Chi trả hoàn tiền</Link>
+          <Link className="receptionist-secondary-button" to="/receptionist/refunds"><span className="material-symbols-outlined" aria-hidden="true">currency_exchange</span> Chi trả hoàn tiền</Link>
         </div>
         <div role="status" aria-live="polite">
           {loading && <p className="receptionist-search-status">Đang tìm hội viên…</p>}

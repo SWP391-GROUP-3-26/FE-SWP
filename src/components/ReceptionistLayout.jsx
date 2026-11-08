@@ -21,7 +21,6 @@ export default function ReceptionistLayout({ children, className = '' }) {
           <span><strong>UniSports</strong><small>Tiếp tân</small></span>
         </Link>
         <div className="receptionist-user">
-          <Link to="/receptionist/refunds">Hoàn tiền</Link>
           <span><strong>{displayName}</strong><small>Tiếp tân</small></span>
           <span className="receptionist-user-avatar material-symbols-outlined" aria-hidden="true">person</span>
           <button onClick={logout} type="button">Đăng xuất</button>

@@ -9,7 +9,22 @@
 .receptionist-primary-button:hover, .receptionist-secondary-button:hover { color: #fff; background: #245f43; }
 .receptionist-secondary-button { color: #2e7955; background: #fff; }
 .receptionist-secondary-button:hover { color: #245f43; background: #f0f7f2; }
-.receptionist-dashboard-page .member-booking-actions { margin-top: 16px; }
+.receptionist-dashboard-actions {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: min(100%, 540px);
+  margin-top: 16px;
+}
+.receptionist-dashboard-actions > a {
+  flex: 1 1 220px;
+  min-height: 44px;
+  margin: 0;
+  line-height: 1.4;
+  white-space: normal;
+}
 .receptionist-search-status, .receptionist-dashboard-page [role="status"] { color: #6c7c71; font-size: 13px; }
 .receptionist-quick-results { width: min(900px,100%); grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); margin-top: 16px; text-align: left; }
 .receptionist-page-intro { display: grid; justify-items: start; gap: 8px; margin: 0 0 20px; }
