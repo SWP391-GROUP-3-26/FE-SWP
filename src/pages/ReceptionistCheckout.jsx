@@ -121,7 +121,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
             <div className="checkout-package-note"><strong>{item.packageName || 'Chưa có gói hoạt động'}</strong><p>Còn {item.remainingPackageClasses ?? 0} buổi · Cần dùng {item.requiredPackageClasses} buổi.</p><p>Điều kiện: đủ lượt và gói có hiệu lực đến buổi cuối của lớp.</p>{!canUsePackage && <p>Không thể trừ gói: {item.message}</p>}</div>
           </> : <>
             <dl className="checkout-facts"><div><dt>Thời hạn sử dụng</dt><dd>{item.durationDays} ngày</dd></div><div><dt>Số buổi trong gói</dt><dd>{item.includedClasses} buổi</dd></div></dl>
-            {item.benefits && <div className="checkout-service-copy"><h5>Quyền lợi</h5><p>{item.benefits}</p></div>}
+            {item.benefits && <div className="checkout-service-copy"><h5>Quyền lợi</h5><p>{normalizePackageBenefits(item.benefits)}</p></div>}
             {item.termConditions && <div className="checkout-service-copy"><h5>Điều kiện sử dụng</h5><p>{item.termConditions}</p></div>}
             {isRenewal ? <dl className="checkout-facts">
               <div><dt>Thời điểm gia hạn</dt><dd>{data.renewal?.renewalStart === 'IMMEDIATE' ? 'Bắt đầu ngay sau khi thanh toán' : 'Sau khi gói hiện tại hết hạn'}</dd></div>
@@ -178,3 +178,4 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
     </div>
   </ReceptionistLayout>
 }
+import { normalizePackageBenefits } from '../utils/packageBenefits'

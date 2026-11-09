@@ -333,6 +333,10 @@
   letter-spacing: .06em;
 }
 
+.subscription-sports { display: grid; gap: 4px; margin: 4px 0 12px; font-size: 14px; }
+.subscription-sports p { margin: 0; }
+.subscription-sports small { color: var(--member-package-muted); }
+
 .member-package-card h4,
 .member-subscription-content h4 {
   margin: 8px 0;
@@ -848,6 +852,17 @@
   gap: 10px;
   margin-top: 20px;
 }
+
+.member-freeze-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0;
+}
+
+.member-freeze-controls > strong { width: 100%; }
+.member-freeze-controls > span { font-size: 14px; }
 
 .member-renewal-form {
   display: grid;

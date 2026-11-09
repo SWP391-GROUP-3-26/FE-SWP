@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
+import GymPackageForm from '../components/GymPackageForm'
+import FreezeMonthsField from '../components/FreezeMonthsField'
+import { isGymVariant } from '../utils/gymPackages'
 import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import { getSubjects } from '../services/subjectService'
 import { hasPackageSportConfiguration, toPackageEditForm } from '../utils/packageEditForm'
+import { normalizePackageBenefits } from '../utils/packageBenefits'
 import {
   createPackage,
   deletePackage,
@@ -35,9 +39,9 @@ const EMPTY_FORM = {
   name: '',
   description: '',
   durationMonths: 1,
+  freezeMonths: 0,
   price: '',
   status: 'Active',
-  includedClasses: '',
   benefits: '',
   discount: 0,
   termConditions: '',
@@ -160,6 +164,10 @@ export default function PackageManagement() {
   }
 
   async function openEdit(pkg) {
+    if (isGymVariant(pkg.name)) {
+      setModal({ type: 'gym' })
+      return
+    }
     detailController.current?.abort()
     const controller = new AbortController()
     detailController.current = controller
@@ -269,9 +277,9 @@ export default function PackageManagement() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         durationMonths: Number(form.durationMonths),
+        freezeMonths: form.durationMonths >= 6 ? Number(form.freezeMonths) : 0,
         price,
         status: form.status,
-        includedClasses: form.includedClasses !== '' ? Number(form.includedClasses) : 0,
         benefits: form.benefits.trim() || null,
         discount: Number(form.discount) || 0,
         termConditions: form.termConditions.trim() || null,
@@ -308,9 +316,9 @@ export default function PackageManagement() {
         name: form.name.trim(),
         description: form.description.trim() || null,
         durationMonths: Number(form.durationMonths),
+        freezeMonths: form.durationMonths >= 6 ? Number(form.freezeMonths) : 0,
         price,
         status: form.status,
-        includedClasses: form.includedClasses !== '' ? Number(form.includedClasses) : 0,
         benefits: form.benefits.trim() || null,
         discount: Number(form.discount) || 0,
         termConditions: form.termConditions.trim() || null,
@@ -409,6 +417,8 @@ export default function PackageManagement() {
             </span>
           </label>
         </div>
+        {form.durationMonths >= 6 && <FreezeMonthsField value={form.freezeMonths}
+          onChange={event => setField('freezeMonths', event.target.value)} />}
         <label>
           Trạng thái phát hành <span className="input-wrap">
             <select
@@ -422,16 +432,7 @@ export default function PackageManagement() {
             </select>
           </span>
         </label>
-        <label>
-          Số buổi học bao gồm <span className="input-wrap">
-            <input
-              type="number" min="0" name="includedClasses"
-              placeholder="0 (không giới hạn)"
-              value={form.includedClasses}
-              onChange={(e) => setField('includedClasses', e.target.value)}
-            />
-          </span>
-        </label>
+        <p>Số buổi học không giới hạn trong thời hạn gói đối với các môn đi kèm.</p>
         <label>
           Đặc quyền bổ sung
           <textarea
@@ -543,6 +544,8 @@ export default function PackageManagement() {
             <span className="material-symbols-outlined" aria-hidden="true">add</span>
             Tạo mới gói tập
           </button>
+          <button className="subject-button" type="button" disabled={loading || Boolean(listError)}
+            onClick={() => setModal({ type: 'gym' })}>Cấu hình gói Gym</button>
         </div>
 
         {/* Toolbar */}
@@ -658,7 +661,12 @@ export default function PackageManagement() {
       </section>
 
       {/* ── Modals ── */}
-      {modal && (
+      {modal?.type === 'gym' && <GymPackageForm packages={packages} onClose={closeModal} onSaved={() => {
+        closeModal()
+        setNotice('Đã lưu cấu hình gói Gym.')
+        void loadPackages()
+      }} />}
+      {modal && modal.type !== 'gym' && (
         <Modal
           title={
             modal.type === 'create' ? 'Tạo mới Gói dịch vụ' :
@@ -729,10 +737,11 @@ export default function PackageManagement() {
                     ['Mã gói', detail.code],
                     ['Tên gói dịch vụ', detail.name],
                     ['Mô tả & đặc quyền', detail.description],
-                    ['Đặc quyền bổ sung', detail.benefits],
+                    ['Đặc quyền bổ sung', normalizePackageBenefits(detail.benefits)],
                     ['Thời hạn', detail.durationMonths ? `${detail.durationMonths} tháng (${detail.durationDays} ngày)` : null],
+                    ['Quyền bảo lưu', detail.freezeMonths > 0 ? `${detail.freezeMonths} tháng` : 'Không bảo lưu'],
                     ['Giá niêm yết', formatCurrency(detail.price)],
-                    ['Số buổi học', detail.includedClasses != null ? `${detail.includedClasses} buổi` : '—'],
+                    ['Số buổi học', 'Không giới hạn trong thời hạn gói'],
                     ['Trạng thái', detail.statusLabel],
                   ].map(([label, value]) => (
                     <div key={label}>

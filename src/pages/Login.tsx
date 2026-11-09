@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
+import loginBackgroundVideo from '../assets/login-background.mp4'
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -81,6 +82,17 @@ export default function Login() {
 
   return (
     <main className="auth-page auth-page--login">
+      <video
+        className="auth-login-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        <source src={loginBackgroundVideo} type="video/mp4" />
+      </video>
       <section className="auth-card">
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>

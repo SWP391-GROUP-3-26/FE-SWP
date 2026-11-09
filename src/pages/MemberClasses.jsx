@@ -11,7 +11,7 @@ import memberMenuItems from '../components/memberMenuItems'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../services/memberPaymentService'
 import {
   classApiErrorMessage,
-  getAvailableClasses,
+  getAvailableClassCatalog,
   getMyClassList,
   cancelClassRegistration,
   getClassConfirmation,
@@ -78,14 +78,33 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
     const controller = new AbortController()
 
     const loadRegistered = memberId ? (options) => getReceptionistRegistrations(memberId, options) : getMyClassList
-    const loadAvailable = memberId ? getReceptionistClasses : getAvailableClasses
+    const loadAvailable = memberId ? getReceptionistClasses : getAvailableClassCatalog
     const request = activeTab === 'registered'
       ? loadRegistered({ search: submittedSearch, status: registrationStatus, signal: controller.signal })
       : loadAvailable({ search: submittedSearch, signal: controller.signal })
-    request.then((result) => {
+    request.then(async (result) => {
       if (controller.signal.aborted) return
       if (activeTab === 'registered') { setRegisteredClasses(result.classes); setCounts(result.counts) }
-      else setClasses(result)
+      else if (memberId) setClasses(result.filter((item) => item.sessionId != null))
+      else {
+        const visibleClasses = result.classes.filter((item) => item.sessionId != null)
+        setClasses(visibleClasses)
+        setLoading(false)
+        if (!result.hasActivePackage) return
+        const candidates = visibleClasses.filter((item) => item.canRegister && !item.enrolled)
+        for (let index = 0; index < candidates.length && !controller.signal.aborted; index += 4) {
+          await Promise.all(candidates.slice(index, index + 4).map(async ({ classId }) => {
+            try {
+              const detail = await getClassConfirmation(classId, controller.signal)
+              if (detail.packageOption?.eligible && !controller.signal.aborted) {
+                setClasses((items) => items.map((item) => item.classId === classId ? { ...item, coveredByPackage: true } : item))
+              }
+            } catch {
+              // Opening the class checks eligibility again and shows the server's reason.
+            }
+          }))
+        }
+      }
     })
       .catch((error) => {
         if (!controller.signal.aborted) setLoadError(classApiErrorMessage(error))
@@ -408,14 +427,14 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                 <strong>
                   Giá niêm yết: {classItem.priceFormatted || (classItem.price == null ? 'Liên hệ trung tâm' : priceFormatter.format(classItem.price))}
                 </strong>
-                {classItem.packageNote && <small className="member-class-package-note">{classItem.packageNote}</small>}
+                {classItem.coveredByPackage && <small className="member-class-package-note">Đã bao gồm trong gói của bạn</small>}
                 <button
                   className="member-register-button"
                   disabled={!classItem.canRegister || classItem.enrolled || Boolean(selectedClass)}
                   type="button"
                   onClick={() => openRegistration(classItem)}
                 >
-                  {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? 'Đăng ký lớp'
+                  {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? (classItem.coveredByPackage ? 'Nhận lớp' : 'Đăng ký lớp')
                     : classItem.sessionId === null ? 'Không còn buổi học'
                       : classItem.remainingSlots <= 0 ? 'Hết chỗ' : 'Đã đóng đăng ký'}
                 </button>
@@ -438,7 +457,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
           busy={bookingLoading}
           className="member-booking-modal"
           onClose={closeRegistration}
-          title="Xác nhận đăng ký lớp"
+          title={!receptionist && confirmation?.packageOption?.eligible && paymentMethod === 'PACKAGE' ? 'Xác nhận nhận lớp' : 'Xác nhận đăng ký lớp'}
         >
           {confirmationLoading ? (
             <div className="member-class-state" role="status">Đang tải thông tin đăng ký...</div>
@@ -509,8 +528,8 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                       type="radio"
                       value="PACKAGE"
                     />
-                    {confirmation.packageOption.title || 'Trừ gói hội viên'}
-                    {` · Dùng ${confirmation.packageOption.requiredSessions ?? confirmation.sessionCount ?? 1} buổi`}
+                    {confirmation.packageOption.title || 'Sử dụng gói hội viên'}
+                    {confirmation.packageOption.requiredSessions != null && ` · Dùng ${confirmation.packageOption.requiredSessions} buổi`}
                     {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
                   </label>
                 )}
@@ -559,6 +578,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                 >
                   {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span> : paymentMethod === 'MIXED'
                     ? `Thanh toán thêm ${priceFormatter.format(confirmation.packageOption.additionalAmount)}`
+                    : !receptionist && paymentMethod === 'PACKAGE' ? 'Nhận lớp'
                     : memberId && paymentMethod === 'DIRECT' && paymentChannel === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
                 </button>
               </div>

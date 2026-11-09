@@ -31,8 +31,8 @@ export async function getSubjectById(id, signal) {
   return result.data
 }
 
-export function createSubject({ name, category, description }) {
-  return request('post', '', { name, category, description })
+export function createSubject({ name, category, description, allowedRoomTypes }) {
+  return request('post', '', { name, category, description, allowedRoomTypes })
 }
 
 export function deleteSubject(id) {

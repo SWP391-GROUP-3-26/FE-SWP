@@ -11,7 +11,7 @@ export function classApiErrorMessage(error) {
   return error.response?.data?.message || error.message || 'Không thể tải danh sách lớp.'
 }
 
-export async function getAvailableClasses({ search = '', signal } = {}) {
+export async function getAvailableClassCatalog({ search = '', signal } = {}) {
   const token = getAccessToken()
   const response = await axiosClient.get('/api/member/classes/available', {
     params: {
@@ -26,7 +26,11 @@ export async function getAvailableClasses({ search = '', signal } = {}) {
     throw new Error(response.data?.message || 'Dữ liệu lớp khả dụng từ backend không hợp lệ.')
   }
 
-  return response.data.classes
+  return { classes: response.data.classes, hasActivePackage: response.data.activeSubscription?.hasActivePackage === true }
+}
+
+export async function getAvailableClasses(options) {
+  return (await getAvailableClassCatalog(options)).classes
 }
 
 export async function getMyClassList({ status = 'ongoing', search = '', signal } = {}) {
@@ -58,9 +62,10 @@ export async function cancelClassRegistration(bookingId, confirmation) {
   return response.data
 }
 
-export async function getClassConfirmation(classId) {
+export async function getClassConfirmation(classId, signal) {
   const token = getAccessToken()
   const response = await axiosClient.get(`/api/member/classes/${classId}/confirm`, {
+    signal,
     timeout: 15000,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })

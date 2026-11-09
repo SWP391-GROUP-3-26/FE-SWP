@@ -4,7 +4,7 @@ import Modal from '../components/Modal'
 import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
-import { SUBJECT_CATEGORIES } from '../constants/subjectCategories'
+import { SUBJECT_CATEGORIES, VENUES_BY_CATEGORY } from '../constants/subjectCategories'
 import { createSubject, deleteSubject, getSubjectById, getSubjects } from '../services/subjectService'
 import './SubjectManagement.css'
 
@@ -24,7 +24,8 @@ export default function SubjectManagement() {
   const [category, setCategory] = useState('')
   const [page, setPage] = useState(0)
   const [modal, setModal] = useState(null)
-  const [form, setForm] = useState({ name: '', category: '', description: '' })
+  const [form, setForm] = useState({ name: '', category: '', description: '', allowedRoomTypes: [] })
+  const venues = VENUES_BY_CATEGORY[form.category] || []
   const [modalError, setModalError] = useState('')
   const [busy, setBusy] = useState(false)
   const [detail, setDetail] = useState(null)
@@ -69,7 +70,7 @@ export default function SubjectManagement() {
 
   function openModal(type, subject) {
     setModalError('')
-    setForm({ name: '', category: '', description: '' })
+    setForm({ name: '', category: '', description: '', allowedRoomTypes: [] })
     setModal({ type, subject })
   }
 
@@ -93,9 +94,13 @@ export default function SubjectManagement() {
   async function handleCreate(event) {
     event.preventDefault()
     if (busy) return
-    const data = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim()]))
-    if (!data.name || !categoryOptions.includes(data.category)) {
+    const data = { ...form, name: form.name.trim(), description: form.description.trim() }
+    if (!data.name || !SUBJECT_CATEGORIES.includes(data.category)) {
       setModalError('Vui lòng nhập tên môn học và chọn danh mục hợp lệ.')
+      return
+    }
+    if (!data.allowedRoomTypes.length) {
+      setModalError('Vui lòng chọn ít nhất một loại địa điểm có thể dạy môn này.')
       return
     }
     setBusy(true)
@@ -130,8 +135,6 @@ export default function SubjectManagement() {
     }
   }
 
-  const categories = [...new Set(subjects.map((subject) => subject.category).filter(Boolean))].sort()
-  const categoryOptions = [...new Set([...SUBJECT_CATEGORIES, ...categories])]
   const query = search.trim().toLocaleLowerCase('vi')
   const filtered = subjects.filter((subject) =>
     (!category || subject.category === category) &&
@@ -165,8 +168,7 @@ export default function SubjectManagement() {
           <label className="subject-filter"><span className="visually-hidden">Lọc danh mục</span>
             <select value={category} onChange={(event) => { setCategory(event.target.value); setPage(0) }}>
               <option value="">Tất cả danh mục</option>
-              {category && !categories.includes(category) && <option value={category}>{category}</option>}
-              {categories.map((value) => <option key={value} value={value}>{value}</option>)}
+              {SUBJECT_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
         </div>
@@ -205,11 +207,27 @@ export default function SubjectManagement() {
           <fieldset disabled={busy}>
             <label>Tên môn học <span className="input-wrap"><input autoFocus required name="name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></span></label>
             <label>Danh mục <span className="input-wrap">
-              <select required name="category" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+              <select required name="category" value={form.category} onChange={(event) => {
+                const category = event.target.value
+                const options = VENUES_BY_CATEGORY[category] || []
+                setForm({ ...form, category, allowedRoomTypes: options.length === 1 ? [options[0][0]] : [] })
+                setModalError('')
+              }}>
                 <option value="" disabled>Chọn danh mục</option>
-                {categoryOptions.map((value) => <option key={value} value={value}>{value}</option>)}
+                {SUBJECT_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
             </span></label>
+            {venues.length === 1 && <p>Địa điểm phù hợp: <strong>{venues[0][1]}</strong></p>}
+            {venues.length > 1 && <fieldset className="subject-venue-options">
+              <legend>Loại địa điểm có thể dạy</legend>
+              {venues.map(([code, label]) => <label key={code}>
+                <input type="checkbox" checked={form.allowedRoomTypes.includes(code)} onChange={({ target }) => {
+                  setForm({ ...form, allowedRoomTypes: target.checked
+                    ? [...form.allowedRoomTypes, code] : form.allowedRoomTypes.filter(item => item !== code) })
+                  setModalError('')
+                }} /> {label}
+              </label>)}
+            </fieldset>}
             <label>Mô tả <textarea name="description" rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
           </fieldset>
           <div className="subject-modal-actions"><button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Hủy</button>

@@ -1,5 +1,6 @@
 import axiosClient from '../api/axiosClient'
 import { getAccessToken } from '../auth/authStorage'
+import { groupGymPackages } from '../utils/gymPackages'
 
 export function memberPackageApiErrorMessage(error) {
   if (error.response?.status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
@@ -52,6 +53,17 @@ export async function getMemberPackage(packageId, { signal } = {}) {
   return response.data.data
 }
 
+export async function getGroupedMemberCatalog({ signal }) {
+  const first = await getMemberPackageCatalog({ signal })
+  const items = [...first.data]
+  for (let page = 1; page * first.size < first.total && first.size > 0; page++) {
+    const next = await getMemberPackageCatalog({ page, size: first.size, signal })
+    items.push(...next.data)
+  }
+  const data = groupGymPackages(items)
+  return { data, total: data.length }
+}
+
 export async function getMemberPackageRenewalOverview({ signal } = {}) {
   const response = await axiosClient.get('/api/member/packages/renewal', authConfig(signal))
   if (response.data?.success !== true || !Array.isArray(response.data?.availablePackages)) {
@@ -75,6 +87,22 @@ export async function getMyMemberPackageSubscriptions({ page = 0, size = 100, si
   })
   return validateListResponse(response.data, 'lịch sử gói tập')
 }
+
+async function freezeRequest(subscriptionId, action, method, data, signal) {
+  const response = await axiosClient.request({
+    ...authConfig(signal), method, data,
+    url: `/api/member/packages/subscriptions/${encodeURIComponent(subscriptionId)}/${action}`,
+  })
+  const state = response.data
+  if (!state?.success || Number(state.subscriptionId) !== Number(subscriptionId) || !state.status) {
+    throw new Error(state?.message || 'Không xác nhận được trạng thái bảo lưu.')
+  }
+  return state
+}
+
+export const getFreezeState = (id, signal) => freezeRequest(id, 'freeze', 'get', undefined, signal)
+export const freezeSubscription = (id, months) => freezeRequest(id, 'freeze', 'post', { months })
+export const resumeSubscription = id => freezeRequest(id, 'resume', 'post')
 
 export async function getMemberPackageDetail(packageId) {
   const response = await axiosClient.get(`/api/member/packages/${encodeURIComponent(packageId)}`, authConfig())

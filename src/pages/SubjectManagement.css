@@ -31,6 +31,10 @@
 .serene-modal h3 { font-size: 22px; }
 .subject-modal-error { margin-bottom: 18px; }
 .subject-form fieldset { display: grid; gap: 18px; min-width: 0; }
+.subject-form .subject-venue-options { grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px 14px; }
+.subject-venue-options legend { font: inherit; font-weight: 700; }
+.subject-form .subject-venue-options label { display: flex; align-items: center; gap: 8px; }
+.subject-form .subject-venue-options input { width: 1em; height: 1em; }
 .subject-form textarea { width: 100%; resize: vertical; font-weight: 400; }
 .subject-form .input-wrap select { width: 100%; min-width: 0; min-height: 46px; border: 0; outline: 0; color: var(--text); background: transparent; font: inherit; }
 .subject-modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 22px; }

@@ -15,10 +15,10 @@ export function toPackageEditForm(pkg) {
     name: pkg.name ?? '',
     description: pkg.description ?? '',
     durationMonths: pkg.durationMonths ?? 1,
+    freezeMonths: pkg.freezeMonths ?? 0,
     price: pkg.price != null ? String(pkg.price) : '',
     status: pkg.status ?? 'Active',
-    includedClasses: pkg.includedClasses != null ? String(pkg.includedClasses) : '',
-    benefits: pkg.benefits ?? '',
+    benefits: normalizePackageBenefits(pkg.benefits),
     discount: pkg.discount ?? 0,
     termConditions: pkg.termConditions ?? '',
     includedSportIds: hasSports ? pkg.includedSports.map((sport) => sport.id) : [],
@@ -31,3 +31,4 @@ export function toPackageEditForm(pkg) {
     })) : [],
   }
 }
+import { normalizePackageBenefits } from './packageBenefits'

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { MouseEvent } from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getLanguage, saveLanguage } from '../utils/language'
 
 const programs = [
   {
@@ -31,6 +32,13 @@ const programs = [
 
 export default function Landing() {
   const scrollFrameRef = useRef<number | null>(null)
+  const [language, setLanguage] = useState(getLanguage)
+  const english = language === 'en'
+  const programText = english ? [
+    { title: 'Yoga & Meditation', tag: 'Mind & relaxation', description: 'Unwind after work with yoga, meditation and recovery classes in a quiet studio.' },
+    { title: 'Pilates Reformer', tag: 'Posture & alignment', description: 'Build core strength, improve your posture and move more freely.' },
+    { title: 'Functional & Boxing', tag: 'Strength & endurance', description: 'Train with boxing equipment and high-intensity functional exercises.' },
+  ] : programs
 
   useEffect(() => () => {
     if (scrollFrameRef.current !== null) window.cancelAnimationFrame(scrollFrameRef.current)
@@ -72,7 +80,7 @@ export default function Landing() {
   }
 
   return (
-    <div className="site-shell">
+    <div className="site-shell" lang={language}>
       <header className="site-header">
         <Link to="/" className="brand">
           <span className="brand-mark material-symbols-outlined">spa</span>
@@ -82,6 +90,14 @@ export default function Landing() {
           </span>
         </Link>
 
+        <div className="landing-language">
+          <span className="material-symbols-outlined" aria-hidden="true">language</span>
+          <select aria-label={english ? 'Language' : 'Ngôn ngữ'} value={language}
+            onChange={(event) => { setLanguage(event.target.value); saveLanguage(event.target.value) }}>
+            <option value="vi" lang="vi">Tiếng Việt</option>
+            <option value="en" lang="en">English</option>
+          </select>
+        </div>
       </header>
 
       <main>
@@ -89,48 +105,46 @@ export default function Landing() {
           <div className="hero-copy">
             <span className="eyebrow">
               <span className="material-symbols-outlined">eco</span>
-              Tái tạo năng lượng chuẩn sinh thái
+              {english ? 'Recharge in a greener space' : 'Tái tạo năng lượng chuẩn sinh thái'}
             </span>
-            <h1>Bắt đầu hành trình sống khỏe cùng UniSports</h1>
+            <h1>{english ? 'Start your fitness journey with UniSports' : 'Bắt đầu hành trình sống khỏe cùng UniSports'}</h1>
             <p>
-              Không gian tập luyện hiện đại, kết hợp năng lượng thiên nhiên và
-              đội ngũ huấn luyện viên chuyên nghiệp để giúp bạn cân bằng thể
-              lực mỗi ngày.
+              {english ? 'Train in a modern, nature-inspired space with professional coaches who help you stay active every day.' : 'Không gian tập luyện hiện đại, kết hợp năng lượng thiên nhiên và đội ngũ huấn luyện viên chuyên nghiệp để giúp bạn cân bằng thể lực mỗi ngày.'}
             </p>
             <div className="hero-actions">
               <Link to="/register" className="cta-button">
-                Đăng ký ngay
+                {english ? 'Join now' : 'Đăng ký ngay'}
                 <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
             </div>
           </div>
 
-          <nav className="hero-panel" aria-label="Truy cập và tìm hiểu UniSports">
+          <nav className="hero-panel" aria-label={english ? 'Explore UniSports' : 'Truy cập và tìm hiểu UniSports'}>
             <Link to="/login" className="hero-panel-action">
-              <strong>Đăng nhập</strong>
-              <span>Truy cập tài khoản UniSports</span>
+              <strong>{english ? 'Sign in' : 'Đăng nhập'}</strong>
+              <span>{english ? 'Access your UniSports account' : 'Truy cập tài khoản UniSports'}</span>
             </Link>
             <Link to="/register" className="hero-panel-action">
-              <strong>Đăng ký</strong>
-              <span>Tạo tài khoản hội viên mới</span>
+              <strong>{english ? 'Register' : 'Đăng ký'}</strong>
+              <span>{english ? 'Create a member account' : 'Tạo tài khoản hội viên mới'}</span>
             </Link>
             <a href="#programs" className="hero-panel-action hero-panel-scroll-link" onClick={scrollToPrograms}>
-              <strong>Tìm hiểu thêm về trung tâm</strong>
-              <span>Khám phá các bộ môn và không gian tập luyện</span>
+              <strong>{english ? 'Explore the center' : 'Tìm hiểu thêm về trung tâm'}</strong>
+              <span>{english ? 'Discover our programs and training spaces' : 'Khám phá các bộ môn và không gian tập luyện'}</span>
             </a>
           </nav>
         </section>
 
         <section className="program-section" id="programs">
           <div className="section-heading">
-            <span>Chương trình tiêu biểu</span>
-            <h2>Không gian bộ môn chuyên sâu</h2>
+            <span>{english ? 'Featured programs' : 'Chương trình tiêu biểu'}</span>
+            <h2>{english ? 'Our training studios' : 'Không gian bộ môn chuyên sâu'}</h2>
           </div>
 
           <div className="program-grid">
-            {programs.map((program) => (
+            {programText.map((program, index) => (
               <article className="program-card" key={program.title}>
-                <img src={program.image} alt={program.title} />
+                <img src={programs[index].image} alt={program.title} />
                 <div className="program-body">
                   <span className="program-tag">{program.tag}</span>
                   <h3>{program.title}</h3>

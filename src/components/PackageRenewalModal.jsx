@@ -3,6 +3,8 @@ import Modal from './Modal'
 import useMemberRequest from '../hooks/useMemberRequest'
 import { memberPackageApiErrorMessage } from '../services/memberPackageService'
 import { getPackageRenewalOverview, previewPackageRenewal, renewPackage } from '../services/packageRenewalService'
+import { rememberSports } from '../utils/subscriptionSports'
+import { getAuth } from '../auth/authStorage'
 import { getReceptionistSubscriptions } from '../services/receptionistRegistrationService'
 import { getVnpayPaymentUrl } from '../services/memberPaymentService'
 import { useNavigate } from 'react-router-dom'
@@ -15,7 +17,7 @@ function dateLabel(value) {
   return value ? String(value).slice(0, 10).split('-').reverse().join('/') : 'Chưa cập nhật'
 }
 
-export default function PackageRenewalModal({ memberId, expectedSubscriptionId, hasScheduledPackage, onClose, onSuccess }) {
+export default function PackageRenewalModal({ memberId, requestedPackageId, expectedSubscriptionId, hasScheduledPackage, onClose, onSuccess }) {
   const [busy, setBusy] = useState(false)
   const request = useCallback(async (signal) => {
     const overview = await getPackageRenewalOverview(memberId, signal)
@@ -40,13 +42,13 @@ export default function PackageRenewalModal({ memberId, expectedSubscriptionId, 
     {data?.currentSubscription && !matchesSubscription && <p role="alert">Gói được chọn không còn là gói đang hoạt động. Hãy đóng cửa sổ và tải lại hồ sơ hội viên.</p>}
     {data?.pendingPayment && <p role="alert">Hội viên đang có giao dịch gói chờ thanh toán. Hãy xử lý giao dịch đó trước khi gia hạn.</p>}
     {data?.currentSubscription && matchesSubscription && !data.pendingPayment && <RenewalForm overview={data} memberId={memberId}
+      packageId={requestedPackageId ?? data.currentSubscription.packageId}
       hasScheduledPackage={data.hasScheduledPackage} busy={busy} setBusy={setBusy} onClose={onClose} onSuccess={onSuccess} />}
   </Modal>
 }
 
-function RenewalForm({ overview, memberId, hasScheduledPackage, busy, setBusy, onClose, onSuccess }) {
+function RenewalForm({ overview, memberId, packageId, hasScheduledPackage, busy, setBusy, onClose, onSuccess }) {
   const navigate = useNavigate()
-  const packageId = overview.currentSubscription.packageId
   const selectedPackage = overview.availablePackages.find((item) => String(item.id) === String(packageId))
   const [renewalStart, setRenewalStart] = useState(hasScheduledPackage ? '' : 'AFTER_CURRENT')
   const [choiceGroups, setChoiceGroups] = useState(() => (selectedPackage?.choiceGroups || [])
@@ -83,6 +85,7 @@ function RenewalForm({ overview, memberId, hasScheduledPackage, busy, setBusy, o
     try {
       const result = await renewPackage(memberId, { packageId: Number(packageId), renewalStart, choiceGroups, paymentMethod })
       if (!memberId) {
+        rememberSports(getAuth().userId, result.data.subscriptionId, selectedPackage, choiceGroups)
         if (paymentMethod === 'Card') window.location.assign(getVnpayPaymentUrl(result.data.paymentUrl))
         else navigate(`/member/payment-result?paymentId=${result.data.paymentId}&type=package`)
         return
@@ -101,7 +104,7 @@ function RenewalForm({ overview, memberId, hasScheduledPackage, busy, setBusy, o
       Hết hạn ngày {dateLabel(overview.currentSubscription.endDate)}.</p>
     {!selectedPackage && <p role="alert">Gói hiện tại không còn mở gia hạn. Vui lòng liên hệ trung tâm để được hỗ trợ.</p>}
     <label className="member-package-payment-field">Gói gia hạn
-      <input value={overview.currentSubscription.packageName} readOnly />
+      <input value={selectedPackage?.name ?? ''} readOnly />
     </label>
     <label className="member-package-payment-field">Thời điểm bắt đầu
       <select value={renewalStart} disabled={busy} onChange={(event) => { setRenewalStart(event.target.value); resetConfirmation() }}>

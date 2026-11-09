@@ -13,7 +13,7 @@ const original = structuredClone(saved)
 const form = toPackageEditForm(saved)
 assert.equal(hasPackageSportConfiguration(saved), true)
 assert.equal(form.price, '1300000')
-assert.equal(form.includedClasses, '30')
+assert.equal(Object.hasOwn(form, 'includedClasses'), false)
 assert.equal(form.benefits, 'Phòng tập')
 assert.equal(form.discount, 5)
 assert.equal(form.termConditions, 'Điều kiện')
@@ -32,7 +32,6 @@ for (const missing of [
   assert.equal(hasPackageSportConfiguration(missing), false, 'Missing data must not be treated as saved empty configuration')
 }
 assert.equal(hasPackageSportConfiguration({ includedSports: [], choiceGroups: [] }), true)
-assert.equal(toPackageEditForm({ ...saved, includedClasses: 0 }).includedClasses, '0')
 
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
 globalThis.localStorage = { getItem: () => null }
