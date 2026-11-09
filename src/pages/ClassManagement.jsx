@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
 import TablePagination from '../components/TablePagination'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
+import { ROLES } from '../auth/roleConfig'
 import {
   createClass,
   deleteClass,
@@ -203,6 +205,15 @@ export default function ClassManagement() {
   const currentPage = Math.min(page, totalPages)
   const visibleClasses = useMemo(() => classes.slice((currentPage - 1) * classPageSize, currentPage * classPageSize), [classes, currentPage])
   const dayOptions = optionsLoading ? [] : options
+  const selectedSubject = dayOptions.subjects.find((subject) => String(subject.id) === form.subjectId)
+  const allowedRoomTypes = new Set(selectedSubject?.allowedRoomTypes || [])
+  const compatibleRooms = selectedSubject
+    ? dayOptions.rooms.filter((room) => allowedRoomTypes.has(room.type))
+    : []
+  const eligibleRooms = form.maxCapacity
+    ? compatibleRooms.filter((room) => Number(room.maxCapacity) >= Number(form.maxCapacity))
+    : compatibleRooms
+  const selectedRoom = eligibleRooms.find((room) => String(room.id) === form.roomId)
   const selectedSlot = options.timeSlots.find((slot) => String(slot.id) === form.slotId)
   const termErrors = validateClassTerm(form)
   const previewEndDate = calculateClassEndDate(form.startDate, form.durationWeeks)
@@ -276,15 +287,23 @@ export default function ClassManagement() {
           {!optionsLoading && <form className="auth-form service-form" onSubmit={handleCreate}>
             <fieldset disabled={busy}>
               <label>Tên lớp học <span className="input-wrap"><input autoFocus required maxLength={100} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></span></label>
-              <label>Môn học <span className="input-wrap"><select required value={form.subjectId} onChange={(event) => setForm({ ...form, subjectId: event.target.value })}>
+              <label>Môn học <span className="input-wrap"><select required value={form.subjectId} onChange={(event) => setForm({ ...form, subjectId: event.target.value, roomId: '' })}>
                 <option value="" disabled>Chọn môn học</option>{dayOptions.subjects.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.name}</option>)}
               </select></span></label>
               <label>Huấn luyện viên <span className="input-wrap"><select required value={form.coachId} onChange={(event) => setForm({ ...form, coachId: event.target.value })}>
                 <option value="" disabled>Chọn huấn luyện viên</option>{dayOptions.coaches.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.fullName}</option>)}
               </select></span></label>
-              <label>Phòng tập <span className="input-wrap"><select required value={form.roomId} onChange={(event) => setForm({ ...form, roomId: event.target.value })}>
-                <option value="" disabled>Chọn phòng tập</option>{dayOptions.rooms.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.name}</option>)}
+              <label>Phòng / sân học <span className="input-wrap"><select required disabled={!selectedSubject || !eligibleRooms.length} value={form.roomId} onChange={(event) => setForm({ ...form, roomId: event.target.value })}>
+                <option value="" disabled>{!selectedSubject ? 'Chọn môn học trước' : eligibleRooms.length ? 'Chọn phòng / sân phù hợp' : 'Chưa có địa điểm phù hợp'}</option>
+                {eligibleRooms.map((item) => <option key={item.id} value={item.id}>{item.displayText || `${item.name} · ${item.typeLabel || item.type} · tối đa ${item.maxCapacity} người`}</option>)}
               </select></span></label>
+              {selectedSubject && !eligibleRooms.length && <div className="service-unavailable" role="status">
+                <span className="material-symbols-outlined" aria-hidden="true">meeting_room</span>
+                <div><strong>{compatibleRooms.length ? 'Sức chứa vượt quá giới hạn phòng phù hợp.' : 'Chưa có phòng đang hoạt động phù hợp với môn này.'}</strong>
+                  <p>{compatibleRooms.length ? 'Giảm sức chứa lớp hoặc kiểm tra lại sức chứa phòng.' : 'Hãy tạo phòng đúng loại và cấu hình loại phòng được phép cho môn học.'}
+                    {[ROLES.CENTER_MANAGER, ROLES.ADMIN].includes(role) && <> <Link to="/center-manager/rooms">Mở quản lý phòng</Link>.</>}</p></div>
+              </div>}
+              {selectedRoom && <p className="class-time-slot-hint">{selectedRoom.typeLabel || selectedRoom.type}{selectedRoom.location ? ` · ${selectedRoom.location}` : ''} · tối đa {selectedRoom.maxCapacity} người</p>}
               <fieldset className="service-days"><legend>Ngày học trong tuần</legend>{CLASS_WEEKDAYS.map((day) => <label key={day}>
                 <input type="checkbox" checked={form.daysOfWeek.includes(day)} onChange={(event) => { setForm((current) => ({
                   ...current,
@@ -306,7 +325,7 @@ export default function ClassManagement() {
 
                 <label>Giờ bắt đầu <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.startTime} onChange={(event) => handleTimeChange('startTime', event.target.value)} /></span></label>
                 <label>Giờ kết thúc <span className="input-wrap"><input required type="time" disabled={!selectedSlot} min={form.startTime || selectedSlot?.startTime} max={selectedSlot?.endTime} step="60" aria-describedby="class-slot-help" value={form.endTime} onChange={(event) => handleTimeChange('endTime', event.target.value)} /></span></label>
-                <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value })} /></span></label>
+                <label>Sức chứa <span className="input-wrap"><input required type="number" min="1" max={selectedRoom?.maxCapacity} value={form.maxCapacity} onChange={(event) => setForm({ ...form, maxCapacity: event.target.value, roomId: selectedRoom && Number(event.target.value) > Number(selectedRoom.maxCapacity) ? '' : form.roomId })} /></span></label>
                 <label>Học phí (VND) <span className="input-wrap"><input required type="number" min="0" step="1000" value={form.price} onChange={(event) => setForm({ ...form, price: event.target.value })} /></span></label>
                 <label>Ngày bắt đầu <span className="input-wrap"><input required type="date" min="0001-01-01" max="9999-12-31" aria-invalid={Boolean(form.startDate && termErrors.startDate)} aria-describedby="class-start-date-help class-start-date-error" value={form.startDate} onChange={(event) => { setForm({ ...form, startDate: event.target.value }); setModalError('') }} /></span></label>
                 <label>Số tuần học <span className="input-wrap"><input required type="number" min="1" max="2147483647" step="1" aria-invalid={Boolean(form.durationWeeks && termErrors.durationWeeks)} aria-describedby="class-duration-error" value={form.durationWeeks} onChange={(event) => { setForm({ ...form, durationWeeks: event.target.value }); setModalError('') }} /></span></label>
@@ -317,7 +336,7 @@ export default function ClassManagement() {
               {form.durationWeeks && termErrors.durationWeeks && <p id="class-duration-error" className="field-error mb-0" role="alert">{termErrors.durationWeeks}</p>}
             </fieldset>
             <div className="subject-modal-actions"><button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Hủy</button>
-              <button className="subject-button subject-primary" disabled={busy || optionsLoading} type="submit">{busy ? 'Đang tạo...' : 'Tạo lớp học'}</button></div>
+              <button className="subject-button subject-primary" disabled={busy || optionsLoading || !eligibleRooms.length} type="submit">{busy ? 'Đang tạo...' : 'Tạo lớp học'}</button></div>
           </form>}
         </>}
         {modal?.type === 'detail' && <>

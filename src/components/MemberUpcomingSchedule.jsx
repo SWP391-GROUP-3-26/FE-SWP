@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { classApiErrorMessage, getMyClasses } from '../services/memberClassService'
 import { calendarDateKey, getSessionTimes, isConfirmedBooking, parseCalendarDate } from '../utils/classSchedule'
+import LocalizedContent from './LocalizedContent'
+import { getLanguage, useLanguage } from '../utils/language'
 import './MemberUpcomingSchedule.css'
 
 function getUpcomingSessions(classes) {
@@ -38,7 +40,7 @@ function getUpcomingSessions(classes) {
 
 function formatWeekday(value) {
   const date = parseCalendarDate(value)
-  return date ? new Intl.DateTimeFormat('vi-VN', { weekday: 'long' }).format(date) : ''
+  return date ? new Intl.DateTimeFormat(getLanguage() === 'en' ? 'en-US' : 'vi-VN', { weekday: 'long' }).format(date) : ''
 }
 
 function formatDate(value) {
@@ -47,6 +49,7 @@ function formatDate(value) {
 }
 
 export default function MemberUpcomingSchedule() {
+  useLanguage()
   const [state, setState] = useState({ sessions: [], loading: true, error: '' })
   const [reload, setReload] = useState(0)
 
@@ -63,7 +66,7 @@ export default function MemberUpcomingSchedule() {
   }, [reload])
 
   return (
-    <section className="member-upcoming-schedule" aria-labelledby="member-upcoming-title">
+    <LocalizedContent><section className="member-upcoming-schedule" aria-labelledby="member-upcoming-title">
       <header className="member-upcoming-heading">
         <div>
           <span className="section-heading-kicker">THỜI KHÓA BIỂU CỦA BẠN</span>
@@ -112,6 +115,6 @@ export default function MemberUpcomingSchedule() {
           })}
         </div>
       )}
-    </section>
+    </section></LocalizedContent>
   )
 }

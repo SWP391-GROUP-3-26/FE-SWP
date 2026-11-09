@@ -7,6 +7,8 @@ import {
   resolveAvatarUrl,
 } from '../services/memberProfileService'
 import Sidebar from './Sidebar'
+import LanguageSwitcher from './LanguageSwitcher'
+import LocalizedContent from './LocalizedContent'
 
 export default function DashboardLayout({
   role,
@@ -87,7 +89,7 @@ export default function DashboardLayout({
             <span className="material-symbols-outlined" aria-hidden="true">left_panel_open</span>
           </button>
         )}
-        <header className="dashboard-topbar">
+        <LocalizedContent><header className="dashboard-topbar">
           <div>
             {eyebrow && !['Hội viên', 'Member'].includes(role) && (
               <span className="breadcrumb">{eyebrow}</span>
@@ -95,11 +97,10 @@ export default function DashboardLayout({
             <h1 className="dashboard-page-title">{title}</h1>
           </div>
           <div className="topbar-user">
-            {role !== 'Hội viên' && (
-              <button className="notification-button" type="button">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-            )}
+            <button aria-label="Thông báo" className="notification-button" title="Thông báo" type="button">
+              <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
+            </button>
+            <LanguageSwitcher />
             <div className="user-copy">
               <strong>{profile?.fullName || auth.fullName || auth.username || role}</strong>
               <small>{roleLabel}</small>
@@ -129,18 +130,20 @@ export default function DashboardLayout({
               </span>
             )}
           </div>
-        </header>
+        </header></LocalizedContent>
 
         <main className="dashboard-content">
           {showIntro && (
-            <section className="dashboard-intro">
-              <div>
-                <span className="section-heading-kicker">{roleLabel}</span>
-                <h2>{title}</h2>
-              </div>
-            </section>
+            <LocalizedContent>
+              <section className="dashboard-intro">
+                <div>
+                  <span className="section-heading-kicker">{roleLabel}</span>
+                  <h2>{title}</h2>
+                </div>
+              </section>
+            </LocalizedContent>
           )}
-          {children}
+          <LocalizedContent>{children}</LocalizedContent>
         </main>
       </div>
     </div>

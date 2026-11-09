@@ -4,6 +4,7 @@ import axiosClient, { GOOGLE_AUTH_URL } from '../api/axiosClient'
 import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
 import loginBackgroundVideo from '../assets/login-background.mp4'
+import LocalizedContent from '../components/LocalizedContent'
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -81,7 +82,7 @@ export default function Login() {
   }
 
   return (
-    <main className="auth-page auth-page--login">
+    <LocalizedContent><main className="auth-page auth-page--login">
       <video
         className="auth-login-video"
         autoPlay
@@ -171,6 +172,6 @@ export default function Login() {
           Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
       </section>
-    </main>
+    </main></LocalizedContent>
   )
 }

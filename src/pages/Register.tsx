@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import RegistrationForm from '../components/RegistrationForm'
 import { register } from '../services/registrationService'
+import LocalizedContent from '../components/LocalizedContent'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -8,7 +9,7 @@ export default function Register() {
     navigate('/login', { replace: true, state: { registered: true } })
   }
   return (
-    <main className="auth-page">
+    <LocalizedContent><main className="auth-page">
       <section className="auth-card auth-card-wide">
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>
@@ -28,6 +29,6 @@ export default function Register() {
           Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
         </p>
       </section>
-    </main>
+    </main></LocalizedContent>
   )
 }

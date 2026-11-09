@@ -3,9 +3,9 @@ export const SUBJECT_CATEGORIES = ['Fitness', 'Thể thao trên cạn', 'Thể t
 
 export const VENUES_BY_CATEGORY = {
   Fitness: [
-    ['MULTIPURPOSE', 'Phòng đa năng'], ['FUNCTIONAL', 'Phòng Functional'],
+    ['MULTIPURPOSE', 'Phòng đa năng / studio'], ['FUNCTIONAL', 'Phòng Functional'],
     ['PILATES', 'Phòng Pilates'], ['BOXING', 'Phòng Boxing'],
-    ['MARTIAL_ARTS', 'Phòng võ'], ['GYM', 'Phòng gym'],
+    ['MARTIAL_ARTS', 'Phòng võ'],
   ],
   'Thể thao trên cạn': [
     ['BADMINTON_COURT', 'Sân cầu lông'], ['FOOTBALL_COURT', 'Sân bóng đá'],

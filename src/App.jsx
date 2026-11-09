@@ -3,11 +3,13 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
 
 import ProtectedRoute from './components/ProtectedRoute'
+import LocalizationBridge from './components/LocalizationBridge'
 import { ROLES } from './auth/roleConfig'
 const CenterManagerDashboard = lazy(() => import('./pages/CenterManagerDashboard'))
 const CenterManagerFinance = lazy(() => import('./pages/CenterManagerFinance'))
 const AuditLog = lazy(() => import('./pages/AuditLog'))
 const ClassManagement = lazy(() => import('./pages/ClassManagement'))
+const RoomManagement = lazy(() => import('./pages/RoomManagement'))
 const CoachDashboard = lazy(() => import('./pages/CoachDashboard'))
 const CoachClasses = lazy(() => import('./pages/CoachClasses'))
 const CoachClassDetail = lazy(() => import('./pages/CoachClassDetail'))
@@ -43,6 +45,7 @@ const MemberChat = lazy(() => import('./pages/MemberChat'))
 function App() {
   return (
     <BrowserRouter>
+      <LocalizationBridge />
       <Suspense fallback={<div className="app-route-loading" role="status">Đang tải trang…</div>}>
       <Routes>
         <Route path="/member/payment-history" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
@@ -225,6 +228,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
               <ClassManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/center-manager/rooms"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+              <RoomManagement />
             </ProtectedRoute>
           }
         />

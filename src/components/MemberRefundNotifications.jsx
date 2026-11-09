@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getRefundNotifications, financeError } from '../services/refundService'
 import { money, refundLabel } from '../utils/finance'
 import './Finance.css'
+import LocalizedContent from './LocalizedContent'
 
 export default function MemberRefundNotifications() {
   const [state, setState] = useState({ loading: true, items: [], error: '' })
@@ -15,12 +16,12 @@ export default function MemberRefundNotifications() {
     return () => controller.abort()
   }, [reload])
   if (!state.loading && !state.error && !state.items.length) return null
-  return <section className="finance-notices" aria-labelledby="refund-notices-title"><header className="finance-header"><h2 id="refund-notices-title">Cập nhật hoàn tiền {state.items.length > 0 && `(${state.items.length} chưa đọc)`}</h2><Link to="/member/payment-history">Lịch sử thanh toán</Link></header>
+  return <LocalizedContent><section className="finance-notices" aria-labelledby="refund-notices-title"><header className="finance-header"><h2 id="refund-notices-title">Cập nhật hoàn tiền {state.items.length > 0 && `(${state.items.length} chưa đọc)`}</h2><Link to="/member/payment-history">Lịch sử thanh toán</Link></header>
     {state.loading && <p role="status">Đang tải thông báo hoàn tiền...</p>}
     {state.error && <div role="alert">{state.error} <button type="button" onClick={() => setReload((n) => n + 1)}>Thử lại</button></div>}
     <ul className="finance-notice-list">{state.items.slice(0, 3).map((refund) => <li key={refund.id}><strong>{refund.itemName} — {refundLabel(refund.status)}</strong>
       <p>{refund.status === 'PENDING' ? `Dự kiến hoàn ${money(refund.estimatedAmount)}. Trung tâm đang kiểm tra yêu cầu.`
         : refund.status === 'REJECTED' ? refund.reviewNote : `${refund.status === 'PAID' ? 'Đã hoàn' : 'Đã duyệt'} ${money(refund.approvedAmount)}.`}</p>
       <Link to={`/member/payment-history/${refund.paymentId}`}>Xem chi tiết hoàn tiền →</Link></li>)}</ul>
-  </section>
+  </section></LocalizedContent>
 }

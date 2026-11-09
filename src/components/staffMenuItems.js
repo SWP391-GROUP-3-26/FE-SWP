@@ -10,6 +10,7 @@ export const staffMenuItems = {
       label: 'Services',
       children: [
         { icon: 'event_note', label: 'Lớp học', route: '/center-manager/classes' },
+        { icon: 'meeting_room', label: 'Phòng & sân', route: '/center-manager/rooms' },
         { icon: 'card_membership', label: 'Gói tập', route: '/center-manager/packages' },
         { icon: 'menu_book', label: 'Môn học', route: '/subjects' },
       ],

@@ -12,6 +12,17 @@ export function memberPackageApiErrorMessage(error) {
   return error.response?.data?.message || error.message || 'Không thể thực hiện yêu cầu về gói tập.'
 }
 
+export function memberFreezeApiErrorMessage(error) {
+  const status = error.response?.status
+  const message = error.response?.data?.message
+  if (status === 409) {
+    return message || 'Chưa thể bảo lưu lúc này. Hãy kiểm tra lịch lớp trùng thời gian bảo lưu và hoàn tất giao dịch mua hoặc gia hạn đang chờ thanh toán.'
+  }
+  if (status === 400) return message || 'Số tháng bảo lưu không hợp lệ hoặc vượt quá hạn mức còn lại.'
+  if (status === 404) return message || 'Không tìm thấy gói tập của hội viên này.'
+  return memberPackageApiErrorMessage(error)
+}
+
 function authConfig(signal) {
   const token = getAccessToken()
   return {
@@ -96,6 +107,9 @@ async function freezeRequest(subscriptionId, action, method, data, signal) {
   const state = response.data
   if (!state?.success || Number(state.subscriptionId) !== Number(subscriptionId) || !state.status) {
     throw new Error(state?.message || 'Không xác nhận được trạng thái bảo lưu.')
+  }
+  if (state.remainingFreezeMonths == null || !Number.isFinite(Number(state.remainingFreezeMonths))) {
+    throw new Error('API bảo lưu chưa trả về hạn mức của gói. Cần cập nhật BE và migration bảo lưu rồi thử lại.')
   }
   return state
 }

@@ -3,8 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { clearAuth } from '../auth/authStorage'
 import { getRouteForRole, ROLES } from '../auth/roleConfig'
 import memberPlant from '../assets/member-plant.svg'
+import { getLanguage, translateText, useLanguage } from '../utils/language'
 
 export default function Sidebar({ role, menuItems, onCollapse }) {
+  useLanguage()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const activeIndex = menuItems.findIndex((item) => item.route === pathname)
@@ -17,6 +19,7 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
     Receptionist: 'Tiếp tân',
   }
   const roleLabel = roleLabels[role] || role
+  const localizedRoleLabel = role === 'Center Manager' ? 'Center Manager' : role === 'Coach' ? 'Coach' : role === 'Receptionist' ? 'Receptionist' : translateText(roleLabel)
   const dashboardRoute = getRouteForRole(role === 'Hội viên' ? ROLES.MEMBER : role)
 
   const handleLogout = () => {
@@ -30,29 +33,29 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
         <Link
           to={dashboardRoute}
           className="dashboard-brand"
-          aria-label={`UniSports — về trang chính ${roleLabel}`}
-          title={`Về trang chính ${roleLabel}`}
+          aria-label={getLanguage() === 'en' ? `UniSports — ${localizedRoleLabel} home` : `UniSports — về trang chính ${roleLabel}`}
+          title={getLanguage() === 'en' ? `Go to ${localizedRoleLabel} home` : `Về trang chính ${roleLabel}`}
         >
           <span className="brand-mark material-symbols-outlined">spa</span>
           <span className="dashboard-brand-copy">
             <strong>UniSports</strong>
-            <small>{roleLabel}</small>
+            <small>{localizedRoleLabel}</small>
           </span>
         </Link>
         <button
           aria-controls="dashboard-sidebar"
           aria-expanded="true"
-          aria-label="Ẩn thanh điều hướng"
+          aria-label={translateText('Ẩn thanh điều hướng')}
           className="sidebar-toggle-button"
           onClick={onCollapse}
-          title="Ẩn thanh điều hướng"
+          title={translateText('Ẩn thanh điều hướng')}
           type="button"
         >
           <span className="material-symbols-outlined" aria-hidden="true">left_panel_close</span>
         </button>
       </div>
 
-      <nav className="dashboard-nav" aria-label={`Điều hướng ${roleLabel}`}>
+      <nav className="dashboard-nav" aria-label={`${translateText('Điều hướng')} ${localizedRoleLabel}`}>
         {menuItems.map((item, index) => {
           if (item.children) {
             const groupActive = item.children.some((child) => child.route === pathname)
@@ -66,7 +69,7 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
                   type="button"
                 >
                   <span className="material-symbols-outlined">{item.icon}</span>
-                  <span className="dashboard-nav-label">{item.label}</span>
+                  <span className="dashboard-nav-label">{translateText(item.label)}</span>
                   <span className="material-symbols-outlined dashboard-nav-chevron" aria-hidden="true">
                     {expanded ? 'expand_less' : 'expand_more'}
                   </span>
@@ -83,7 +86,7 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
                           to={child.route}
                         >
                           <span className="material-symbols-outlined">{child.icon}</span>
-                          <span className="dashboard-nav-label">{child.label}</span>
+                          <span className="dashboard-nav-label">{translateText(child.label)}</span>
                         </Link>
                       )
                     })}
@@ -98,10 +101,10 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
                 aria-disabled="true"
                 className="dashboard-nav-item dashboard-nav-item-disabled"
                 key={item.label}
-                title="Chức năng chưa được kết nối với Backend"
+                title={getLanguage() === 'en' ? 'This feature is not connected to the backend' : 'Chức năng chưa được kết nối với Backend'}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
-                <span className="dashboard-nav-label">{item.label}</span>
+                <span className="dashboard-nav-label">{translateText(item.label)}</span>
               </span>
             )
           }
@@ -113,16 +116,16 @@ export default function Sidebar({ role, menuItems, onCollapse }) {
               to={item.route}
             >
               <span className="material-symbols-outlined">{item.icon}</span>
-              <span className="dashboard-nav-label">{item.label}</span>
+              <span className="dashboard-nav-label">{translateText(item.label)}</span>
             </Link>
           )
         })}
       </nav>
 
       <div className="dashboard-sidebar-utility">
-        <button aria-label="Đăng xuất" className="logout-button" onClick={handleLogout} type="button">
+        <button aria-label={translateText('Đăng xuất')} className="logout-button" onClick={handleLogout} type="button">
           <span className="material-symbols-outlined">logout</span>
-          <span>Đăng xuất</span>
+          <span>{translateText('Đăng xuất')}</span>
         </button>
         <img className="sidebar-plant-art" src={memberPlant} alt="" aria-hidden="true" />
       </div>

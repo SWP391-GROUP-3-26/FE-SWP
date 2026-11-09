@@ -1,0 +1,80 @@
+.language-switcher {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.language-switcher-trigger {
+  display: inline-flex;
+  min-width: 72px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #dce9df;
+  border-radius: 10px;
+  color: #315b44;
+  background: #f7fbf8;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.language-switcher-trigger:hover,
+.language-switcher-trigger[aria-expanded="true"] {
+  border-color: #a9cdb5;
+  color: #205d3d;
+  background: #edf6ef;
+}
+
+.language-switcher-trigger:focus-visible,
+.language-switcher-menu button:focus-visible {
+  outline: 3px solid rgba(47, 125, 89, .3);
+  outline-offset: 2px;
+}
+
+.language-switcher-trigger > .material-symbols-outlined { font-size: 18px; }
+.language-switcher-trigger .language-switcher-chevron { margin-left: -3px; font-size: 17px; }
+
+.language-switcher-menu {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  width: 168px;
+  gap: 3px;
+  padding: 6px;
+  border: 1px solid #dce9df;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(28, 52, 37, .16);
+}
+
+.language-switcher-menu button {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #40574a;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.language-switcher-menu button:hover,
+.language-switcher-menu button.is-selected { color: #205d3d; background: #edf6ef; }
+.language-switcher-menu button .material-symbols-outlined { font-size: 18px; }
+
+@media (max-width: 480px) {
+  .language-switcher-trigger { min-width: 62px; height: 34px; gap: 3px; padding-inline: 7px; }
+  .language-switcher-trigger > .material-symbols-outlined { font-size: 17px; }
+}

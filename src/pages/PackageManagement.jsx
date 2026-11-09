@@ -3,8 +3,10 @@ import DashboardLayout from '../components/DashboardLayout'
 import Modal from '../components/Modal'
 import GymPackageForm from '../components/GymPackageForm'
 import FreezeMonthsField from '../components/FreezeMonthsField'
-import { isGymVariant } from '../utils/gymPackages'
+import SubjectMultiSelect from '../components/SubjectMultiSelect'
+import { GYM_COACHED, GYM_SOLO, isGymVariant } from '../utils/gymPackages'
 import TablePagination from '../components/TablePagination'
+import LocalizedContent from '../components/LocalizedContent'
 import { staffMenuItems } from '../components/staffMenuItems'
 import { getRole } from '../auth/authStorage'
 import { getSubjects } from '../services/subjectService'
@@ -36,6 +38,7 @@ const STATUS_OPTIONS = [
 ]
 
 const EMPTY_FORM = {
+  packageType: 'standard',
   name: '',
   description: '',
   durationMonths: 1,
@@ -47,6 +50,10 @@ const EMPTY_FORM = {
   termConditions: '',
   includedSportIds: [],
   choiceGroups: [],
+  gymSoloPrice: '',
+  gymCoachPrice: '',
+  gymCoachSessions: 1,
+  gymCoachEnabled: false,
 }
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -70,7 +77,9 @@ function StatusBadge({ status }) {
   const isActive = String(status).toLowerCase() === 'active'
   return (
     <span className={`service-status${isActive ? ' active' : ''}`}>
+      <LocalizedContent>
       {isActive ? 'Đang mở bán' : 'Tạm ngưng'}
+      </LocalizedContent>
     </span>
   )
 }
@@ -157,7 +166,15 @@ export default function PackageManagement() {
   function openCreate() {
     detailController.current?.abort()
     setDetailLoading(false)
-    setForm(EMPTY_FORM)
+    const solo = packages.find((item) => item.name === GYM_SOLO)
+    const coached = packages.find((item) => item.name === GYM_COACHED)
+    setForm({
+      ...EMPTY_FORM,
+      gymSoloPrice: solo?.price ?? '',
+      gymCoachPrice: coached?.price ?? '',
+      gymCoachSessions: Number(coached?.description?.match(/^(\d+) buổi/)?.[1] || 1),
+      gymCoachEnabled: Boolean(coached && coached.status?.toLowerCase() === 'active'),
+    })
     setReplaceBenefits(true)
     setModalError('')
     setModal({ type: 'create' })
@@ -205,26 +222,6 @@ export default function PackageManagement() {
     }))
   }
 
-  function toggleSport(listKey, sportId) {
-    setForm((current) => {
-      const selected = current[listKey] || []
-      return { ...current, [listKey]: selected.includes(sportId)
-        ? selected.filter((id) => id !== sportId) : [...selected, sportId] }
-    })
-  }
-
-  function toggleGroupSport(index, sportId) {
-    setForm((current) => ({
-      ...current,
-      choiceGroups: current.choiceGroups.map((group, groupIndex) => {
-        if (groupIndex !== index) return group
-        const sportIds = group.sportIds || []
-        return { ...group, sportIds: sportIds.includes(sportId)
-          ? sportIds.filter((id) => id !== sportId) : [...sportIds, sportId] }
-      }),
-    }))
-  }
-
   function validateBenefits() {
     const invalidGroup = form.choiceGroups.find((group) =>
       !group.groupName.trim() || !group.requiredSelection || group.sportIds.length < Number(group.requiredSelection))
@@ -265,6 +262,74 @@ export default function PackageManagement() {
   async function handleCreate(event) {
     event.preventDefault()
     if (busy) return
+    if (form.packageType === 'gym') {
+      const soloPrice = Number(form.gymSoloPrice)
+      const coachPrice = Number(form.gymCoachPrice)
+      const sessions = Number(form.gymCoachSessions)
+      if (!Number.isFinite(soloPrice) || soloPrice <= 0) {
+        setModalError('Vui lòng nhập giá tự tập hợp lệ (lớn hơn 0).')
+        return
+      }
+      if (form.gymCoachEnabled && (!Number.isFinite(coachPrice) || coachPrice <= 0 || !Number.isInteger(sessions) || sessions < 1)) {
+        setModalError('Nhập giá có huấn luyện viên và số buổi 1–1 hợp lệ.')
+        return
+      }
+
+      setBusy(true)
+      setModalError('')
+      try {
+        const latest = await getPackages({})
+        const solo = latest.data.find((item) => item.name === GYM_SOLO)
+        const coached = latest.data.find((item) => item.name === GYM_COACHED)
+        const durationMonths = Number(form.durationMonths)
+        const common = {
+          durationMonths,
+          status: form.status,
+          discount: Number(form.discount) || 0,
+          benefits: form.benefits.trim() || null,
+          termConditions: form.termConditions.trim() || null,
+        }
+        const soloPayload = {
+          ...common,
+          name: GYM_SOLO,
+          description: form.description.trim() || 'Tự tập tại phòng Gym.',
+          price: soloPrice,
+          freezeMonths: durationMonths >= 6 ? Number(form.freezeMonths) : 0,
+        }
+        if (solo) await updatePackage(solo.id, soloPayload)
+        else await createPackage(soloPayload)
+
+        if (form.gymCoachEnabled) {
+          const coachedPayload = {
+            ...common,
+            name: GYM_COACHED,
+            description: `${sessions} buổi tập 1–1 với huấn luyện viên.`,
+            price: coachPrice,
+            freezeMonths: durationMonths >= 6 ? Number(form.freezeMonths) : 0,
+          }
+          if (coached) await updatePackage(coached.id, coachedPayload)
+          else await createPackage(coachedPayload)
+        } else if (coached && coached.status?.toLowerCase() === 'active') {
+          await updatePackage(coached.id, {
+            ...common,
+            name: GYM_COACHED,
+            description: coached.description || 'Gói Gym có huấn luyện viên 1–1.',
+            price: Number(coached.price),
+            freezeMonths: Number(coached.freezeMonths) || 0,
+            status: 'Inactive',
+          })
+        }
+
+        closeModal()
+        setNotice('Đã lưu cấu hình gói Gym.')
+        await loadPackages()
+      } catch (error) {
+        setModalError(errorMessage(error))
+      } finally {
+        setBusy(false)
+      }
+      return
+    }
     const price = parseFloat(form.price)
     if (!form.name.trim()) { setModalError('Vui lòng nhập tên gói dịch vụ.'); return }
     if (isNaN(price) || price <= 0) { setModalError('Vui lòng nhập giá niêm yết hợp lệ (lớn hơn 0).'); return }
@@ -371,6 +436,55 @@ export default function PackageManagement() {
 
   /* ── Shared form fields ── */
   function renderPackageFormFields() {
+    if (modal.type === 'create' && form.packageType === 'gym') {
+      return (
+        <fieldset disabled={busy} className="gym-package-create-fields">
+          <div className="gym-package-summary">
+            <span className="material-symbols-outlined" aria-hidden="true">fitness_center</span>
+            <div><strong>Gói Gym</strong><p>Hội viên chọn tự tập hoặc thêm huấn luyện viên 1–1 khi đăng ký.</p></div>
+          </div>
+          <label>Mô tả gói
+            <textarea rows={3} value={form.description} onChange={(event) => setField('description', event.target.value)}
+              placeholder="Ví dụ: Quyền sử dụng khu vực Gym trong thời hạn gói." />
+          </label>
+          <div className="service-form-grid">
+            <label>Thời hạn hiệu lực <span className="input-wrap"><select value={form.durationMonths}
+              onChange={(event) => setField('durationMonths', Number(event.target.value))}>
+              {DURATION_OPTIONS.map(({ label, value }) => <option key={value} value={value}>{label}</option>)}
+            </select></span></label>
+            <label>Trạng thái phát hành <span className="input-wrap"><select value={form.status}
+              onChange={(event) => setField('status', event.target.value)}>
+              {STATUS_OPTIONS.map(({ label, value }) => <option key={value} value={value}>{label}</option>)}
+            </select></span></label>
+          </div>
+          {form.durationMonths >= 6 && <FreezeMonthsField value={form.freezeMonths}
+            onChange={(event) => setField('freezeMonths', event.target.value)} />}
+          <section className="gym-price-options" aria-label="Giá các lựa chọn Gym">
+            <div className="gym-price-option">
+              <div><strong>Tự tập</strong><span>Không kèm huấn luyện viên</span></div>
+              <label>Giá niêm yết (VNĐ)<span className="input-wrap"><input required type="number" min="1" step="1"
+                value={form.gymSoloPrice} onChange={(event) => setField('gymSoloPrice', event.target.value)} placeholder="VD: 1200000" /></span></label>
+            </div>
+            <label className="gym-coach-toggle">
+              <input type="checkbox" checked={form.gymCoachEnabled}
+                onChange={(event) => setField('gymCoachEnabled', event.target.checked)} />
+              <span><strong>Cho phép đăng ký kèm huấn luyện viên 1–1</strong><small>Hội viên có thể bật lựa chọn này trước khi thanh toán.</small></span>
+            </label>
+            {form.gymCoachEnabled && <div className="gym-price-option gym-price-option-coached">
+              <div><strong>Có huấn luyện viên</strong><span>Bao gồm số buổi tập cá nhân đã cấu hình</span></div>
+              <label>Giá niêm yết (VNĐ)<span className="input-wrap"><input required type="number" min="1" step="1"
+                value={form.gymCoachPrice} onChange={(event) => setField('gymCoachPrice', event.target.value)} placeholder="VD: 2500000" /></span></label>
+              <label>Số buổi 1–1<span className="input-wrap"><input required type="number" min="1" step="1"
+                value={form.gymCoachSessions} onChange={(event) => setField('gymCoachSessions', event.target.value)} /></span></label>
+            </div>}
+          </section>
+          <label>Đặc quyền bổ sung<textarea rows={2} value={form.benefits}
+            onChange={(event) => setField('benefits', event.target.value)} placeholder="Mô tả thêm quyền lợi của gói Gym" /></label>
+          <label>Điều khoản và điều kiện<textarea rows={3} value={form.termConditions}
+            onChange={(event) => setField('termConditions', event.target.value)} /></label>
+        </fieldset>
+      )
+    }
     return (
       <fieldset disabled={busy}>
         <label>
@@ -466,16 +580,10 @@ export default function PackageManagement() {
                 <div><strong>Môn học được bao gồm</strong><small>Hội viên không cần chọn lại khi đăng ký.</small></div>
               </div>
               {subjectsError && <p className="auth-error" role="alert">{subjectsError}</p>}
-              <div className="package-sport-picker">
-                {subjects.map((subject) => (
-                  <label key={subject.id}>
-                    <input type="checkbox" checked={form.includedSportIds.includes(subject.id)}
-                      onChange={() => toggleSport('includedSportIds', subject.id)} />
-                    {subject.name}
-                  </label>
-                ))}
-                {!subjectsError && !subjects.length && <small>Chưa có môn học để chọn.</small>}
-              </div>
+              {subjects.length > 0
+                ? <SubjectMultiSelect options={subjects} value={form.includedSportIds}
+                    onChange={(value) => setForm((current) => ({ ...current, includedSportIds: value }))} />
+                : !subjectsError && <small>Chưa có môn học để chọn.</small>}
             </section>
             <section>
               <div className="package-benefit-editor-heading">
@@ -497,15 +605,11 @@ export default function PackageManagement() {
                     }))}>Xóa</button>
                   </div>
                   <label>Mô tả<input value={group.description || ''} onChange={(e) => updateGroup(index, 'description', e.target.value)} /></label>
-                  <div className="package-sport-picker">
-                    {subjects.map((subject) => (
-                      <label key={subject.id}>
-                        <input type="checkbox" checked={(group.sportIds || []).includes(subject.id)}
-                          onChange={() => toggleGroupSport(index, subject.id)} />
-                        {subject.name}
-                      </label>
-                    ))}
-                  </div>
+                  {subjects.length > 0 && (
+                    <SubjectMultiSelect options={subjects} value={group.sportIds || []}
+                      label="Chọn môn tự chọn"
+                      onChange={(value) => updateGroup(index, 'sportIds', value)} />
+                  )}
                   <small>Đã chọn {group.sportIds.length} môn · yêu cầu {group.requiredSelection}</small>
                 </fieldset>
               ))}
@@ -544,8 +648,6 @@ export default function PackageManagement() {
             <span className="material-symbols-outlined" aria-hidden="true">add</span>
             Tạo mới gói tập
           </button>
-          <button className="subject-button" type="button" disabled={loading || Boolean(listError)}
-            onClick={() => setModal({ type: 'gym' })}>Cấu hình gói Gym</button>
         </div>
 
         {/* Toolbar */}
@@ -668,6 +770,7 @@ export default function PackageManagement() {
       }} />}
       {modal && modal.type !== 'gym' && (
         <Modal
+          className="package-management-modal"
           title={
             modal.type === 'create' ? 'Tạo mới Gói dịch vụ' :
             modal.type === 'edit'   ? `Chỉnh sửa: ${modal.pkg?.name}` :
@@ -681,12 +784,26 @@ export default function PackageManagement() {
 
           {/* ── Create form ── */}
           {modal.type === 'create' && (
-            <form className="auth-form subject-form service-form" onSubmit={handleCreate}>
+            <form className="auth-form subject-form service-form package-management-form" onSubmit={handleCreate}>
+              <p className="package-modal-intro">Chọn loại gói trước, sau đó cấu hình thời hạn, giá và quyền lợi.</p>
+              <fieldset className="package-type-picker" disabled={busy}>
+                <legend>Loại gói</legend>
+                <label className={form.packageType === 'standard' ? 'is-selected' : ''}>
+                  <input type="radio" name="packageType" value="standard" checked={form.packageType === 'standard'}
+                    onChange={() => setField('packageType', 'standard')} />
+                  <span><strong>Gói tập thông thường</strong><small>Cấu hình tên gói và các môn đi kèm.</small></span>
+                </label>
+                <label className={form.packageType === 'gym' ? 'is-selected' : ''}>
+                  <input type="radio" name="packageType" value="gym" checked={form.packageType === 'gym'}
+                    onChange={() => setField('packageType', 'gym')} />
+                  <span><strong>Gói Gym</strong><small>Tự tập, tùy chọn thêm huấn luyện viên 1–1.</small></span>
+                </label>
+              </fieldset>
               {renderPackageFormFields()}
               <div className="subject-modal-actions">
                 <button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Huỷ bỏ</button>
                 <button className="subject-button subject-primary" disabled={busy} type="submit">
-                  {busy ? 'Đang lưu...' : 'Lưu thay đổi'}
+                  {busy ? 'Đang lưu...' : 'Tạo gói tập'}
                 </button>
               </div>
             </form>
@@ -694,11 +811,14 @@ export default function PackageManagement() {
 
           {/* ── Edit form ── */}
           {modal.type === 'edit' && (
-            <form className="auth-form subject-form service-form" onSubmit={handleUpdate}>
+            <form className="auth-form subject-form service-form package-management-form" onSubmit={handleUpdate}>
               {detailLoading && <p role="status">Đang tải thông tin gói đã lưu…</p>}
               {!detailLoading && !editLoaded && <button className="subject-button" type="button"
                 onClick={() => openEdit(modal.pkg)}>Tải lại chi tiết</button>}
-              {editLoaded && renderPackageFormFields()}
+              {editLoaded && <>
+                <p className="package-modal-intro">Cập nhật cấu hình gói. Môn học và nhóm tự chọn chỉ thay đổi khi bạn bật chỉnh sửa.</p>
+                {renderPackageFormFields()}
+              </>}
               <div className="subject-modal-actions">
                 <button className="subject-button" disabled={busy} type="button" onClick={closeModal}>Huỷ bỏ</button>
                 <button className="subject-button subject-primary" disabled={busy || detailLoading || !editLoaded} type="submit">

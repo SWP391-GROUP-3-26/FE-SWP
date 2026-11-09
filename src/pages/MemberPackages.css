@@ -863,6 +863,11 @@
 
 .member-freeze-controls > strong { width: 100%; }
 .member-freeze-controls > span { font-size: 14px; }
+.member-freeze-note {
+  margin: 10px 0;
+  color: var(--member-package-muted, #66756d);
+  font-size: 13px;
+}
 
 .member-renewal-form {
   display: grid;

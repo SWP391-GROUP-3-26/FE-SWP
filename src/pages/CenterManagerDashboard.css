@@ -5,6 +5,19 @@
   margin: 22px 0;
 }
 
+.manager-open-finance-link,
+.manager-open-finance-link:visited {
+  color: #2e7d5b;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.manager-open-finance-link:hover {
+  color: #205b42;
+  text-decoration: none;
+}
+
 .manager-analytics-card {
   min-width: 0;
   padding: 24px;

@@ -110,7 +110,7 @@ export default function CenterManagerDashboard() {
       <section className="dashboard-panel">
         <div className="panel-heading">
           <h3>Báo cáo tài chính</h3>
-          <Link to="/center-manager/finances">Mở toàn trang</Link>
+          <Link className="manager-open-finance-link" to="/center-manager/finances">Mở toàn trang</Link>
         </div>
         <CenterManagerFinance embedded />
       </section>

@@ -111,6 +111,15 @@ function isCurrentlyActive(subscription) {
     && subscription.endDate >= today
 }
 
+function isFreezeDurationEligible(subscription) {
+  const durationDays = Number(subscription.durationDays)
+  if (Number.isFinite(durationDays) && durationDays > 0) return durationDays >= 180
+
+  const start = dateOrdinal(subscription.startDate)
+  const end = dateOrdinal(subscription.endDate)
+  return start != null && end != null && end - start + 1 >= 180
+}
+
 function subscriptionStatusLabel(status, paymentStatus) {
   if (String(status).toLowerCase() === 'pending' && String(paymentStatus).toLowerCase() === 'paid') return 'Sắp gia hạn'
   const labels = {
@@ -171,7 +180,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
   const catalog = catalogResult?.key === catalogRequestKey ? catalogResult : null
   const subscriptions = subscriptionsResult?.key === subscriptionRequestKey ? subscriptionsResult : null
   const matchingPackages = (catalog?.data || []).filter(item => memberId || !submittedSearch ||
-    [item.name, item.description, item.variants?.coached.name, item.variants?.coached.description]
+    [item.name, item.description, item.variants?.coached?.name, item.variants?.coached?.description]
       .some(value => value?.toLocaleLowerCase().includes(submittedSearch.toLocaleLowerCase())))
   const packages = memberId ? matchingPackages : matchingPackages.slice(page * 20, (page + 1) * 20)
   const totalPackages = memberId ? catalog?.total || 0 : matchingPackages.length
@@ -234,7 +243,6 @@ export default function MemberPackages({ receptionist = false, memberId = null }
 
   const activeSubscription = subscriptions?.data?.find(isCurrentlyActive)
   const frozenSubscription = subscriptions?.data?.find(s => s.subscriptionStatus === 'Frozen')
-  const singleActive = subscriptions?.data?.filter(isCurrentlyActive).length === 1
   const pendingSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Pending')
   const scheduledSubscription = subscriptions?.data?.find((s) => s.subscriptionStatus === 'Pending' && s.paymentStatus === 'Paid')
   const memberCurrentSubscriptions = subscriptions?.data?.filter((subscription) =>
@@ -463,16 +471,18 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                     </div>
                     <h4>{subscription.packageName}</h4>
                     {!memberId && <SubscriptionSports memberId={authIdentity} subscription={subscription} />}
-                    {!receptionist && !memberId && subscription.subscriptionStatus === 'Frozen' && (
+                    {!receptionist && !memberId && String(subscription.subscriptionStatus).toLowerCase() === 'frozen' && (
                       <div className="member-freeze-controls">
                         <strong>Thời gian bảo lưu</strong>
-                        <span>{formatDate(subscription.freezeStartedAt)} {subscription.freezeStartedAt?.slice(11, 16)} – {formatDate(subscription.freezeEndsAt)} {subscription.freezeEndsAt?.slice(11, 16)}</span>
+                        <span>{formatDate(subscription.freezeStartedAt)}{subscription.freezeStartedAt?.slice(11, 16) ? `, ${subscription.freezeStartedAt.slice(11, 16)}` : ''} – {formatDate(subscription.freezeEndsAt)}{subscription.freezeEndsAt?.slice(11, 16) ? `, ${subscription.freezeEndsAt.slice(11, 16)}` : ''}</span>
                         <button className="member-class-search-button" type="button" onClick={() => setFreezeTarget(subscription.subscriptionId)}>Tập lại</button>
                       </div>
                     )}
-                    {!receptionist && !memberId && showTimeline && singleActive && !pendingSubscription && subscription.durationDays >= 180 && subscription.remainingFreezeMonths > 0 && (
+                    {!receptionist && !memberId && showTimeline && isFreezeDurationEligible(subscription) && (
                       <div className="member-freeze-controls">
-                        <span>Còn {subscription.remainingFreezeMonths} tháng bảo lưu</span>
+                        <span>{subscription.remainingFreezeMonths == null || Number(subscription.remainingFreezeMonths) < 1
+                          ? 'Xem điều kiện bảo lưu của gói'
+                          : `Còn ${Number(subscription.remainingFreezeMonths)} tháng bảo lưu`}</span>
                         <button className="member-class-search-button" type="button" onClick={() => setFreezeTarget(subscription.subscriptionId)}>Bảo lưu gói</button>
                       </div>
                     )}
@@ -571,7 +581,9 @@ export default function MemberPackages({ receptionist = false, memberId = null }
         {!catalogError && !catalogLoading && packages.length > 0 && (
           <div className="member-package-grid" aria-label="Danh sách gói đang mở bán">
             {packages.map((entry) => {
-              const packageItem = entry.variants ? (gymWithCoach ? entry.variants.coached : entry.variants.solo) : entry
+              const packageItem = entry.variants
+                ? (gymWithCoach && entry.variants.coached ? entry.variants.coached : entry.variants.solo)
+                : entry
               const isStandardThreeMonthPackage = /standard/i.test(packageItem.name || '')
                 && (Number(packageItem.durationMonths) === 3 || /3\s*tháng/i.test(packageItem.name || ''))
               const isPremierTwelveMonthPackage = /premier|premium/i.test(packageItem.name || '')
@@ -598,7 +610,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
                   <div className="member-package-card-content">
                     <span className="member-package-code">{packageItem.code || `GÓI #${packageItem.id}`}</span>
                     <h4>{entry.name}</h4>
-                    {entry.variants && <label><input type="checkbox" checked={gymWithCoach}
+                    {entry.variants?.coached && <label><input type="checkbox" checked={gymWithCoach}
                       onChange={event => setGymWithCoach(event.target.checked)} /> Có huấn luyện viên 1–1</label>}
                     {packageItem.description && <p className="member-package-description">{packageItem.description}</p>}
                     <dl className="member-package-facts">
@@ -682,7 +694,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
           <form onSubmit={submitRegistration}>
             {memberId && <ReceptionistMemberContext memberId={memberId} />}
             <p className="member-package-modal-name">{selectedPackage.name}</p>
-            {selectedGym && <label><input type="checkbox" disabled={registrationLoading}
+            {selectedGym?.coached && <label><input type="checkbox" disabled={registrationLoading}
               checked={selectedPackage.name === GYM_COACHED} onChange={event => {
                 const checked = event.target.checked
                 setGymWithCoach(checked)

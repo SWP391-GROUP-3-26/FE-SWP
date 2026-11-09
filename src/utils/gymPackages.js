@@ -11,7 +11,10 @@ export function groupGymPackages(items) {
   const coached = items.find(item => item.name === GYM_COACHED)
   return items.flatMap(item => {
     if (!isGymVariant(item.name)) return [item]
-    if (item !== solo || !coached || solo.durationDays !== coached.durationDays) return []
+    if (item !== solo) return []
+    if (!coached || solo.durationDays !== coached.durationDays) {
+      return [{ ...solo, name: 'Gym', variants: { solo, coached: null } }]
+    }
     return [{ ...solo, name: 'Gym', variants: { solo, coached } }]
   })
 }
