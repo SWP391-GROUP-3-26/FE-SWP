@@ -8,6 +8,7 @@ import {
 } from '../services/memberProfileService'
 import Sidebar from './Sidebar'
 import LanguageSwitcher from './LanguageSwitcher'
+import MemberNotificationBell from './MemberNotificationBell'
 import LocalizedContent from './LocalizedContent'
 
 export default function DashboardLayout({
@@ -97,9 +98,9 @@ export default function DashboardLayout({
             <h1 className="dashboard-page-title">{title}</h1>
           </div>
           <div className="topbar-user">
-            <button aria-label="Thông báo" className="notification-button" title="Thông báo" type="button">
+            {isMember ? <MemberNotificationBell key={auth.userId} /> : <button aria-label="Thông báo" className="notification-button" title="Thông báo" type="button">
               <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
-            </button>
+            </button>}
             <LanguageSwitcher />
             <div className="user-copy">
               <strong>{profile?.fullName || auth.fullName || auth.username || role}</strong>

@@ -4,6 +4,11 @@ import { validateRegistration } from '../utils/registration'
 function registrationErrorMessage(error) {
   const status = error?.response?.status
   const message = String(error?.response?.data?.message || '').toLocaleLowerCase('vi')
+  if (status === 429 || status === 503) {
+    return error.response.data?.message || (status === 429
+      ? 'Bạn đã yêu cầu mã quá nhiều lần. Vui lòng thử lại sau.'
+      : 'Hiện chưa thể gửi email xác thực. Vui lòng thử lại sau.')
+  }
   if (status === 409) {
     if (message.includes('username') || message.includes('tên tài khoản')) return 'Tên tài khoản này đã được sử dụng.'
     if (message.includes('email')) return 'Địa chỉ email này đã được sử dụng.'
@@ -60,10 +65,10 @@ export default function RegistrationForm({ submitRegistration, onSuccess, showTe
     setIsLoading(true)
 
     try {
-      await submitRegistration(payload)
+      const response = await submitRegistration(payload)
       const message = 'Đăng ký tài khoản thành công.'
       if (onSuccess) {
-        onSuccess(message)
+        onSuccess(message, response)
       } else {
         setFormData({ username: '', fullName: '', email: '', phone: '', password: '', confirmPassword: '' })
         setShowPassword(false)

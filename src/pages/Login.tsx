@@ -5,6 +5,7 @@ import { saveAuth } from '../auth/authStorage'
 import { getRouteForRole } from '../auth/roleConfig'
 import loginBackgroundVideo from '../assets/login-background.mp4'
 import LocalizedContent from '../components/LocalizedContent'
+import EmailFlow from '../components/EmailFlow'
 
 export default function Login() {
   const [searchParams] = useSearchParams()
@@ -29,6 +30,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(getInitialGoogleError)
+  const [flow, setFlow] = useState<'forgot' | 'login' | null>(null)
+  const [challenge, setChallenge] = useState(null)
+  const [resetDone, setResetDone] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const registerMessage = location.state?.registered
@@ -38,6 +42,14 @@ export default function Login() {
   const handleGoogleLogin = () => {
     setIsLoading(true)
     window.location.href = GOOGLE_AUTH_URL
+  }
+
+  const finishLogin = (authData) => {
+    const { accessToken, user } = authData || {}
+    if (!accessToken || user?.userId == null || !user.role) throw new Error('Invalid login response')
+    const { userId, role, fullName, email, username, status, avatarUrl } = user
+    saveAuth({ accessToken, userId, role, fullName, email, username, status, avatarUrl })
+    navigate(getRouteForRole(role), { replace: true })
   }
 
   const handleLogin = async (event: React.FormEvent) => {
@@ -51,18 +63,14 @@ export default function Login() {
         password,
       })
       const authData = response.data.data
-      const accessToken = authData.accessToken
-      const userId = authData.user.userId
-      const role = authData.user.role
-      const { fullName, email, username, status, avatarUrl } = authData.user
-
-      if (!accessToken || userId === undefined || !role) {
-        setError('Phản hồi đăng nhập không đúng cấu trúc backend hiện tại.')
+      if (authData.emailVerificationRequired) {
+        if (!authData.emailVerification?.verificationToken) throw new Error('Missing verification context')
+        setChallenge(authData.emailVerification)
+        setPassword('')
+        setFlow('login')
         return
       }
-
-      saveAuth({ accessToken, userId, role, fullName, email, username, status, avatarUrl })
-      navigate(getRouteForRole(role), { replace: true })
+      finishLogin(authData)
     } catch (requestError) {
       const status = requestError?.response?.status
       if (status === 401) {
@@ -95,6 +103,14 @@ export default function Login() {
         <source src={loginBackgroundVideo} type="video/mp4" />
       </video>
       <section className="auth-card">
+        {flow ? <EmailFlow mode={flow} initial={challenge}
+          onBack={() => { setFlow(null); setChallenge(null) }}
+          onDone={(data) => {
+            if (flow === 'login') return finishLogin(data)
+            setFlow(null)
+            setPassword('')
+            setResetDone(true)
+          }} /> : <>
         <Link to="/" className="back-link">
           <span className="material-symbols-outlined">arrow_back</span>
           Quay lại trang chủ
@@ -108,6 +124,7 @@ export default function Login() {
         </div>
 
         <form className="auth-form" onSubmit={handleLogin}>
+          {resetDone && <div className="auth-notice" role="status">Đã đổi mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.</div>}
           {registerMessage ? (
             <div className="auth-notice auth-register-success" role="status" aria-live="polite">
               <span className="material-symbols-outlined" aria-hidden="true">check_circle</span>
@@ -153,6 +170,8 @@ export default function Login() {
             </span>
           </label>
 
+          <button type="button" className="auth-text-action auth-forgot" disabled={isLoading}
+            onClick={() => { setFlow('forgot'); setResetDone(false); setError(''); setPassword('') }}>Quên mật khẩu?</button>
           {error ? <div className="auth-error" role="alert">{error}</div> : null}
 
           <button className="submit-button" disabled={isLoading} type="submit">
@@ -171,6 +190,7 @@ export default function Login() {
         <p className="auth-switch">
           Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
+        </>}
       </section>
     </main></LocalizedContent>
   )

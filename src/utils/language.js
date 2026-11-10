@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 const preferenceKey = 'unisports.language'
 
 const ENGLISH = {
+  'Đã đổi mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.': 'Password updated. Sign in with your new password.',
   'Tổng quan': 'Overview', 'Lịch tập': 'My Schedule', 'Gói tập': 'Packages',
   'Tổng quan hội viên': 'Member Overview',
   'Lịch sử thanh toán': 'Payment History', 'Lớp học': 'Classes',

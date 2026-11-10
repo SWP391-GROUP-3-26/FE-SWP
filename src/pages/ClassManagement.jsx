@@ -204,11 +204,10 @@ export default function ClassManagement() {
   const totalPages = Math.max(1, Math.ceil(classes.length / classPageSize))
   const currentPage = Math.min(page, totalPages)
   const visibleClasses = useMemo(() => classes.slice((currentPage - 1) * classPageSize, currentPage * classPageSize), [classes, currentPage])
-  const dayOptions = optionsLoading ? [] : options
-  const selectedSubject = dayOptions.subjects.find((subject) => String(subject.id) === form.subjectId)
+  const selectedSubject = options.subjects.find((subject) => String(subject.id) === form.subjectId)
   const allowedRoomTypes = new Set(selectedSubject?.allowedRoomTypes || [])
   const compatibleRooms = selectedSubject
-    ? dayOptions.rooms.filter((room) => allowedRoomTypes.has(room.type))
+    ? options.rooms.filter((room) => allowedRoomTypes.has(room.type))
     : []
   const eligibleRooms = form.maxCapacity
     ? compatibleRooms.filter((room) => Number(room.maxCapacity) >= Number(form.maxCapacity))
@@ -288,10 +287,10 @@ export default function ClassManagement() {
             <fieldset disabled={busy}>
               <label>Tên lớp học <span className="input-wrap"><input autoFocus required maxLength={100} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></span></label>
               <label>Môn học <span className="input-wrap"><select required value={form.subjectId} onChange={(event) => setForm({ ...form, subjectId: event.target.value, roomId: '' })}>
-                <option value="" disabled>Chọn môn học</option>{dayOptions.subjects.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.name}</option>)}
+                <option value="" disabled>Chọn môn học</option>{options.subjects.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.name}</option>)}
               </select></span></label>
               <label>Huấn luyện viên <span className="input-wrap"><select required value={form.coachId} onChange={(event) => setForm({ ...form, coachId: event.target.value })}>
-                <option value="" disabled>Chọn huấn luyện viên</option>{dayOptions.coaches.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.fullName}</option>)}
+                <option value="" disabled>Chọn huấn luyện viên</option>{options.coaches.map((item) => <option key={item.id} value={item.id}>{item.displayText || item.fullName}</option>)}
               </select></span></label>
               <label>Phòng / sân học <span className="input-wrap"><select required disabled={!selectedSubject || !eligibleRooms.length} value={form.roomId} onChange={(event) => setForm({ ...form, roomId: event.target.value })}>
                 <option value="" disabled>{!selectedSubject ? 'Chọn môn học trước' : eligibleRooms.length ? 'Chọn phòng / sân phù hợp' : 'Chưa có địa điểm phù hợp'}</option>

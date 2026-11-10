@@ -113,6 +113,26 @@ export default function PackageManagement() {
 
   const listController  = useRef(null)
   const detailController = useRef(null)
+  const savedSelections = useRef(new Map())
+
+  function rememberSelections(id) {
+    if (id == null) return
+    const sport = (id) => ({ id, name: subjects.find((item) => item.id === id)?.name || `#${id}` })
+    savedSelections.current.set(id, {
+      includedSports: form.includedSportIds.map(sport),
+      choiceGroups: form.choiceGroups.map((group, sortOrder) => ({
+        name: group.groupName, description: group.description, requiredSelection: group.requiredSelection,
+        sortOrder, sports: group.sportIds.map(sport),
+      })),
+    })
+  }
+
+  async function readPackage(id, signal) {
+    const pkg = await getPackageById(id, signal)
+    const saved = savedSelections.current.get(pkg.id)
+    if (!saved || pkg.includedSports != null || pkg.choiceGroups != null) return pkg
+    return { ...pkg, ...saved, fromLastSave: true }
+  }
 
   /* ── Load list ── */
   const loadPackages = useCallback(async () => {
@@ -195,8 +215,9 @@ export default function PackageManagement() {
     setModalError('')
     setModal({ type: 'edit', pkg })
     try {
-      const result = await getPackageById(pkg.id, controller.signal)
+      const result = await readPackage(pkg.id, controller.signal)
       if (controller.signal.aborted) return
+      setDetail(result)
       setForm(toPackageEditForm(result))
       setSportConfigurationAvailable(hasPackageSportConfiguration(result))
       setEditLoaded(true)
@@ -244,7 +265,7 @@ export default function PackageManagement() {
     detailController.current = controller
     setDetailLoading(true)
     try {
-      const result = await getPackageById(pkg.id, controller.signal)
+      const result = await readPackage(pkg.id, controller.signal)
       if (!controller.signal.aborted) setDetail(result)
     } catch (error) {
       if (!controller.signal.aborted) setModalError(errorMessage(error))
@@ -338,7 +359,7 @@ export default function PackageManagement() {
     setBusy(true)
     setModalError('')
     try {
-      await createPackage({
+      const created = await createPackage({
         name: form.name.trim(),
         description: form.description.trim() || null,
         durationMonths: Number(form.durationMonths),
@@ -351,6 +372,7 @@ export default function PackageManagement() {
         includedSportIds: form.includedSportIds,
         choiceGroups: form.choiceGroups.map((group, index) => ({ ...group, sortOrder: index })),
       })
+      rememberSelections(created?.data?.id)
       closeModal()
       setNotice('Tạo gói dịch vụ thành công.')
       await loadPackages()
@@ -365,8 +387,8 @@ export default function PackageManagement() {
   async function handleUpdate(event) {
     event.preventDefault()
     if (busy || detailLoading || !editLoaded) return
-    if (replaceBenefits && !sportConfigurationAvailable) {
-      setModalError('Chưa tải được cấu hình môn hiện tại. Vui lòng tải lại chi tiết trước khi sửa môn.')
+    if (replaceBenefits && (!subjects.length || subjectsError)) {
+      setModalError('Cần tải danh sách môn học trước khi lưu cấu hình môn.')
       return
     }
     const price = parseFloat(form.price)
@@ -393,6 +415,7 @@ export default function PackageManagement() {
         payload.choiceGroups = form.choiceGroups.map((group, index) => ({ ...group, sortOrder: index }))
       }
       await updatePackage(modal.pkg.id, payload)
+      if (replaceBenefits) rememberSelections(modal.pkg.id)
       closeModal()
       setNotice(`Cập nhật gói "${form.name.trim()}" thành công.`)
       await loadPackages()
@@ -564,16 +587,17 @@ export default function PackageManagement() {
         {modal.type === 'edit' && (
           <div className="package-benefit-replace-note">
             <label className="package-benefit-replace-toggle">
-              <input type="checkbox" checked={replaceBenefits} disabled={!sportConfigurationAvailable}
+              <input type="checkbox" checked={replaceBenefits} disabled={!subjects.length || Boolean(subjectsError)}
                 onChange={(event) => setReplaceBenefits(event.target.checked)} />
-              Chỉnh sửa môn học và nhóm tự chọn
+              {sportConfigurationAvailable ? 'Chỉnh sửa môn học và nhóm tự chọn' : 'Thay thế toàn bộ cấu hình môn'}
             </label>
             <p>{sportConfigurationAvailable
-              ? 'Các môn đã lưu được hiển thị bên dưới. Bật chỉnh sửa để thay đổi; bỏ chọn để giữ nguyên cấu hình đã lưu.'
-              : 'Chưa thể hiển thị cấu hình môn hiện tại. Bạn vẫn có thể sửa thông tin chung; môn học và nhóm tự chọn đã lưu sẽ được giữ nguyên.'}</p>
+              ? (detail?.fromLastSave ? 'Đang hiển thị cấu hình bạn vừa lưu trong lần mở trang này.' : 'Bật chỉnh sửa để thay đổi danh sách bên dưới.')
+              : 'Máy chủ chưa cung cấp cấu hình hiện tại. Nếu bật tùy chọn này, danh sách bạn nhập sẽ thay thế cả môn bao gồm và các nhóm tự chọn khi lưu. Để trống cả hai sẽ xóa toàn bộ môn của gói.'}</p>
+            {subjectsError && <p role="alert">{subjectsError}</p>}
           </div>
         )}
-        {(modal.type === 'create' || sportConfigurationAvailable) && (
+        {(modal.type === 'create' || sportConfigurationAvailable || replaceBenefits) && (
           <fieldset className="package-benefit-editor" disabled={modal.type === 'edit' && !replaceBenefits}>
             <section>
               <div className="package-benefit-editor-heading">
@@ -872,12 +896,15 @@ export default function PackageManagement() {
                 </dl>
                 <section className="package-benefit-detail">
                   <h4>Môn học và nhóm lựa chọn</h4>
+                  {detail.fromLastSave && <small>Cấu hình bạn vừa lưu trong lần mở trang này.</small>}
                   {detail.includedSports?.length ? (
                     <p><strong>Đã bao gồm:</strong> {detail.includedSports.map((sport) => sport.name).join(', ')}</p>
-                  ) : <p>API chi tiết chưa trả danh sách môn được bao gồm.</p>}
+                  ) : Array.isArray(detail.includedSports) && <p>Không có môn học bao gồm.</p>}
                   {detail.choiceGroups?.length ? detail.choiceGroups.map((group) => (
-                    <p key={group.id}><strong>{group.name} · chọn {group.requiredSelection}:</strong> {(group.sports || []).map((sport) => sport.name).join(', ')}</p>
-                  )) : <p>API chi tiết chưa trả các nhóm môn tự chọn.</p>}
+                    <p key={group.id ?? group.sortOrder}><strong>{group.name} · chọn {group.requiredSelection}:</strong> {(group.sports || []).map((sport) => sport.name).join(', ')}</p>
+                  )) : Array.isArray(detail.choiceGroups) && <p>Không có nhóm tự chọn.</p>}
+                  {(!Array.isArray(detail.includedSports) || !Array.isArray(detail.choiceGroups)) &&
+                    <p>Máy chủ chưa cung cấp đầy đủ cấu hình môn của gói này.</p>}
                 </section>
                 </>
               )}

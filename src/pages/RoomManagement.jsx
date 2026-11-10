@@ -168,7 +168,7 @@ export default function RoomManagement() {
       <aside className="room-guidance"><span className="material-symbols-outlined">info</span><div><strong>Cấu hình theo từng tài nguyên thực tế</strong><p>Tạo riêng “Sân cầu lông 1”, “Sân cầu lông 2” hoặc “Phòng Fitness 1”, “Phòng Fitness 2”…; nhập đúng loại, vị trí và sức chứa. Chỉ phòng đang hoạt động và đúng loại môn học mới xuất hiện khi xếp lớp.</p></div></aside>
     </div>
 
-    {modal?.type === 'form' && <Modal title={modal.mode === 'create' ? 'Thêm phòng / sân' : `Chỉnh sửa: ${modal.room.name}`} busy={busy} onClose={closeModal}>
+    {modal?.type === 'form' && <Modal className="room-editor-modal" title={modal.mode === 'create' ? 'Thêm phòng / sân' : `Chỉnh sửa: ${modal.room.name}`} busy={busy} onClose={closeModal}>
       {modalError && <div className="auth-error subject-modal-error" role="alert">{modalError}</div>}
       <form className="auth-form room-form" onSubmit={save}><fieldset disabled={busy}>
         <label>Tên phòng / sân <span className="input-wrap"><input required maxLength={50} autoFocus placeholder="Ví dụ: Sân cầu lông 1" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></span></label>
@@ -177,7 +177,7 @@ export default function RoomManagement() {
           <label>Vị trí <span className="input-wrap"><input required maxLength={150} placeholder="Ví dụ: Tầng 2, khu A" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} /></span></label></div>
         <label>Trạng thái <span className="input-wrap"><select required value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>{options.statuses.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></span></label>
       </fieldset>
-        <p className="room-form-hint">Nếu một khu có nhiều sân hoặc phòng độc lập, hãy tạo mỗi nơi thành một bản ghi riêng để hệ thống kiểm tra lịch trùng chính xác.</p>
+        <div className="room-form-hint"><span className="material-symbols-outlined" aria-hidden="true">info</span><p>Nếu có nhiều sân hoặc phòng độc lập, hãy tạo mỗi nơi thành một bản ghi riêng để hệ thống kiểm tra lịch trùng chính xác.</p></div>
         <div className="subject-modal-actions"><button className="subject-button" type="button" disabled={busy} onClick={closeModal}>Hủy</button><button className="subject-button subject-primary" type="submit" disabled={busy}>{busy ? 'Đang lưu...' : modal.mode === 'create' ? 'Tạo địa điểm' : 'Lưu thay đổi'}</button></div>
       </form>
     </Modal>}

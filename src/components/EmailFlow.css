@@ -1,0 +1,13 @@
+.auth-card .auth-text-action {
+  background: transparent;
+  border: 0;
+  padding: .4rem 0;
+  color: #216347;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-card .auth-text-action:disabled { color: #60746a; cursor: default; }
+.auth-card .auth-forgot { justify-self: end; align-self: flex-end; }
+.email-flow .otp-code { letter-spacing: .38em; font-variant-numeric: tabular-nums; }
+.auth-heading strong { overflow-wrap: anywhere; }
