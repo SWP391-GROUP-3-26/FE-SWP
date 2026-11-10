@@ -11,6 +11,7 @@ export const VENUES_BY_CATEGORY = {
     ['BADMINTON_COURT', 'Sân cầu lông'], ['FOOTBALL_COURT', 'Sân bóng đá'],
     ['BASKETBALL_COURT', 'Sân bóng rổ'], ['TABLE_TENNIS_COURT', 'Sân bóng bàn'],
     ['TENNIS_COURT', 'Sân tennis'], ['MULTIPURPOSE', 'Phòng đa năng'],
+    ['GYM', 'Phòng Gym'],
   ],
   'Thể thao dưới nước': [['SWIMMING_POOL', 'Bể bơi']],
 }

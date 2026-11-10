@@ -22,6 +22,7 @@ export default function EmailFlow({ mode, initial, onBack, onDone }) {
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [wait, setWait] = useState(initial?.resendAfterSeconds || 0)
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function EmailFlow({ mode, initial, onBack, onDone }) {
   async function submit(action) {
     if (busy) return
     setError('')
+    setNotice('')
     setBusy(true)
     const context = challenge && { email: challenge.email, verificationToken: challenge.verificationToken }
     try {
@@ -60,6 +62,7 @@ export default function EmailFlow({ mode, initial, onBack, onDone }) {
         setOtp('')
         setWait(60)
         setStep('otp')
+        if (action === 'resend') setNotice(t('Đã gửi mã mới. Vui lòng dùng mã trong email mới nhất.', 'A new code was sent. Use the code in the latest email.'))
       } else if (action === 'otp') {
         const data = await post(routes[purpose] + '/verify', { ...context, otp })
         if (purpose === 'forgot') {
@@ -93,7 +96,10 @@ export default function EmailFlow({ mode, initial, onBack, onDone }) {
       <h1>{titles[step]}</h1>
       {step === 'email' && <p>{t('Nhập email đã dùng để đăng ký UniSports.', 'Enter the email you used to sign up for UniSports.')}</p>}
       {step === 'request' && <p>{t('Nhận mã xác thực tại', 'Receive a verification code at')} <strong>{challenge.email}</strong></p>}
-      {step === 'otp' && <p>{t('Nhập mã 6 chữ số đã gửi đến', 'Enter the six-digit code sent to')} <strong>{challenge.email}</strong>. {t('Mã có hiệu lực 5 phút.', 'The code is valid for 5 minutes.')}</p>}
+      {step === 'otp' && <>
+        <p>{t('Nhập mã 6 chữ số đã gửi đến', 'Enter the six-digit code sent to')} <strong>{challenge.email}</strong>. {t('Mã có hiệu lực 5 phút.', 'The code is valid for 5 minutes.')}</p>
+        <p>{t('Nếu chưa thấy thư, hãy kiểm tra mục Thư rác.', 'If you cannot find the email, check your spam folder.')} {/@(?:gmail|googlemail)\.com$/i.test(challenge.email) && <a href="https://mail.google.com/" target="_blank" rel="noopener noreferrer">{t('Mở Gmail', 'Open Gmail')} ↗</a>}</p>
+      </>}
     </header>
     <form className="auth-form email-flow" onSubmit={event => { event.preventDefault(); submit(step) }}>
       {isEmail && <label>Email<span className="input-wrap"><input autoComplete="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} /></span></label>}
@@ -103,6 +109,7 @@ export default function EmailFlow({ mode, initial, onBack, onDone }) {
         <label>{t('Nhập lại mật khẩu mới', 'Confirm new password')}<span className="input-wrap"><input required autoComplete="new-password" type="password" maxLength={72} value={confirmation} onChange={e => setConfirmation(e.target.value)} /></span></label>
       </>}
       {error && <div className="auth-error" role="alert">{error}</div>}
+      {notice && <p role="status">{notice}</p>}
       <button className="submit-button" disabled={busy || (step === 'request' && wait > 0)}>{busy ? t('Đang xử lý…', 'Processing…') : step === 'otp' ? t('Xác nhận mã', 'Verify code') : step === 'password' ? t('Lưu mật khẩu mới', 'Save new password') : sendLabel}{step === 'request' && wait > 0 && ' (' + wait + 's)'}</button>
       {step === 'otp' && <button className="auth-text-action" type="button" disabled={busy || wait > 0} onClick={() => submit('resend')}>{t('Gửi lại mã', 'Resend code')}{wait > 0 && ' (' + wait + 's)'}</button>}
       {purpose === 'login' && step !== 'change' && <button type="button" className="auth-text-action" disabled={busy} onClick={() => { setError(''); setStep('change') }}>{t('Dùng địa chỉ email khác', 'Use another email address')}</button>}
