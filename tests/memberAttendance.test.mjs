@@ -9,7 +9,7 @@ const server = await createServer({
   server: { middlewareMode: true, hmr: false }, appType: 'custom', plugins: [nativeReact],
 })
 try {
-  const { default: MemberSessionCard } = await server.ssrLoadModule('/src/components/MemberSessionCard.jsx')
+  const { default: MemberSessionCard } = await server.ssrLoadModule('/src/components/member/MemberSessionCard.jsx')
   const registration = {
     bookingId: 10, className: 'Yoga', classCode: 'CLS-010', rawStatus: 'Booked',
     startDate: '2026-10-13', durationWeeks: 1, endDate: '2026-10-18',

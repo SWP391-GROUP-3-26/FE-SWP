@@ -1,0 +1,472 @@
+import { useEffect, useRef, useState } from 'react'
+import DashboardLayout from '../../layouts/DashboardLayout'
+import Modal from '../../components/common/Modal'
+import TablePagination from '../../components/common/TablePagination'
+import { staffMenuItems } from '../../layouts/staffMenuItems'
+import { getRole } from '../../auth/authStorage'
+import {
+  getManagedUserById,
+  getManagedUsers,
+  getUserManagementOptions,
+  updateManagedUserRole,
+  updateManagedUserStatus,
+} from '../../services/userManagementService'
+import '../../styles/ServiceManagement.css'
+
+const EMPTY_STATUS = ''
+const EMPTY_ROLE = ''
+
+export default function UserManagement() {
+  const role = getRole()
+  const [users, setUsers] = useState([])
+  const [roleOptions, setRoleOptions] = useState([])
+  const [statusOptions, setStatusOptions] = useState(['Active', 'Inactive', 'Locked'])
+  const [search, setSearch] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState(EMPTY_STATUS)
+  const [selectedRole, setSelectedRole] = useState(EMPTY_ROLE)
+  const [page, setPage] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [statusUpdateError, setStatusUpdateError] = useState('')
+  const [updatingUserIds, setUpdatingUserIds] = useState([])
+  const [detailUser, setDetailUser] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState('')
+  const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsError, setOptionsError] = useState('')
+  const [detailRole, setDetailRole] = useState('')
+  const [roleSaving, setRoleSaving] = useState(false)
+  const [roleUpdateError, setRoleUpdateError] = useState('')
+  const [roleUpdateSuccess, setRoleUpdateSuccess] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+  const detailControllerRef = useRef(null)
+  const roleUpdatePendingRef = useRef(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadOptions() {
+      try {
+        const options = await getUserManagementOptions()
+        if (!isMounted) return
+        setRoleOptions(options.roles)
+        if (Array.isArray(options.statuses) && options.statuses.length) setStatusOptions(options.statuses)
+      } catch (err) {
+        if (isMounted) setOptionsError(err?.response?.data?.message || err?.message || 'Không thể tải danh sách vai trò.')
+      } finally {
+        if (isMounted) setOptionsLoading(false)
+      }
+    }
+
+    loadOptions()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => () => detailControllerRef.current?.abort(), [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadUsers() {
+      setLoading(true)
+      setError('')
+
+      try {
+        const response = await getManagedUsers({
+          search,
+          role: selectedRole,
+          status: selectedStatus,
+          page,
+          size: 10,
+        })
+
+        if (!isMounted) return
+        setUsers(response.users || [])
+        setTotal(response.total || 0)
+        const lastPage = Math.max((response.totalPages || 0) - 1, 0)
+        if (page > lastPage) setPage(lastPage)
+      } catch (err) {
+        if (!isMounted) return
+        setUsers([])
+        setError(err?.message || 'Không thể tải danh sách người dùng.')
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    loadUsers()
+
+    return () => {
+      isMounted = false
+    }
+  }, [search, selectedRole, selectedStatus, page, reloadKey])
+
+  const roleTabs = ['Tất cả vai trò', ...roleOptions]
+
+  const handleRoleChange = (label) => {
+    setSelectedRole(label === 'Tất cả vai trò' ? EMPTY_ROLE : label)
+    setPage(0)
+  }
+
+  const handleStatusChange = (event) => {
+    setSelectedStatus(event.target.value)
+    setPage(0)
+  }
+
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value)
+    setPage(0)
+  }
+
+  const handleRefresh = () => {
+    setSearch('')
+    setSelectedStatus(EMPTY_STATUS)
+    setSelectedRole(EMPTY_ROLE)
+    setPage(0)
+  }
+
+  const handleStatusToggle = async (user) => {
+    const nextStatus = user.status === 'Active' ? 'Inactive' : 'Active'
+    if (user.status === 'Active') {
+      const username = user.username || user.fullName || user.userId
+      const confirmed = window.confirm(
+        `Bạn có chắc muốn huỷ hoạt động của người này không "${username}"?`
+      )
+      if (!confirmed) return
+    }
+
+    setStatusUpdateError('')
+    setUpdatingUserIds((current) => [...current, user.userId])
+
+    try {
+      const updatedUser = await updateManagedUserStatus(user.userId, nextStatus)
+      setUsers((current) => current.map((item) =>
+        item.userId === user.userId ? { ...item, ...updatedUser } : item
+      ))
+    } catch (err) {
+      setStatusUpdateError(err?.message || 'Không thể cập nhật trạng thái người dùng.')
+    } finally {
+      setUpdatingUserIds((current) => current.filter((id) => id !== user.userId))
+    }
+  }
+
+  const loadUserDetail = async (user) => {
+    if (roleUpdatePendingRef.current) return
+    detailControllerRef.current?.abort()
+    const controller = new AbortController()
+    detailControllerRef.current = controller
+    setDetailUser(user)
+    setDetailLoading(true)
+    setDetailError('')
+    setDetailRole('')
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
+
+    try {
+      const detail = await getManagedUserById(user.userId, controller.signal)
+      if (!controller.signal.aborted) {
+        setDetailUser(detail)
+        setDetailRole(detail.role || '')
+      }
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        setDetailError(err?.message || 'Không thể tải thông tin người dùng.')
+      }
+    } finally {
+      if (!controller.signal.aborted) setDetailLoading(false)
+    }
+  }
+
+  const closeDetail = () => {
+    if (roleUpdatePendingRef.current) return
+    detailControllerRef.current?.abort()
+    detailControllerRef.current = null
+    setDetailUser(null)
+    setDetailLoading(false)
+    setDetailError('')
+    setDetailRole('')
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
+  }
+
+  const canSaveRole = Boolean(detailUser && !detailLoading && !detailError &&
+    !optionsLoading && !optionsError && roleOptions.includes(detailRole) &&
+    detailRole !== detailUser.role && !updatingUserIds.includes(detailUser.userId))
+
+  const handleSaveRole = async (event) => {
+    event.preventDefault()
+    const controller = detailControllerRef.current
+    if (!canSaveRole || roleUpdatePendingRef.current || !controller || controller.signal.aborted) return
+
+    roleUpdatePendingRef.current = true
+    setRoleSaving(true)
+    setRoleUpdateError('')
+    setRoleUpdateSuccess('')
+    try {
+      const updatedUser = await updateManagedUserRole(detailUser.userId, detailRole)
+      if (controller.signal.aborted) return
+      setDetailUser(updatedUser)
+      setDetailRole(updatedUser.role)
+      setRoleUpdateSuccess('Cập nhật vai trò thành công.')
+      setReloadKey((current) => current + 1)
+    } catch (err) {
+      if (controller.signal.aborted) return
+      setRoleUpdateError(err?.response?.data?.message ||
+        (err?.request && !err?.response ? 'Không thể kết nối máy chủ. Vui lòng thử lại.' : err?.message) ||
+        'Không thể cập nhật vai trò người dùng.')
+    } finally {
+      roleUpdatePendingRef.current = false
+      if (!controller.signal.aborted) setRoleSaving(false)
+    }
+  }
+
+  const detailInitials = (detailUser?.fullName || detailUser?.username || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+
+  return (
+    <DashboardLayout role={role} menuItems={staffMenuItems[role] || []} className="user-management-theme"
+      eyebrow="Hệ thống phân quyền & kiểm soát tài khoản"
+      title="Quản lý người dùng">
+      <section className="dashboard-panel service-panel user-management-panel">
+        <div className="panel-heading service-heading">
+          <div><h3>Tài khoản hệ thống</h3></div>
+        </div>
+
+        <div className="user-management-toolbar">
+          <div className="user-management-search-filter">
+            <label className="service-search"><span className="visually-hidden">Tìm kiếm tài khoản</span>
+              <span className="input-wrap"><span className="material-symbols-outlined" aria-hidden="true">search</span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={handleSearchChange}
+                  placeholder="Tìm kiếm theo tên, UID, email, số điện thoại..."
+                />
+              </span>
+            </label>
+            <label className="service-filter"><span className="visually-hidden">Lọc trạng thái</span>
+              <select value={selectedStatus} onChange={handleStatusChange}>
+                <option value="">Tất cả trạng thái</option>
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+            </label>
+            <button className="subject-button" type="button" aria-label="Tải lại danh sách" onClick={handleRefresh}>
+              <span className="material-symbols-outlined" aria-hidden="true">refresh</span>
+            </button>
+          </div>
+
+          <div className="user-role-tabs" aria-label="Lọc người dùng theo vai trò">
+            {roleTabs.map((label) => (
+              <button
+                className={`user-role-tab${(label === 'Tất cả vai trò' && !selectedRole) || selectedRole === label ? ' user-role-tab-active' : ''}`}
+                key={label}
+                type="button"
+                onClick={() => handleRoleChange(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {statusUpdateError && (
+          <div className="user-management-action-error" role="alert">
+            <span className="material-symbols-outlined" aria-hidden="true">error</span>
+            {statusUpdateError}
+          </div>
+        )}
+
+        {error && (
+          <div className="subject-empty user-management-empty" style={{ marginTop: '16px' }}>
+            <span className="material-symbols-outlined" aria-hidden="true">error</span>
+            <strong>Không thể tải dữ liệu</strong>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!error && (
+          <div className="subject-table-scroll" tabIndex={0} role="region" aria-label="Bảng người dùng">
+            <table className="subject-table service-table">
+              <thead>
+                <tr>{['UID', 'Thành viên', 'Email liên hệ', 'Số điện thoại', 'Vai trò (Role)', 'Trạng thái', 'Thao tác'].map((label) => <th key={label} scope="col">{label}</th>)}</tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td className="subject-empty user-management-empty" colSpan={7}>
+                      <span className="material-symbols-outlined" aria-hidden="true">sync</span>
+                      <strong>Đang tải danh sách người dùng…</strong>
+                    </td>
+                  </tr>
+                ) : users.length > 0 ? (
+                  users.map((user) => (
+                    <tr key={user.userId ?? user.id ?? `${user.email}-${user.fullName}`}>
+                      <td>{user.userId ?? user.id ?? '—'}</td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <strong>{user.fullName || '—'}</strong>
+                          <small>{user.username || '—'}</small>
+                        </div>
+                      </td>
+                      <td>{user.email || '—'}</td>
+                      <td>{user.phone || '—'}</td>
+                      <td>{user.role || '—'}</td>
+                      <td>
+                        {user.status === 'Locked' ? (
+                          <span className="status-badge status-locked">Locked</span>
+                        ) : (
+                          <div className="user-status-control">
+                            <button
+                              aria-checked={user.status === 'Active'}
+                              aria-label={`${user.status === 'Active' ? 'Tắt' : 'Bật'} hoạt động của ${user.username || user.fullName || user.userId}`}
+                              className={`user-status-toggle${user.status === 'Active' ? ' user-status-toggle-on' : ''}`}
+                              disabled={updatingUserIds.includes(user.userId) || (roleSaving && detailUser?.userId === user.userId)}
+                              onClick={() => handleStatusToggle(user)}
+                              role="switch"
+                              type="button"
+                            >
+                              <span />
+                            </button>
+                            <span className={`status-badge ${user.status === 'Active' ? 'status-active' : 'status-inactive'}`}>
+                              {updatingUserIds.includes(user.userId) ? 'Đang cập nhật…' : user.status || '—'}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          className="subject-button"
+                          type="button"
+                          aria-label={`Xem thông tin ${user.username || user.fullName || user.userId}`}
+                          disabled={roleSaving}
+                          onClick={() => loadUserDetail(user)}
+                        >
+                          Xem
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="subject-empty user-management-empty" colSpan={7}>
+                      <span className="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+                      <strong>Chưa có dữ liệu phù hợp</strong>
+                      <p>Không tìm thấy người dùng nào theo bộ lọc hiện tại.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!error && <TablePagination page={page} pageSize={10} totalItems={total} itemLabel="người dùng"
+          onPageChange={setPage} loading={loading} />}
+      </section>
+      {detailUser && (
+        <Modal title="Chi tiết người dùng" className="user-detail-modal" busy={roleSaving} onClose={closeDetail}>
+          <div className="user-detail-content">
+            <div className="user-detail-profile">
+              <span className="user-detail-avatar" aria-hidden="true">{detailInitials}</span>
+              <div className="user-detail-identity">
+                <strong>{detailUser.fullName || 'Chưa có tên'}</strong>
+                <span>@{detailUser.username || '—'}</span>
+              </div>
+              <span className={`status-badge status-${(detailUser.status || '').toLowerCase()}`}>
+                {detailUser.status || '—'}
+              </span>
+            </div>
+            {detailLoading && (
+              <div className="subject-loading" role="status">
+                <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+                Đang tải thông tin người dùng…
+              </div>
+            )}
+            {detailError && (
+              <div className="auth-error subject-modal-error" role="alert">{detailError}</div>
+            )}
+            {!detailLoading && !detailError && (
+              <div className="user-detail-sections">
+                <section className="user-detail-section" aria-labelledby="user-detail-personal-title">
+                  <h4 id="user-detail-personal-title">Thông tin cá nhân</h4>
+                  <dl className="user-detail-grid">
+                    {[
+                      ['Email', detailUser.email],
+                      ['Số điện thoại', detailUser.phone],
+                      ['Ngày sinh', detailUser.dob],
+                      ['Giới tính', detailUser.gender],
+                      ['Địa chỉ', detailUser.address, 'user-detail-wide'],
+                    ].map(([label, value, className]) => (
+                      <div className={`user-detail-item ${className || ''}`} key={label}>
+                        <dt>{label}</dt>
+                        <dd>{value || '—'}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+                <section className="user-detail-section" aria-labelledby="user-detail-account-title">
+                  <h4 id="user-detail-account-title">Thông tin tài khoản</h4>
+                  <dl className="user-detail-grid">
+                    {[
+                      ['UID', detailUser.userId],
+                      ['Tên đăng nhập', detailUser.username],
+                      ['Vai trò', detailUser.role],
+                      ['Trạng thái', detailUser.status],
+                    ].map(([label, value]) => (
+                      <div className="user-detail-item" key={label}>
+                        <dt>{label}</dt>
+                        <dd>{value || '—'}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <form className="auth-form service-form mt-3" onSubmit={handleSaveRole} aria-busy={roleSaving}>
+                    <fieldset disabled={roleSaving || optionsLoading || Boolean(optionsError) || updatingUserIds.includes(detailUser.userId)}>
+                      <label htmlFor="managed-user-role">Vai trò người dùng
+                        <span className="input-wrap">
+                          <select id="managed-user-role" value={detailRole} onChange={(event) => {
+                            setDetailRole(event.target.value)
+                            setRoleUpdateError('')
+                            setRoleUpdateSuccess('')
+                          }}>
+                            {!roleOptions.includes(detailRole) && <option value={detailRole}>{detailRole || 'Chọn vai trò'}</option>}
+                            {roleOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                          </select>
+                        </span>
+                      </label>
+                    </fieldset>
+                    {optionsLoading && <p role="status">Đang tải danh sách vai trò…</p>}
+                    {optionsError && <div className="auth-error" role="alert">{optionsError} Vui lòng tải lại trang để thử lại.</div>}
+                    {!optionsLoading && !optionsError && !roleOptions.length && <p role="status">Hiện chưa có vai trò khả dụng.</p>}
+                    {roleUpdateError && <div className="auth-error" role="alert">{roleUpdateError}</div>}
+                    {roleUpdateSuccess && <div className="alert alert-success mb-0" role="status">{roleUpdateSuccess}</div>}
+                    <button className="subject-button subject-primary" type="submit" disabled={roleSaving || !canSaveRole}>
+                      {roleSaving ? <span role="status">Đang lưu vai trò…</span> : 'Lưu vai trò'}
+                    </button>
+                  </form>
+                </section>
+              </div>
+            )}
+          </div>
+          <div className="subject-modal-actions user-detail-actions">
+            {detailError && (
+              <button className="subject-button" type="button" onClick={() => loadUserDetail(detailUser)}>
+                Thử lại
+              </button>
+            )}
+            <button className="subject-button" type="button" disabled={roleSaving} onClick={closeDetail}>Đóng</button>
+          </div>
+        </Modal>
+      )}
+    </DashboardLayout>
+  )
+}

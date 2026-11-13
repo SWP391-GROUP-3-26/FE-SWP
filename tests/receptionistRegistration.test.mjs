@@ -80,7 +80,7 @@ try {
   for (const [file, props] of [['MemberClasses', {}], ['MemberPackages', {}], ['MemberPaymentResult', {}],
     ['MemberClasses', { receptionist: true, memberId: '7' }], ['MemberPackages', { receptionist: true, memberId: '7' }],
     ['MemberPaymentResult', { receptionist: true, memberId: '7' }]]) {
-    const { default: Page } = await server.ssrLoadModule(`/src/pages/${file}.jsx`)
+    const { default: Page } = await server.ssrLoadModule(`/src/pages/member/${file}.jsx`)
     const html = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(Page, props)))
     assert.ok(html.length > 0)
     if (props.receptionist) assert.ok(html.includes('/receptionist/members/7'))

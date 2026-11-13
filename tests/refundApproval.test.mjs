@@ -11,8 +11,8 @@ const server = await createServer({
   resolve: { alias: { axios: fileURLToPath(new URL('../node_modules/axios/dist/esm/axios.js', import.meta.url)) } },
 })
 try {
-  const { default: RefundDetail } = await server.ssrLoadModule('/src/components/RefundDetail.jsx')
-  const { default: RegisteredClassCard } = await server.ssrLoadModule('/src/components/RegisteredClassCard.jsx')
+  const { default: RefundDetail } = await server.ssrLoadModule('/src/components/shared/RefundDetail.jsx')
+  const { default: RegisteredClassCard } = await server.ssrLoadModule('/src/components/member/RegisteredClassCard.jsx')
   const refund = { id: 60, paymentId: 50, memberName: 'Member', itemName: 'Yoga',
     paidAmount: 100000, estimatedAmount: 100000, sessions: [], version: 0 }
   const renderRefund = (status, pickupCode = null) => renderToStaticMarkup(createElement(RefundDetail, {

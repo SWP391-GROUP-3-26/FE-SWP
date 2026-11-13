@@ -38,7 +38,7 @@ const server = await createServer({
   plugins: [{
     name: 'user-management-test', enforce: 'pre',
     transform(code, id) {
-      if (id.replaceAll('\\', '/').endsWith('/src/pages/UserManagement.jsx')) {
+      if (id.replaceAll('\\', '/').endsWith('/src/pages/centerManager/UserManagement.jsx')) {
         return code.replace("from 'react'", "from 'virtual:user-test-hooks'")
       }
     },
@@ -56,7 +56,7 @@ const server = await createServer({
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
   const service = await server.ssrLoadModule('/src/services/userManagementService.js')
-  const { default: UserManagement } = await server.ssrLoadModule('/src/pages/UserManagement.jsx')
+  const { default: UserManagement } = await server.ssrLoadModule('/src/pages/centerManager/UserManagement.jsx')
   let calls = []
   let payload
   client.defaults.adapter = async (config) => {

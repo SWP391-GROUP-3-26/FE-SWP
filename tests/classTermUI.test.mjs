@@ -33,7 +33,7 @@ const server = await createServer({
   plugins: [nativeReact, {
     name: 'term-page-test', enforce: 'pre',
     transform(code, id) {
-      if (['/src/pages/ClassManagement.jsx', '/src/pages/MemberSchedule.jsx'].some((path) => id.replaceAll('\\', '/').endsWith(path))) {
+      if (['/src/pages/centerManager/ClassManagement.jsx', '/src/pages/member/MemberSchedule.jsx'].some((path) => id.replaceAll('\\', '/').endsWith(path))) {
         return code.replace("from 'react'", "from 'virtual:term-test-hooks'")
       }
     },
@@ -51,8 +51,8 @@ const server = await createServer({
 })
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
-  const { default: Admin } = await server.ssrLoadModule('/src/pages/ClassManagement.jsx')
-  const { default: Member } = await server.ssrLoadModule('/src/pages/MemberSchedule.jsx')
+  const { default: Admin } = await server.ssrLoadModule('/src/pages/centerManager/ClassManagement.jsx')
+  const { default: Member } = await server.ssrLoadModule('/src/pages/member/MemberSchedule.jsx')
   let calls = []
   let memberItems = []
   const savedClass = { id: 3, code: 'CLS-003', name: 'Yoga', daysOfWeek: ['T3', 'T5'],

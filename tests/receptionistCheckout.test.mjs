@@ -17,7 +17,7 @@ const server = await createServer({
   plugins: [nativeReact, {
     name: 'checkout-test-hooks', enforce: 'pre',
     transform(code, id) {
-      if (!id.replaceAll('\\', '/').endsWith('/src/pages/ReceptionistCheckout.jsx')) return
+      if (!id.replaceAll('\\', '/').endsWith('/src/pages/receptionist/ReceptionistCheckout.jsx')) return
       return code.replace("from 'react'", "from 'virtual:checkout-hooks'")
         .replace("from 'react-router-dom'", "from 'virtual:checkout-router'")
         .replace("from '../hooks/useMemberRequest'", "from 'virtual:checkout-request'")
@@ -57,7 +57,7 @@ function find(element, predicate) {
 }
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
-  const { ReceptionistCheckoutContent: Checkout } = await server.ssrLoadModule('/src/pages/ReceptionistCheckout.jsx')
+  const { ReceptionistCheckoutContent: Checkout } = await server.ssrLoadModule('/src/pages/receptionist/ReceptionistCheckout.jsx')
   const member = { userId: 7, fullName: 'Checkout Member', status: 'Active', activePackages: [], phone: '0900000000', email: 'member@example.test' }
   const preview = { memberId: 7, className: 'Yoga Checkout', classInfo: { classId: 11, availableSeats: 4, subjectName: 'Yoga' },
     canRegister: true, canPayWithPackage: true, packageName: 'Current Package', remainingPackageClasses: 8, requiredPackageClasses: 2,

@@ -25,9 +25,9 @@ const server = await createServer({
   plugins: [nativeReact, {
     name: 'payment-hook-test', enforce: 'pre',
     transform(code, id) {
-      if (['/src/hooks/useMemberPayment.js', '/src/pages/MemberClasses.jsx'].some((file) => id.replaceAll('\\', '/').endsWith(file))) {
+      if (['/src/hooks/useMemberPayment.js', '/src/pages/member/MemberClasses.jsx'].some((file) => id.replaceAll('\\', '/').endsWith(file))) {
         const transformed = code.replace("from 'react'", "from 'virtual:payment-test-hooks'")
-        return id.replaceAll('\\', '/').endsWith('/src/pages/MemberClasses.jsx')
+        return id.replaceAll('\\', '/').endsWith('/src/pages/member/MemberClasses.jsx')
           ? transformed.replace("from 'react-router-dom'", "from 'virtual:payment-test-router'") : transformed
       }
     },
@@ -59,9 +59,9 @@ try {
   const service = await server.ssrLoadModule('/src/services/memberPaymentService.js')
   const { registerForClass } = await server.ssrLoadModule('/src/services/memberClassService.js')
   const { default: useMemberPayment } = await server.ssrLoadModule('/src/hooks/useMemberPayment.js')
-  const { default: PaymentPage } = await server.ssrLoadModule('/src/pages/MemberPaymentResult.jsx')
-  const { default: ClassesPage } = await server.ssrLoadModule('/src/pages/MemberClasses.jsx')
-  const { default: ProtectedRoute } = await server.ssrLoadModule('/src/components/ProtectedRoute.jsx')
+  const { default: PaymentPage } = await server.ssrLoadModule('/src/pages/member/MemberPaymentResult.jsx')
+  const { default: ClassesPage } = await server.ssrLoadModule('/src/pages/member/MemberClasses.jsx')
+  const { default: ProtectedRoute } = await server.ssrLoadModule('/src/components/common/ProtectedRoute.jsx')
   const App = (await server.transformRequest('/src/App.jsx')).code
   assert.match(App, /path: "\/member\/payment-result"[\s\S]*?allowedRoles: \[ROLES.MEMBER\]/)
 

@@ -7,8 +7,8 @@ import nativeReact from './ssrDependencies.mjs'
 
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom', plugins: [nativeReact] })
 try {
-  const { default: Cards } = await server.ssrLoadModule('/src/components/TrainingPlanCards.jsx')
-  const { default: Recipients } = await server.ssrLoadModule('/src/components/TrainingPlanRecipients.jsx')
+  const { default: Cards } = await server.ssrLoadModule('/src/components/shared/TrainingPlanCards.jsx')
+  const { default: Recipients } = await server.ssrLoadModule('/src/components/shared/TrainingPlanRecipients.jsx')
   const plan = { id: 10, scope: 'CLASS', status: 'ASSIGNED', title: 'Kế hoạch chung', className: 'Lớp A', memberName: 'Cả lớp',
     coachName: 'Coach', recipientCount: 2, totalExercises: 4, completedExercises: 1, editable: true,
     eligibleNewMembers: [{ memberId: 4, memberName: 'Học viên mới' }],

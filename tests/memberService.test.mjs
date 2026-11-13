@@ -14,10 +14,10 @@ globalThis.localStorage = { getItem: (key) => storage.get(key) ?? null }
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
   const { searchMembers, getMemberById } = await server.ssrLoadModule('/src/services/memberService.js')
-  const { default: ErrorView } = await server.ssrLoadModule('/src/components/MemberRequestError.jsx')
-  const { default: ProtectedRoute } = await server.ssrLoadModule('/src/components/ProtectedRoute.jsx')
-  const { default: Home } = await server.ssrLoadModule('/src/pages/ReceptionistDashboard.jsx')
-  const { staffMenuItems } = await server.ssrLoadModule('/src/components/staffMenuItems.js')
+  const { default: ErrorView } = await server.ssrLoadModule('/src/components/member/MemberRequestError.jsx')
+  const { default: ProtectedRoute } = await server.ssrLoadModule('/src/components/common/ProtectedRoute.jsx')
+  const { default: Home } = await server.ssrLoadModule('/src/pages/receptionist/ReceptionistDashboard.jsx')
+  const { staffMenuItems } = await server.ssrLoadModule('/src/layouts/staffMenuItems.js')
   const { ROLES, getRouteForRole } = await server.ssrLoadModule('/src/auth/roleConfig.js')
   let calls = 0
   let lastRequest

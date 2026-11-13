@@ -20,8 +20,8 @@ try {
     getMyMemberPackageSubscriptions,
     registerMemberPackage,
   } = await server.ssrLoadModule('/src/services/memberPackageService.js')
-  const { default: MemberPackages } = await server.ssrLoadModule('/src/pages/MemberPackages.jsx')
-  const { default: MemberDashboard } = await server.ssrLoadModule('/src/pages/MemberDashboard.jsx')
+  const { default: MemberPackages } = await server.ssrLoadModule('/src/pages/member/MemberPackages.jsx')
+  const { default: MemberDashboard } = await server.ssrLoadModule('/src/pages/member/MemberDashboard.jsx')
 
   let lastRequest
   let body = {

@@ -28,7 +28,7 @@ assert.equal(coachWeekSchedule([{ ...classroom, sessions: [session(8, '2026-11-0
 
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom', plugins: [nativeReact] })
 try {
-  const { default: WeeklyTimetable } = await server.ssrLoadModule('/src/components/WeeklyTimetable.jsx')
+  const { default: WeeklyTimetable } = await server.ssrLoadModule('/src/components/shared/WeeklyTimetable.jsx')
   const markup = renderToStaticMarkup(createElement(WeeklyTimetable, { weekStart: week, sessions: result.sessions,
     renderSession: (entry) => createElement('span', { key: entry.key }, `session-${entry.item.sessionId}`) }))
   const cells = [...markup.matchAll(/<td[^>]*>(.*?)<\/td>/g)].map((match) => match[1])
@@ -37,7 +37,7 @@ try {
   assert.match(cells[27], /session-2/)
   assert.match(markup, /Thứ Hai \(26\/10\)/)
   assert.match(markup, /Chủ Nhật \(01\/11\)/)
-  const { default: CoachWeeklySchedule } = await server.ssrLoadModule('/src/components/CoachWeeklySchedule.jsx')
+  const { default: CoachWeeklySchedule } = await server.ssrLoadModule('/src/components/coach/CoachWeeklySchedule.jsx')
   const render = (props) => renderToStaticMarkup(createElement(MemoryRouter, null,
     createElement(CoachWeeklySchedule, { classes: [], loading: false, error: '', onRetry() {}, ...props })))
   assert.match(render({}), /Bạn chưa được phân công lớp học/)
