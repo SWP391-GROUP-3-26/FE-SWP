@@ -24,7 +24,7 @@ try {
 
   const availableClass = { classId: 4, classCode: 'CLS-004', canRegister: true }
   payload = { success: true, classes: [availableClass] }
-  assert.deepEqual(await service.getAvailableClasses({ search: 'CLS-004' }), [availableClass])
+  assert.deepEqual(await service.getAvailableClassCatalog({ search: 'CLS-004' }), { classes: [availableClass], hasActivePackage: false })
   assert.equal(lastRequest.url, '/api/member/classes/available')
   assert.deepEqual(lastRequest.params, { search: 'CLS-004' })
   assert.equal(lastRequest.headers.Authorization, 'Bearer member-class-test-token')

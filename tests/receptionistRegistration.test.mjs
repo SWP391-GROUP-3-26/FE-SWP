@@ -67,7 +67,7 @@ try {
 
   body = { success: true, memberId: 7, memberName: 'Selected Member', classInfo: { name: 'Yoga', pricePerSession: 50000 },
     sessions: [{ sessionId: 31, date: '2026-10-21', startTime: '08:00', endTime: '09:00', availableSeats: 2 }],
-    canPayWithPackage: false, canRegister: true, requiredPackageClasses: 1, remainingPackageClasses: 0, directPaymentAmount: 50000 }
+    canPayWithPackage: false, canRegister: true, directPaymentAmount: 50000 }
   const preview = await api.getReceptionistPreview('7', 11)
   assert.equal(preview.memberId, 7); assert.equal(preview.totalAmount, 50000)
   assert.equal(preview.sessions[0].availableSeats, 2); assert.equal(preview.packageOption.eligible, false)

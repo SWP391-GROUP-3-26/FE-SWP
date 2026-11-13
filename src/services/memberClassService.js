@@ -29,10 +29,6 @@ export async function getAvailableClassCatalog({ search = '', signal } = {}) {
   return { classes: response.data.classes, hasActivePackage: response.data.activeSubscription?.hasActivePackage === true }
 }
 
-export async function getAvailableClasses(options) {
-  return (await getAvailableClassCatalog(options)).classes
-}
-
 export async function getMyClassList({ status = 'ongoing', search = '', signal } = {}) {
   const token = getAccessToken()
   const response = await axiosClient.get('/api/member/classes/my-classes', {

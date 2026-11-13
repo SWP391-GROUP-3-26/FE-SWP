@@ -69,7 +69,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
   const [modalError, setModalError] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('DIRECT')
   const [paymentChannel, setPaymentChannel] = useState('Card')
-  const needsPayment = paymentMethod === 'DIRECT' || paymentMethod === 'MIXED'
+  const needsPayment = paymentMethod === 'DIRECT'
   const [successMessage, setSuccessMessage] = useState('')
   const submitting = useRef(false)
   const previewRequest = useRef(0)
@@ -194,7 +194,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       const details = await (memberId ? getReceptionistPreview(memberId, classItem.classId) : getClassConfirmation(classItem.classId))
       if (requestId !== previewRequest.current) return
       setConfirmation(details)
-      setPaymentMethod(details.packageOption?.eligible ? 'PACKAGE' : !memberId && details.packageOption?.mixedEligible ? 'MIXED' : 'DIRECT')
+      setPaymentMethod(details.packageOption?.eligible ? 'PACKAGE' : 'DIRECT')
     } catch (error) {
       if (requestId !== previewRequest.current) return
       setModalError(classApiErrorMessage(error))
@@ -223,8 +223,6 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
       const result = await register(selectedClass.classId, {
         paymentMethod,
         ...(needsPayment ? { paymentChannel } : {}),
-        ...(paymentMethod === 'MIXED' ? { packageSessions: confirmation.packageOption.packageSessions,
-          paymentAmount: confirmation.packageOption.additionalAmount } : {}),
       })
       if (needsPayment && paymentChannel === 'E_Wallet') {
         if (result.paymentStatus !== 'Pending' || !isValidPaymentId(String(result.paymentId))) {
@@ -479,14 +477,6 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                     </div>
                     <b>0 ₫ thêm</b>
                   </div>
-                ) : paymentMethod === 'MIXED' ? (
-                  <div className="member-mixed-payment-summary" role="status">
-                    <p><strong>Dùng từ gói:</strong> {confirmation.packageOption.packageSessions} lượt</p>
-                    <p><strong>Số buổi trả thêm:</strong> {confirmation.packageOption.payableSessions}</p>
-                    <p><strong>Cần thanh toán:</strong> {priceFormatter.format(confirmation.packageOption.additionalAmount)}</p>
-                    <p>{confirmation.packageOption.note}</p>
-                    <p>Lượt gói dùng cho các buổi đầu theo lịch; các buổi còn lại trả tiền.</p>
-                  </div>
                 ) : (
                   <>
                     <p><strong>Giá niêm yết mỗi buổi:</strong> {priceFormatter.format(confirmation.price || 0)}</p>
@@ -505,20 +495,11 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               </div>
               {memberId && <div role="status">
                 <p>{confirmation.alreadyRegistered ? 'Hội viên đã đăng ký lớp này.' : 'Hội viên chưa đăng ký lớp này.'}</p>
-                <p>Gói hiện tại: {confirmation.packageName || 'Không có gói hoạt động'} · Còn {confirmation.remainingPackageClasses ?? 0} buổi · Cần {confirmation.requiredPackageClasses} buổi.</p>
-                <p>Điều kiện: đủ lượt và gói có hiệu lực đến buổi cuối cùng của lớp.</p>
+                <p>Gói hiện tại: {confirmation.packageName || 'Không có gói hoạt động'}.</p>
                 {!confirmation.canPayWithPackage && <p>Không thể dùng gói: {confirmation.message}</p>}
               </div>}
               <fieldset className="member-payment-options" disabled={bookingLoading}>
                 <legend>Hình thức thanh toán</legend>
-                {!memberId && confirmation.packageOption?.mixedEligible && (
-                  <label>
-                    <input checked={paymentMethod === 'MIXED'} name="paymentMethod" type="radio" value="MIXED"
-                      onChange={() => setPaymentMethod('MIXED')} />
-                    Dùng {confirmation.packageOption.packageSessions} lượt gói + thanh toán {confirmation.packageOption.payableSessions} buổi thiếu
-                    {` · ${priceFormatter.format(confirmation.packageOption.additionalAmount)}`}
-                  </label>
-                )}
                 {confirmation.packageOption?.eligible && (
                   <label>
                     <input
@@ -529,8 +510,6 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                       value="PACKAGE"
                     />
                     {confirmation.packageOption.title || 'Sử dụng gói hội viên'}
-                    {confirmation.packageOption.requiredSessions != null && ` · Dùng ${confirmation.packageOption.requiredSessions} buổi`}
-                    {confirmation.packageOption.remainingSessions != null && ` · Còn ${confirmation.packageOption.remainingSessions} buổi`}
                   </label>
                 )}
                 {confirmation.directPaymentOption?.available && (
@@ -576,8 +555,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   disabled={bookingLoading || (!confirmation.packageOption?.eligible && !confirmation.directPaymentOption?.available)}
                   type="submit"
                 >
-                  {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span> : paymentMethod === 'MIXED'
-                    ? `Thanh toán thêm ${priceFormatter.format(confirmation.packageOption.additionalAmount)}`
+                  {bookingLoading ? <span role="status">Đang xử lý đăng ký...</span>
                     : !receptionist && paymentMethod === 'PACKAGE' ? 'Nhận lớp'
                     : memberId && paymentMethod === 'DIRECT' && paymentChannel === 'Cash' ? 'Xác nhận đã nhận tiền' : 'Xác nhận đăng ký'}
                 </button>

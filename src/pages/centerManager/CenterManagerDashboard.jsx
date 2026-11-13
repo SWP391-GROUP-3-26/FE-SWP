@@ -102,10 +102,6 @@ export default function CenterManagerDashboard() {
           <div className="manager-analytics-heading"><div><span className="section-heading-kicker">TÌNH HÌNH LỚP HỌC</span><h3>Phân bố lớp theo trạng thái</h3></div><span className="material-symbols-outlined" aria-hidden="true">donut_large</span></div>
           {classStatuses.loading ? <p className="manager-chart-empty" role="status">Đang tải thống kê lớp học…</p> : classStatuses.error ? <p className="manager-chart-empty is-error" role="alert">{classStatuses.error}</p> : <ClassStatusChart rows={classStatuses.rows} />}
         </article>
-        <article className="manager-analytics-card manager-package-analytics">
-          <div className="manager-analytics-heading"><div><span className="section-heading-kicker">MỨC ĐỘ QUAN TÂM</span><h3>Gói tập được đăng ký nhiều</h3></div><span className="material-symbols-outlined" aria-hidden="true">workspace_premium</span></div>
-          <div className="manager-package-chart-unavailable"><span className="material-symbols-outlined" aria-hidden="true">query_stats</span><p>Chưa có API thống kê lượt đăng ký theo từng gói.</p><small>Biểu đồ phần trăm sẽ hiển thị khi backend cung cấp số lượt đăng ký cho mỗi gói.</small></div>
-        </article>
       </section>
       <section className="dashboard-panel">
         <div className="panel-heading">

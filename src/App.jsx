@@ -36,7 +36,6 @@ const ReceptionistMemberSearch = lazy(() => import('./pages/receptionist/Recepti
 const ReceptionistRegistrationPage = lazy(() => import('./pages/receptionist/ReceptionistRegistrationPage'))
 const ReceptionistCheckout = lazy(() => import('./pages/receptionist/ReceptionistCheckout'))
 const Register = lazy(() => import('./pages/public/Register'))
-const ReceptionistRegisterMember = lazy(() => import('./pages/receptionist/ReceptionistRegisterMember'))
 const SubjectManagement = lazy(() => import('./pages/shared/SubjectManagement'))
 const UserManagement = lazy(() => import('./pages/centerManager/UserManagement'))
 
@@ -50,8 +49,8 @@ function App() {
       <Routes>
         <Route path="/member/payment-history" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
         <Route path="/member/payment-history/:id" element={<ProtectedRoute allowedRoles={[ROLES.MEMBER]}><MemberPaymentHistory /></ProtectedRoute>} />
-        <Route path="/center-manager/refunds" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><StaffRefunds /></ProtectedRoute>} />
-        <Route path="/center-manager/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
+        <Route path="/center-manager/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><StaffRefunds /></ProtectedRoute>} />
         <Route path="/receptionist/refunds" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
         <Route path="/receptionist/refunds/:id" element={<ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}><StaffRefunds audience="receptionist" /></ProtectedRoute>} />
         <Route path="/coach/training-plans" element={<ProtectedRoute allowedRoles={[ROLES.COACH]}><CoachTrainingPlans /></ProtectedRoute>} />
@@ -61,13 +60,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
-        <Route path="/google-verify" element={<GoogleCallback />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/receptionist/register-member" element={
-          <ProtectedRoute allowedRoles={[ROLES.RECEPTIONIST]}>
-            <ReceptionistRegisterMember />
-          </ProtectedRoute>
-        } />
         <Route
           path="/member"
           element={
@@ -199,18 +192,18 @@ function App() {
         <Route
           path="/center-manager"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <CenterManagerDashboard />
             </ProtectedRoute>
           }
         />
         <Route path="/center-manager/finances" element={
-          <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}><CenterManagerFinance /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}><CenterManagerFinance /></ProtectedRoute>
         } />
         <Route
           path="/center-manager/users"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <UserManagement />
             </ProtectedRoute>
           }
@@ -218,7 +211,7 @@ function App() {
         <Route
           path="/center-manager/audit-logs"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <AuditLog />
             </ProtectedRoute>
           }
@@ -226,7 +219,7 @@ function App() {
         <Route
           path="/center-manager/classes"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <ClassManagement />
             </ProtectedRoute>
           }
@@ -234,7 +227,7 @@ function App() {
         <Route
           path="/center-manager/rooms"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <RoomManagement />
             </ProtectedRoute>
           }
@@ -242,7 +235,7 @@ function App() {
         <Route
           path="/center-manager/packages"
           element={
-            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER, ROLES.ADMIN]}>
+            <ProtectedRoute allowedRoles={[ROLES.CENTER_MANAGER]}>
               <PackageManagement />
             </ProtectedRoute>
           }

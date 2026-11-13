@@ -118,9 +118,9 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
               <div><dt>Tình trạng đăng ký</dt><dd>{item.alreadyRegistered ? 'Đã đăng ký' : 'Chưa đăng ký'}</dd></div>
             </dl>
             <details className="checkout-sessions"><summary>Lịch các buổi được đăng ký ({item.sessions.length})</summary><ul>{item.sessions.map((session) => <li key={session.sessionId}><span>{formatClassDate(session.sessionDate)} · {session.sessionStartTime?.slice(0, 5)}–{session.sessionEndTime?.slice(0, 5)}</span><small>Còn {session.availableSeats} chỗ</small></li>)}</ul></details>
-            <div className="checkout-package-note"><strong>{item.packageName || 'Chưa có gói hoạt động'}</strong><p>Còn {item.remainingPackageClasses ?? 0} buổi · Cần dùng {item.requiredPackageClasses} buổi.</p><p>Điều kiện: đủ lượt và gói có hiệu lực đến buổi cuối của lớp.</p>{!canUsePackage && <p>Không thể trừ gói: {item.message}</p>}</div>
+            <div className="checkout-package-note"><strong>{item.packageName || 'Chưa có gói hoạt động'}</strong>{!canUsePackage && <p>Không thể trừ gói: {item.message}</p>}</div>
           </> : <>
-            <dl className="checkout-facts"><div><dt>Thời hạn sử dụng</dt><dd>{item.durationDays} ngày</dd></div><div><dt>Số buổi trong gói</dt><dd>{item.includedClasses} buổi</dd></div></dl>
+            <dl className="checkout-facts"><div><dt>Thời hạn sử dụng</dt><dd>{item.durationDays} ngày</dd></div></dl>
             {item.benefits && <div className="checkout-service-copy"><h5>Quyền lợi</h5><p>{normalizePackageBenefits(item.benefits)}</p></div>}
             {item.termConditions && <div className="checkout-service-copy"><h5>Điều kiện sử dụng</h5><p>{item.termConditions}</p></div>}
             {isRenewal ? <dl className="checkout-facts">
@@ -130,7 +130,7 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
           </>}
           <dl className="checkout-totals"><div><dt>{isClass ? `Học phí ${item.sessionCount} buổi × ${money.format(item.price)}` : 'Giá gói niêm yết'}</dt><dd>{money.format(isRenewal ? item.renewalPreview?.listedPrice ?? data.amount : data.amount)}</dd></div>
             {isRenewal && <div><dt>Giảm giá</dt><dd>{money.format(item.renewalPreview?.discountAmount || 0)}</dd></div>}
-            {usingPackage && <div><dt>Thanh toán bằng gói hội viên</dt><dd>{item.requiredPackageClasses} buổi</dd></div>}<div className="checkout-total"><dt>Tổng cần thu</dt><dd>{money.format(total)}</dd></div></dl>
+            {usingPackage && <div><dt>Thanh toán bằng gói hội viên</dt><dd>{item.packageName || 'Theo gói'}</dd></div>}<div className="checkout-total"><dt>Tổng cần thu</dt><dd>{money.format(total)}</dd></div></dl>
         </section>
         <section className="checkout-card checkout-payment" aria-labelledby="checkout-payment-title">
           <div className="checkout-card-title"><span className="material-symbols-outlined" aria-hidden="true">account_balance_wallet</span><h3 id="checkout-payment-title">Phương thức thanh toán</h3></div>
@@ -159,12 +159,12 @@ export function ReceptionistCheckoutContent({ memberId, serviceType, serviceId }
                 <input type="radio" name="checkoutMethod" value={option.value} checked={method === option.value} onChange={() => { setMethod(option.value); setReceivedCash(false); setSubmitError('') }} />
                 <span className="material-symbols-outlined" aria-hidden="true">{option.icon}</span><span><strong>{option.label}</strong><small>{option.description}</small></span>
               </label>)}
-              {canUsePackage && <label className={`checkout-method${usingPackage ? ' is-selected' : ''}`}><input type="radio" name="checkoutMethod" value="PACKAGE" checked={usingPackage} onChange={() => { setMethod('PACKAGE'); setReceivedCash(false); setSubmitError('') }} /><span className="material-symbols-outlined" aria-hidden="true">card_membership</span><span><strong>Trừ gói hội viên</strong><small>{item.packageName} · {item.requiredPackageClasses} buổi</small></span></label>}
+              {canUsePackage && <label className={`checkout-method${usingPackage ? ' is-selected' : ''}`}><input type="radio" name="checkoutMethod" value="PACKAGE" checked={usingPackage} onChange={() => { setMethod('PACKAGE'); setReceivedCash(false); setSubmitError('') }} /><span className="material-symbols-outlined" aria-hidden="true">card_membership</span><span><strong>Trừ gói hội viên</strong><small>{item.packageName}</small></span></label>}
             </fieldset>
             <div className="checkout-method-detail">
               <span className="material-symbols-outlined" aria-hidden="true">{usingPackage ? 'card_membership' : methods.find((option) => option.value === method)?.icon}</span>
               <h4>{usingPackage ? 'Sử dụng lượt trong gói' : method === 'E_Wallet' ? 'Quét mã, thanh toán thuận tiện' : method === 'Card' ? 'Thanh toán thẻ qua VNPay' : 'Thu tiền mặt tại quầy'}</h4>
-              <p>{usingPackage ? `Trừ ${item.requiredPackageClasses} buổi để đăng ký toàn bộ các buổi còn lại của lớp.` : method === 'E_Wallet' ? 'Mã QR được tạo sau khi xác nhận đăng ký. Trang thanh toán sẽ tự cập nhật khi hệ thống nhận được tiền.' : method === 'Card' ? 'Tiếp tục đến VNPay để thanh toán. Đăng ký chỉ được xác nhận sau khi cổng thanh toán báo thành công.' : `Nhận đủ ${money.format(data.amount)} từ hội viên trước khi xác nhận.`}</p>
+              <p>{usingPackage ? 'Sử dụng gói hội viên để đăng ký toàn bộ các buổi còn lại của lớp.' : method === 'E_Wallet' ? 'Mã QR được tạo sau khi xác nhận đăng ký. Trang thanh toán sẽ tự cập nhật khi hệ thống nhận được tiền.' : method === 'Card' ? 'Tiếp tục đến VNPay để thanh toán. Đăng ký chỉ được xác nhận sau khi cổng thanh toán báo thành công.' : `Nhận đủ ${money.format(data.amount)} từ hội viên trước khi xác nhận.`}</p>
             </div>
             {method === 'Cash' && <label className="checkout-cash-confirm"><input type="checkbox" checked={receivedCash} disabled={busy || Boolean(blockReason || result)} onChange={(event) => setReceivedCash(event.target.checked)} /><span>Tôi đã nhận đủ {money.format(data.amount)} tiền mặt từ {member.fullName}.</span></label>}
             {submitError && <div className="checkout-notice is-error" role="alert"><p>{submitError}</p>{isValidPaymentId(String(result?.paymentId))

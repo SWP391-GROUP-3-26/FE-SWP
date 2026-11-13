@@ -20,16 +20,17 @@ const server = await createServer({ server: { middlewareMode: true }, appType: '
 globalThis.localStorage = { getItem: () => 'test-token' }
 try {
   const { default: client } = await server.ssrLoadModule('/src/api/axiosClient.js')
-  const { register, registerMember } = await server.ssrLoadModule('/src/services/registrationService.js')
+  const { register } = await server.ssrLoadModule('/src/services/registrationService.js')
+  const { createReceptionistMember } = await server.ssrLoadModule('/src/services/receptionistMemberService.js')
   const { ROLES, isAllowedRole } = await server.ssrLoadModule('/src/auth/roleConfig.js')
   let request
   client.defaults.adapter = async (config) => {
     request = config
-    return { data: { success: true, message: 'Created', data: { role: 'Member' } }, status: 201, headers: {}, config }
+    return { data: { success: true, message: 'Created', data: { userId: 10, role: 'Member' } }, status: 201, headers: {}, config }
   }
   await register(payload)
   assert.equal(request.url, '/api/auth/register')
-  await registerMember(payload)
+  await createReceptionistMember(payload)
   assert.equal(request.url, '/api/receptionist/members')
   assert.equal(request.method, 'post')
   assert.equal(request.headers.Authorization, 'Bearer test-token')
@@ -40,7 +41,7 @@ try {
   }
   const failure = { response: { status: 409, data: { success: false, message: 'Username da ton tai' } } }
   client.defaults.adapter = async () => { throw failure }
-  await assert.rejects(registerMember(payload), (error) => error === failure)
+  await assert.rejects(createReceptionistMember(payload), (error) => error === failure)
   console.log('PASS: shared validation, normalization, API contract, token, errors and role allowlist')
 } finally {
   delete globalThis.localStorage

@@ -34,8 +34,7 @@ export async function getReceptionistPreview(memberId, classId, { signal } = {})
     price: p.classInfo.pricePerSession, totalAmount: p.directPaymentAmount,
     startDate: p.classInfo.startDate, endDate: p.classInfo.endDate, sessionCount: p.sessions.length,
     sessions: p.sessions.map((s) => ({ ...s, sessionDate: s.date, sessionStartTime: s.startTime, sessionEndTime: s.endTime })),
-    packageOption: { eligible: p.canPayWithPackage, title: p.packageName || 'Trừ gói hội viên',
-      requiredSessions: p.requiredPackageClasses, remainingSessions: p.remainingPackageClasses },
+    packageOption: { eligible: p.canPayWithPackage, title: p.packageName || 'Trừ gói hội viên' },
     directPaymentOption: { available: p.canRegister, title: 'Thanh toán học phí' } }
 }
 
@@ -67,7 +66,7 @@ export function getReceptionistSubscriptions(memberId, { signal } = {}) {
   return request(`${memberPath(memberId)}/packages`, { signal })
 }
 
-export async function getReceptionistPackage(packageId, { signal } = {}) {
+async function getReceptionistPackage(packageId, { signal } = {}) {
   const result = await request('/packages', { signal })
   if (!Array.isArray(result.data)) throw new Error('Danh sách gói không hợp lệ.')
   const item = result.data.find((pack) => pack.packageId === Number(packageId))
@@ -121,7 +120,7 @@ async function getRenewalCheckout(memberId, serviceId, renewal, paymentId, signa
     if (!subscription || typeof subscription.paymentAmount !== 'number') throw new Error('Giao dịch không khớp với gói gia hạn của hội viên.')
     return { member, subscriptions: history.data, amount: subscription.paymentAmount,
       item: { id: subscription.packageId, name: subscription.packageName, durationDays: subscription.durationDays,
-        includedClasses: subscription.includedClasses, renewalPreview: { newStartDate: subscription.startDate, newEndDate: subscription.endDate,
+        renewalPreview: { newStartDate: subscription.startDate, newEndDate: subscription.endDate,
           listedPrice: subscription.packagePrice, discountAmount: subscription.discountAmount } }, renewal }
   }
   const overview = await getPackageRenewalOverview(memberId, signal)

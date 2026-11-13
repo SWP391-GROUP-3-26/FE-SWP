@@ -33,7 +33,6 @@ export default function RegisteredClassCard({ item, busy, onDetail, onCancel, on
         {item.requiresReview && <small>Thanh toán cần đối soát, chưa tự hoàn tiền.</small>}
         {pending && !deadline.expired && <div className="member-pending-payment-info">
           <small>Còn thanh toán: {money.format(item.paymentAmount || 0)}</small>
-          {item.heldPackageSessions > 0 && <small>Đang giữ: {item.heldPackageSessions} lượt gói</small>}
           <small>Còn {deadline.remaining} để thanh toán</small>
         </div>}
       </td>

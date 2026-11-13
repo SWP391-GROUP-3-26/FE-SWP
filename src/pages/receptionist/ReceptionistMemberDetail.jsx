@@ -56,8 +56,6 @@ export default function ReceptionistMemberDetail() {
                   <dl className="member-details">
                     <div><dt>Ngày bắt đầu</dt><dd>{formatClassDate(pack.startDate)}</dd></div>
                     <div><dt>Ngày hết hạn</dt><dd>{formatClassDate(pack.endDate)}</dd></div>
-                    <div><dt>Số buổi trong gói</dt><dd>{pack.includedClasses ?? '—'}</dd></div>
-                    <div><dt>Số buổi còn lại</dt><dd>{pack.remainingClasses ?? '—'}</dd></div>
                   </dl>
                   <button className="member-register-button" type="button" disabled={member.status !== 'Active'}
                     onClick={() => setRenewalPackage(pack)}>Gia hạn gói</button>

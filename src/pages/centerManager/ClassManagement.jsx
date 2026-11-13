@@ -300,7 +300,7 @@ export default function ClassManagement() {
                 <span className="material-symbols-outlined" aria-hidden="true">meeting_room</span>
                 <div><strong>{compatibleRooms.length ? 'Sức chứa vượt quá giới hạn phòng phù hợp.' : 'Chưa có phòng đang hoạt động phù hợp với môn này.'}</strong>
                   <p>{compatibleRooms.length ? 'Giảm sức chứa lớp hoặc kiểm tra lại sức chứa phòng.' : 'Hãy tạo phòng đúng loại và cấu hình loại phòng được phép cho môn học.'}
-                    {[ROLES.CENTER_MANAGER, ROLES.ADMIN].includes(role) && <> <Link to="/center-manager/rooms">Mở quản lý phòng</Link>.</>}</p></div>
+                    {role === ROLES.CENTER_MANAGER && <> <Link to="/center-manager/rooms">Mở quản lý phòng</Link>.</>}</p></div>
               </div>}
               {selectedRoom && <p className="class-time-slot-hint">{selectedRoom.typeLabel || selectedRoom.type}{selectedRoom.location ? ` · ${selectedRoom.location}` : ''} · tối đa {selectedRoom.maxCapacity} người</p>}
               <fieldset className="service-days"><legend>Ngày học trong tuần</legend>{CLASS_WEEKDAYS.map((day) => <label key={day}>

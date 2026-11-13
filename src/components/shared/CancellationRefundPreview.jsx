@@ -22,7 +22,7 @@ export default function CancellationRefundPreview({ bookingId, memberId, onReady
     <dt>Buổi tương lai sẽ hủy</dt><dd>{preview.cancelSessions}</dd>
     <dt>Đã thanh toán trực tiếp</dt><dd>{money(preview.paidAmount)}</dd>
     <dt>Dự kiến hoàn tiền</dt><dd>{money(preview.estimatedRefund)}</dd>
-  </dl>{preview.usesPackage && <p>Giải phóng / trả lại {preview.packageSessionsReturned ?? preview.cancelSessions} lượt gói.</p>}
+  </dl>{preview.usesPackage && <p>Hủy {preview.cancelSessions} buổi đăng ký bằng gói hội viên.</p>}
   <p>{preview.estimatedRefund > 0 ? 'Khoản hoàn chỉ tính trên các buổi trả tiền bị hủy, làm tròn xuống đến đồng. Trung tâm sẽ kiểm tra và duyệt số tiền hoàn.'
       : 'Đăng ký này chưa có khoản tiền đủ điều kiện hoàn.'}</p></div>
 }

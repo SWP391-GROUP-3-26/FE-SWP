@@ -20,8 +20,8 @@ const server = await createServer({
       if (!id.replaceAll('\\', '/').endsWith('/src/pages/receptionist/ReceptionistCheckout.jsx')) return
       return code.replace("from 'react'", "from 'virtual:checkout-hooks'")
         .replace("from 'react-router-dom'", "from 'virtual:checkout-router'")
-        .replace("from '../hooks/useMemberRequest'", "from 'virtual:checkout-request'")
-        .replace("from '../hooks/useMemberPayment'", "from 'virtual:checkout-payment'")
+        .replace("from '../../hooks/useMemberRequest'", "from 'virtual:checkout-request'")
+        .replace("from '../../hooks/useMemberPayment'", "from 'virtual:checkout-payment'")
     },
     resolveId(id) { if (id.startsWith('virtual:checkout-')) return '\0' + id },
     load(id) {
@@ -60,7 +60,7 @@ try {
   const { ReceptionistCheckoutContent: Checkout } = await server.ssrLoadModule('/src/pages/receptionist/ReceptionistCheckout.jsx')
   const member = { userId: 7, fullName: 'Checkout Member', status: 'Active', activePackages: [], phone: '0900000000', email: 'member@example.test' }
   const preview = { memberId: 7, className: 'Yoga Checkout', classInfo: { classId: 11, availableSeats: 4, subjectName: 'Yoga' },
-    canRegister: true, canPayWithPackage: true, packageName: 'Current Package', remainingPackageClasses: 8, requiredPackageClasses: 2,
+    canRegister: true, canPayWithPackage: true, packageName: 'Current Package',
     price: 50000, totalAmount: 100000, sessionCount: 2, sessions: [{ sessionId: 31, sessionDate: '2026-10-21', sessionStartTime: '08:00', sessionEndTime: '09:00', availableSeats: 4 }], schedule: 'T2 · 08:00–09:00' }
   const pack = { id: 27, name: 'Package Checkout', price: 900000, durationDays: 30, includedClasses: 12, benefits: 'Training benefits', termConditions: 'Package terms' }
   let posts = []

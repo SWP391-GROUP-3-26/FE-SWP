@@ -32,7 +32,7 @@ try {
           className: 'Yoga đang thanh toán', classCode: 'CLS-010', roomName: 'Phòng Yoga',
           rawStatus: expired ? 'Cancelled' : 'Pending', status: expired ? 'Đã hủy' : 'Chờ thanh toán',
           canCancel: !expired, canRebook: expired, paymentId: 105, paymentStatus: expired ? 'Failed' : 'Pending',
-          paymentAmount: 100000, heldPackageSessions: expired ? 0 : 9, canResumePayment: !expired,
+          paymentAmount: 100000, canResumePayment: !expired,
           paymentExpiresAt: expiresAt }] }
       } else if (path === '/api/member/payments/105' || path === '/api/member/payments/105/resume') {
         const resume = path.endsWith('/resume')
@@ -63,7 +63,6 @@ try {
       assert.equal(await resume.count(), 0)
       assert.ok(listReads >= 2)
     } else {
-      await page.getByText('Đang giữ: 9 lượt gói', { exact: true }).waitFor()
       assert.match(await resume.getAttribute('href'), /paymentId=105$/)
       await resume.click()
       await page.waitForURL('**/member/payment-result?paymentId=105')

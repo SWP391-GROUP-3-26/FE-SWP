@@ -2,7 +2,7 @@ function key(memberId, subscriptionId) {
   return 'unisports:subscription-sports:' + JSON.stringify([String(memberId), String(subscriptionId)])
 }
 
-export function purchaseSports(pkg, choices) {
+function purchaseSports(pkg, choices) {
   return {
     included: (pkg.includedSports || []).map(s => s.name),
     selected: (pkg.choiceGroups || []).flatMap(group => {
