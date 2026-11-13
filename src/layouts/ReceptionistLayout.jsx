@@ -23,13 +23,13 @@ export default function ReceptionistLayout({ children, className = '' }) {
           <span><strong>UniSports</strong><small>Tiếp tân</small></span>
         </Link>
         <div className="receptionist-user">
-          <button aria-label="Thông báo" className="receptionist-notification-button" title="Thông báo" type="button">
-            <span className="material-symbols-outlined" aria-hidden="true">notifications</span>
-          </button>
           <LanguageSwitcher />
-          <span><strong>{displayName}</strong><small>Tiếp tân</small></span>
+          <span className="receptionist-user-info"><strong>{displayName}</strong><small>Tiếp tân</small></span>
           <span className="receptionist-user-avatar material-symbols-outlined" aria-hidden="true">person</span>
-          <button onClick={logout} type="button">Đăng xuất</button>
+          <button className="receptionist-logout-button" onClick={logout} type="button">
+            <span className="material-symbols-outlined" aria-hidden="true">logout</span>
+            <span>Đăng xuất</span>
+          </button>
         </div>
       </header></LocalizedContent>
       <main className="receptionist-main"><LocalizedContent>{children}</LocalizedContent></main>

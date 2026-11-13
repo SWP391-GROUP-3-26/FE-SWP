@@ -5,17 +5,15 @@
 .receptionist-brand > span:last-child { display: grid; gap: 1px; }
 .receptionist-brand strong { font-size: 14px; }
 .receptionist-brand small { color: #7d8b81; font-size: 10px; }
-.receptionist-user { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-.receptionist-notification-button { display: inline-grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 50%; color: #42564b; background: transparent; cursor: pointer; }
-.receptionist-notification-button:hover { color: #205d3d; background: #edf6ef; }
-.receptionist-notification-button:focus-visible { outline: 3px solid rgba(46,121,85,.3); outline-offset: 2px; }
-.receptionist-user > span:first-child { display: grid; justify-items: end; gap: 2px; }
-.receptionist-user strong { max-width: 180px; overflow: hidden; color: #31443a; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.receptionist-user small { color: #8a968e; font-size: 10px; }
-.receptionist-user-avatar { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #fff; background: #327c57; font-size: 18px; }
-.receptionist-user button { min-height: 40px; padding: 9px 14px; border: 1px solid #e6c4be; border-radius: 8px; color: #a8493e; background: #fff5f3; font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s; }
-.receptionist-user button:hover { border-color: #c88f85; color: #7d2e25; background: #fbe7e3; }
-.receptionist-user button:focus-visible { outline: 3px solid rgba(168,73,62,.3); outline-offset: 3px; }
+.receptionist-user { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.receptionist-user-info { display: grid; justify-items: end; gap: 2px; line-height: 1.2; }
+.receptionist-user strong { max-width: 180px; overflow: hidden; color: #22372b; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.receptionist-user small { color: #7d8b81; font-size: 10px; font-weight: 500; }
+.receptionist-user-avatar { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: #2e7955; font-size: 18px; }
+.receptionist-logout-button { display: inline-flex; height: 36px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border: 1px solid #ebd0cc; border-radius: 10px; color: #a8493e; background: #fff; font: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.receptionist-logout-button .material-symbols-outlined { font-size: 17px; }
+.receptionist-logout-button:hover { border-color: #d69c94; color: #7d2e25; background: #fff4f2; }
+.receptionist-logout-button:focus-visible { outline: 3px solid rgba(168,73,62,.3); outline-offset: 2px; }
 .receptionist-main { width: min(1320px, calc(100% - 48px)); margin: 0 auto; padding: 24px 0 48px; }
 .receptionist-main > :first-child { margin-top: 0; }
 .receptionist-main :is(a, button, input, select, textarea):focus-visible { outline: 3px solid rgba(46,121,85,.35); outline-offset: 3px; }
@@ -23,6 +21,6 @@
   .receptionist-topbar { grid-template-columns: 1fr auto; min-height: 58px; padding: 0 14px; }
   .receptionist-user { gap: 7px; }
   .receptionist-user strong { max-width: 100px; }
-  .receptionist-user button { padding: 9px 10px; }
+  .receptionist-logout-button { padding: 0 10px; }
   .receptionist-main { width: calc(100% - 24px); padding-top: 15px; }
 }
