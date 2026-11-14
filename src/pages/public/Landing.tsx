@@ -62,7 +62,7 @@ export default function Landing() {
 
     const startTop = window.scrollY
     const distance = targetTop - startTop
-    const duration = 5000
+    const duration = 1000
     let startTime: number | null = null
 
     const animateScroll = (time: number) => {

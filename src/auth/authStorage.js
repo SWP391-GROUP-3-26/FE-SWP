@@ -20,7 +20,7 @@ export function saveAuth({ accessToken, userId, role, fullName, email, username,
   if (avatarUrl) localStorage.setItem(AUTH_KEYS.avatarUrl, avatarUrl)
   else localStorage.removeItem(AUTH_KEYS.avatarUrl)
 }
-
+ 
 export function getAuth() {
   return {
     accessToken: getAccessToken(),
