@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import Modal from '../../components/common/Modal'
 import TablePagination from '../../components/common/TablePagination'
 import { staffMenuItems } from '../../layouts/staffMenuItems'
 import { getRole } from '../../auth/authStorage'
-import { SUBJECT_CATEGORIES, VENUES_BY_CATEGORY } from '../../constants/subjectCategories'
+import { SUBJECT_CATEGORIES, getVenuesForCategory } from '../../constants/subjectCategories'
 import { createSubject, deleteSubject, getSubjectById, getSubjects } from '../../services/subjectService'
 import '../../styles/SubjectManagement.css'
 
@@ -25,7 +25,11 @@ export default function SubjectManagement() {
   const [page, setPage] = useState(0)
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState({ name: '', category: '', description: '', allowedRoomTypes: [] })
-  const venues = VENUES_BY_CATEGORY[form.category] || []
+  const categories = useMemo(() => {
+    const fromDb = Array.from(new Set(subjects.map((item) => item.category?.trim()).filter(Boolean)))
+    return fromDb.length ? fromDb : SUBJECT_CATEGORIES
+  }, [subjects])
+  const venues = getVenuesForCategory(form.category)
   const [modalError, setModalError] = useState('')
   const [busy, setBusy] = useState(false)
   const [detail, setDetail] = useState(null)
@@ -95,7 +99,7 @@ export default function SubjectManagement() {
     event.preventDefault()
     if (busy) return
     const data = { ...form, name: form.name.trim(), description: form.description.trim() }
-    if (!data.name || !SUBJECT_CATEGORIES.includes(data.category)) {
+    if (!data.name || !categories.includes(data.category)) {
       setModalError('Vui lòng nhập tên môn học và chọn danh mục hợp lệ.')
       return
     }
@@ -168,7 +172,7 @@ export default function SubjectManagement() {
           <label className="subject-filter"><span className="visually-hidden">Lọc danh mục</span>
             <select value={category} onChange={(event) => { setCategory(event.target.value); setPage(0) }}>
               <option value="">Tất cả danh mục</option>
-              {SUBJECT_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
+              {categories.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </label>
         </div>
@@ -209,12 +213,12 @@ export default function SubjectManagement() {
             <label>Danh mục <span className="input-wrap">
               <select required name="category" value={form.category} onChange={(event) => {
                 const category = event.target.value
-                const options = VENUES_BY_CATEGORY[category] || []
+                const options = getVenuesForCategory(category)
                 setForm({ ...form, category, allowedRoomTypes: options.length === 1 ? [options[0][0]] : [] })
                 setModalError('')
               }}>
                 <option value="" disabled>Chọn danh mục</option>
-                {SUBJECT_CATEGORIES.map((value) => <option key={value} value={value}>{value}</option>)}
+                {categories.map((value) => <option key={value} value={value}>{value}</option>)}
               </select>
             </span></label>
             {venues.length === 1 && <p>Địa điểm phù hợp: <strong>{venues[0][1]}</strong></p>}
