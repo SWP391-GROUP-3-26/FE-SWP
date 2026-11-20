@@ -24,7 +24,7 @@ export async function getReceptionistClasses({ search = '', signal } = {}) {
   const result = await request('/classes', { params: { search }, signal })
   if (!Array.isArray(result.data)) throw new Error('Danh sách lớp không hợp lệ.')
   return result.data.map((item) => ({ ...item, price: item.pricePerSession, remainingSlots: item.availableSeats,
-    canRegister: item.available, sessionId: item.upcomingSessions ? undefined : null }))
+    canRegister: item.available }))
 }
 
 export async function getReceptionistPreview(memberId, classId, { signal } = {}) {

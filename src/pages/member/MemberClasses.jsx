@@ -85,7 +85,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
     request.then(async (result) => {
       if (controller.signal.aborted) return
       if (activeTab === 'registered') { setRegisteredClasses(result.classes); setCounts(result.counts) }
-      else if (memberId) setClasses(result.filter((item) => item.sessionId != null))
+      else if (memberId) setClasses(result)
       else {
         const visibleClasses = result.classes.filter((item) => item.sessionId != null)
         setClasses(visibleClasses)
@@ -397,7 +397,13 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
               <div className="member-class-card-heading">
                 <span className="member-class-code">{classItem.classCode || `Lớp #${classItem.classId}`}</span>
                 <span className="member-class-active">
-                  {classItem.enrolled ? 'Đã đăng ký' : classItem.remainingSlotsText || 'Đang mở'}
+                  {classItem.enrolled ? 'Đã đăng ký' : classItem.remainingSlotsText || (
+                    receptionist && Number(classItem.upcomingSessions) === 0
+                      ? 'Không còn buổi học'
+                      : classItem.canRegister
+                        ? 'Đang mở'
+                        : Number(classItem.remainingSlots) <= 0 ? 'Hết chỗ' : 'Đã đóng đăng ký'
+                  )}
                 </span>
               </div>
               <h3>{classItem.name}</h3>
@@ -435,7 +441,7 @@ export default function MemberClasses({ receptionist = false, memberId = null } 
                   onClick={() => openRegistration(classItem)}
                 >
                   {classItem.enrolled ? 'Đã đăng ký' : classItem.canRegister ? (classItem.coveredByPackage ? 'Nhận lớp' : 'Đăng ký lớp')
-                    : classItem.sessionId === null ? 'Không còn buổi học'
+                    : (receptionist ? Number(classItem.upcomingSessions) === 0 : classItem.sessionId === null) ? 'Không còn buổi học'
                       : classItem.remainingSlots <= 0 ? 'Hết chỗ' : 'Đã đóng đăng ký'}
                 </button>
               </div>
