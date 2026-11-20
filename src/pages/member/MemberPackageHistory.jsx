@@ -7,10 +7,7 @@ import {
   getMyMemberPackageSubscriptions,
   memberPackageApiErrorMessage,
 } from '../../services/memberPackageService'
-import basicPackageImage from '../../assets/member-package-basic.jpg'
-import centerWorkoutImage from '../../assets/center-manager-dashboard.jpg'
-import premierPackageImage from '../../assets/member-package-premier.jpg'
-import standardPackageImage from '../../assets/member-package-standard.jpg'
+import { memberPackageImage } from '../../utils/memberPackageImages'
 import '../../styles/MemberActivities.css'
 import '../../styles/MemberPackages.css'
 import './MemberPackageHistory.css'
@@ -23,12 +20,7 @@ const priceFormatter = new Intl.NumberFormat('vi-VN', {
 })
 
 function packageImageFor(subscription) {
-  const name = String(subscription.packageName || '')
-  const days = Number(subscription.durationDays)
-  if (/basic/i.test(name) || days === 30) return basicPackageImage
-  if (/standard/i.test(name) || days === 90) return standardPackageImage
-  if (/premier|premium/i.test(name) || [365, 730].includes(days)) return premierPackageImage
-  return centerWorkoutImage
+  return memberPackageImage(subscription.packageName, subscription.durationDays)
 }
 
 function durationLabel(days) {

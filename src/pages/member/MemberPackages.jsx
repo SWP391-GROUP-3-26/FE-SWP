@@ -6,10 +6,7 @@ import { ROLES } from '../../auth/roleConfig'
 import { getAuth } from '../../auth/authStorage'
 import { getReceptionistPackages, getReceptionistSubscriptions, registerReceptionistPackage } from '../../services/receptionistRegistrationService'
 import { getVnpayPaymentUrl, isValidPaymentId, paymentApiErrorMessage } from '../../services/memberPaymentService'
-import basicPackageImage from '../../assets/member-package-basic.jpg'
-import centerWorkoutImage from '../../assets/center-manager-dashboard.jpg'
-import premierPackageImage from '../../assets/member-package-premier.jpg'
-import standardPackageImage from '../../assets/member-package-standard.jpg'
+import { memberPackageImage } from '../../utils/memberPackageImages'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import ReceptionistLayout from '../../layouts/ReceptionistLayout'
 import Modal from '../../components/common/Modal'
@@ -42,11 +39,7 @@ const paymentMethods = [
 ]
 
 function packageImageFor(name, durationDays) {
-  const packageName = String(name || '')
-  if (/basic/i.test(packageName) || Number(durationDays) === 30) return basicPackageImage
-  if (/standard/i.test(packageName) || Number(durationDays) === 90) return standardPackageImage
-  if (/premier|premium/i.test(packageName) || [365, 730].includes(Number(durationDays))) return premierPackageImage
-  return centerWorkoutImage
+  return memberPackageImage(name, durationDays)
 }
 
 function subscriptionDurationLabel(durationDays) {
@@ -584,19 +577,7 @@ export default function MemberPackages({ receptionist = false, memberId = null }
               const packageItem = entry.variants
                 ? (gymWithCoach && entry.variants.coached ? entry.variants.coached : entry.variants.solo)
                 : entry
-              const isStandardThreeMonthPackage = /standard/i.test(packageItem.name || '')
-                && (Number(packageItem.durationMonths) === 3 || /3\s*tháng/i.test(packageItem.name || ''))
-              const isPremierTwelveMonthPackage = /premier|premium/i.test(packageItem.name || '')
-                && (Number(packageItem.durationMonths) === 12 || /12\s*tháng/i.test(packageItem.name || ''))
-              const isBasicOneMonthPackage = /basic/i.test(packageItem.name || '')
-                && (Number(packageItem.durationMonths) === 1 || /1\s*tháng/i.test(packageItem.name || ''))
-              const image = isBasicOneMonthPackage
-                ? basicPackageImage
-                : isPremierTwelveMonthPackage
-                  ? premierPackageImage
-                  : isStandardThreeMonthPackage
-                    ? standardPackageImage
-                    : centerWorkoutImage
+              const image = memberPackageImage(packageItem.name, packageItem.durationMonths)
               const durationLabel = packageDurationLabel(packageItem)
               return (
                 <article className="member-package-card" key={entry.id}>
